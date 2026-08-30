@@ -17,7 +17,7 @@
 
 
 
-<link rel="manifest" href="./manifest.json?v=25">
+<link rel="manifest" href="./manifest.json?v=20">
 <link rel="icon" type="image/png" sizes="192x192" href="./icons/stock-pnl-v17-192.png?v=17">
 <link rel="apple-touch-icon" href="./icons/stock-pnl-v17-192.png?v=17">
 <meta name="application-name" content="Stock P&L Calendar">
@@ -68,38 +68,17 @@ button,input{font:inherit}
 .week{margin-bottom:4px;align-items:stretch}
 .week:last-child{margin-bottom:0}
 .day,.gain{height:56px;min-height:56px;border-radius:8px;border:1px solid rgba(101,132,145,.24);background:linear-gradient(145deg,#132630,#0f2029)}
-.day{padding:6px 6px 5px;display:flex;flex-direction:column;align-items:flex-start;justify-content:flex-start;gap:4px;color:#f4f6f7;overflow:hidden}
+.day{padding:6px 4px 5px;display:flex;flex-direction:column;align-items:center;justify-content:flex-start;gap:4px;color:#f4f6f7;overflow:hidden;text-align:center}
 .day.empty{opacity:.62}
 .day.profit{background:linear-gradient(145deg,#132630,#0f2029)}
 .day.loss{background:linear-gradient(145deg,#29191f,#22161b);border-color:#7d2b35}
 .num{font-size:16px;line-height:1;font-weight:750;white-space:nowrap}
-.pnl{font-size:11.5px;line-height:1;font-weight:720;margin-top:2px;white-space:nowrap;letter-spacing:-.1px}
+.pnl{font-size:11px;line-height:1;font-weight:700;margin-top:2px;white-space:nowrap;letter-spacing:-.1px}
 .day.profit .pnl{color:var(--green)} .day.loss .pnl{color:#ff625e}
-.count{display:none}
-.gain{display:flex;align-items:center;justify-content:center;padding:0 2px;font-size:12px;line-height:1;font-weight:720;color:#d2d8db;white-space:nowrap;text-align:center}
+.count{display:block;font-size:9.5px;line-height:1;font-weight:500;color:#ffd928;white-space:nowrap;margin-top:0;text-align:center}.count:empty{display:none}
+.gain{display:flex;align-items:center;justify-content:center;padding:0 2px;font-size:11px;line-height:1;font-weight:680;color:#d2d8db;white-space:nowrap;text-align:center}
 .gain.profit{color:var(--green)} .gain.loss{color:#ff625e}
 .cal::after{content:"ⓘ  Tap a date to see closed picks for that day.";display:block;text-align:center;color:#aeb7bc;font-size:10.8px;line-height:1.2;margin-top:5px;padding:2px 0 1px}
-
-/* V24: open-trade calendar status + bottom navigation / FY summary */
-.day.has-open{gap:2px}
-.open-status{color:#ffd21f;font-size:8.6px;line-height:1;font-weight:700;white-space:nowrap;letter-spacing:-.25px}
-.open-count{display:none}
-.day.has-open .pnl{font-size:11.5px;margin-top:0}
-.bottom-nav{display:grid;grid-template-columns:repeat(4,1fr);gap:2px;margin-top:10px;padding:8px 4px 7px;background:linear-gradient(150deg,#071822,#06151e);border:1.5px solid #30444e;border-radius:16px}
-.bottom-nav button{border:0;background:transparent;color:#aeb8be;min-width:0;padding:3px 1px;font-size:10.5px;line-height:1.1;display:flex;flex-direction:column;align-items:center;gap:4px}
-.bottom-nav button.active{color:var(--green)}
-.bottom-icon{font-size:21px;line-height:1}
-.fy-page{display:none;position:fixed;inset:0;z-index:40;background:var(--bg);overflow:auto;color:var(--text)}
-.fy-page.show{display:block}
-.fy-inner{width:100%;max-width:430px;margin:0 auto;padding:12px 10px 20px}
-.fy-head{display:flex;align-items:center;gap:12px;margin:4px 0 14px}
-.fy-back{width:42px;height:42px;border-radius:12px;border:1.5px solid #30444e;background:#0a1923;color:#fff;font-size:27px}
-.fy-head h2{margin:0;font-size:20px}
-.fy-card{background:linear-gradient(150deg,#081a24,#06151e);border:1px solid var(--line);border-radius:16px;padding:14px;margin-bottom:12px}
-.fy-top{display:flex;justify-content:space-between;gap:10px;align-items:flex-end}.fy-label{color:#b3bdc2;font-size:12px}.fy-year{font-size:20px;font-weight:750;margin-top:3px}.fy-total{text-align:right;font-size:18px;font-weight:800;color:var(--green)}
-.fy-list{border:1px solid var(--line);border-radius:15px;overflow:hidden}.fy-row{display:flex;justify-content:space-between;align-items:center;padding:12px 13px;border-bottom:1px solid var(--line);background:#081923}.fy-row:last-child{border-bottom:0}.fy-row button{all:unset;display:flex;width:100%;justify-content:space-between;cursor:pointer}.fy-val.pos{color:var(--green)}.fy-val.neg{color:var(--red)}
-@media(max-height:760px){.bottom-nav{margin-top:7px;padding:5px 3px}.bottom-icon{font-size:18px}.bottom-nav button{font-size:9.5px;gap:2px}.open-status{font-size:9.5px}.open-count{font-size:8.8px}}
-
 /* modal */
 .modal{position:fixed;inset:0;background:#0009;display:none;align-items:flex-end;justify-content:center;z-index:50}.modal.show{display:flex}
 .sheet{background:#f8fbfc;color:#1c282e;width:min(430px,100%);max-height:88vh;overflow:auto;border-radius:22px 22px 0 0;padding:14px}
@@ -169,7 +148,7 @@ iframe[src*="netlify" i], iframe[title*="netlify" i], [class*="netlify" i], [id*
   .head,.week{gap:3px}
   .week{margin-bottom:3px}
   .day,.gain{height:47px;min-height:47px}
-  .day{padding:5px 5px 4px;gap:2px}
+  .day{padding:5px 4px 4px;gap:2px}
   .num{font-size:15px}
   .pnl{font-size:10.5px;margin-top:1px}
   .gain{font-size:11px}
@@ -236,9 +215,7 @@ iframe[src*="netlify" i], iframe[title*="netlify" i], [class*="netlify" i], [id*
   <button class="nav-arrow" onclick="move(1)">›</button>
 </div>
  <div class="cal"><div class="head"><div>M</div><div>T</div><div>W</div><div>T</div><div>F</div><div>Gains</div></div><div id="weeks"></div></div>
- <div class="bottom-nav"><button class="active" onclick="showCalendar()"><span class="bottom-icon">▣</span><span>Calendar</span></button><button onclick="showHistory()"><span class="bottom-icon">▤</span><span>History</span></button><button onclick="showFY()"><span class="bottom-icon">⌁</span><span>FY Summary</span></button><button onclick="showMore()"><span class="bottom-icon">⚙</span><span>More</span></button></div>
 </div>
-<div class="fy-page" id="fyPage"><div class="fy-inner"><div class="fy-head"><button class="fy-back" onclick="showCalendar()">‹</button><h2>Financial Year Summary</h2></div><div class="fy-card"><div class="fy-top"><div><div class="fy-label">Financial Year</div><div class="fy-year" id="fyYear"></div><div class="fy-label" id="fyRange"></div></div><div><div class="fy-label" style="text-align:right">FY Total P&amp;L</div><div class="fy-total" id="fyTotal"></div></div></div></div><div class="fy-list" id="fyList"></div></div></div>
 <div class="modal" id="modal"><div class="sheet">
  <div class="sheettop"><b id="dateTitle"></b><button class="close" onclick="closeModal()">×</button></div>
  <div class="summary" id="daySummary"></div>
@@ -334,14 +311,7 @@ if(lc) lc.textContent=losses;
 function render(){
  let y=cursor.getFullYear(),m=cursor.getMonth();month.textContent=cursor.toLocaleString('en-IN',{month:'long',year:'numeric'});
  let first=new Date(y,m,1),last=new Date(y,m+1,0).getDate(),off=(first.getDay()+6)%7,slots=[];for(let i=0;i<off;i++)slots.push(0);for(let d=1;d<=last;d++)slots.push(d);while(slots.length%7)slots.push(0);
- let html='';for(let w=0;w<slots.length/7;w++){let days='',wt=0;for(let dow=0;dow<5;dow++){let d=slots[w*7+dow];if(!d){days+='<div class="day empty"></div>';continue}let ds=key(y,m,d),arr=byDate(ds),net=sumDay(ds),openCount=arr.filter(isOpenTrade).length,closedCount=arr.length-openCount;wt+=net;let cls=net>0?'profit':net<0?'loss':'';let pnl=closedCount?short(net):'';let openHtml=openCount?`<div class="open-status">OPEN • ${openCount} Trade${openCount>1?'s':''}</div>`:'';days+=`<div class="day ${cls} ${openCount?'has-open':''}" onclick="openDay('${ds}')"><div class="num">${d}</div><div class="pnl">${pnl}</div>${openHtml}</div>`}for(let dow=5;dow<7;dow++){let d=slots[w*7+dow];if(d)wt+=sumDay(key(y,m,d))}let wc=wt>0?'profit':wt<0?'loss':'';html+=`<div class="week">${days}<div class="gain ${wc}">${wt?short(wt):'—'}</div></div>`}weeks.innerHTML=html}
-function fyStartYear(){const m=cursor.getMonth(),y=cursor.getFullYear();return m>=3?y:y-1}
-function showFY(){const sy=fyStartYear(),months=[];let total=0;for(let i=0;i<12;i++){let d=new Date(sy,3+i,1),y=d.getFullYear(),m=d.getMonth();let mt=trades.filter(t=>{let td=new Date(tradeCalendarDate(t)+'T12:00:00');return td.getFullYear()===y&&td.getMonth()===m});let n=mt.reduce((a,t)=>a+calcGross(t)-realisedCharges(t),0);total+=n;months.push({d,n});}fyYear.textContent=`${sy} – ${sy+1}`;fyRange.textContent=`(Apr ${sy} – Mar ${sy+1})`;fyTotal.textContent=money(total);fyTotal.style.color=total<0?'var(--red)':'var(--green)';fyList.innerHTML=months.map(x=>`<div class="fy-row"><button onclick="openFYMonth(${x.d.getFullYear()},${x.d.getMonth()})"><span>${x.d.toLocaleString('en-IN',{month:'short',year:'numeric'})}</span><b class="fy-val ${x.n>0?'pos':x.n<0?'neg':''}">${money(x.n)}</b></button></div>`).join('');fyPage.classList.add('show')}
-function openFYMonth(y,m){cursor=new Date(y,m,1);fyPage.classList.remove('show');render();updateStats();window.scrollTo(0,0)}
-function showCalendar(){fyPage.classList.remove('show')}
-function showHistory(){alert('History will be added in a future update.')}
-function showMore(){alert('More options will be added in a future update.')}
-
+ let html='';for(let w=0;w<slots.length/7;w++){let days='',wt=0;for(let dow=0;dow<5;dow++){let d=slots[w*7+dow];if(!d){days+='<div class="day empty"></div>';continue}let ds=key(y,m,d),arr=byDate(ds),net=sumDay(ds),openCount=arr.filter(isOpenTrade).length;wt+=net;let cls=net>0?'profit':net<0?'loss':'';days+=`<div class="day ${cls}" onclick="openDay('${ds}')"><div class="num">${d}</div><div class="pnl">${net?short(net):''}</div><div class="count">${openCount?'OPEN · '+openCount+' Trade'+(openCount>1?'s':''):''}</div></div>`}for(let dow=5;dow<7;dow++){let d=slots[w*7+dow];if(d)wt+=sumDay(key(y,m,d))}let wc=wt>0?'profit':wt<0?'loss':'';html+=`<div class="week">${days}<div class="gain ${wc}">${wt?short(wt):'—'}</div></div>`}weeks.innerHTML=html}
 function move(n){cursor=new Date(cursor.getFullYear(),cursor.getMonth()+n,1);render();updateStats()}
 function clearTradeForm(){
   stock.value='';buyPrice.value='';buyQty.value='';sellPrice.value='';sellQty.value='';sellDate.value='';charges.value='';
