@@ -17,7 +17,7 @@
 
 
 
-<link rel="manifest" href="./manifest.json?v=20">
+<link rel="manifest" href="./manifest.json?v=26">
 <link rel="icon" type="image/png" sizes="192x192" href="./icons/stock-pnl-v17-192.png?v=17">
 <link rel="apple-touch-icon" href="./icons/stock-pnl-v17-192.png?v=17">
 <meta name="application-name" content="Stock P&L Calendar">
@@ -166,6 +166,25 @@ iframe[src*="netlify" i], iframe[title*="netlify" i], [class*="netlify" i], [id*
   .cal::after{font-size:9px}
 }
 
+
+/* V26 FINAL REFERENCE FIX */
+.day{align-items:center!important;text-align:center!important}
+.num{width:100%;text-align:center!important}
+.pnl{font-size:11px!important;font-weight:700!important;line-height:1!important}
+.count{color:#ffd928!important;font-size:8px!important;font-weight:400!important;line-height:1!important;letter-spacing:-.35px!important;white-space:nowrap!important;transform:scaleX(.84);transform-origin:center center;width:118%;margin-left:-9%;text-align:center!important}
+.gain{font-size:10.5px!important;font-weight:620!important}
+.bottom-nav{margin-top:8px;border:1.5px solid #30444e;border-radius:17px;background:linear-gradient(150deg,#071822,#06151e);display:grid;grid-template-columns:repeat(4,1fr);gap:2px;padding:8px 4px 7px}
+.bottom-nav button{border:0;background:transparent;color:#aeb8be;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;min-height:48px;padding:2px 0;font-size:11px;font-weight:400}
+.bottom-nav button.active{color:var(--green)}
+.bottom-nav .bn-icon{font-size:21px;line-height:1;font-weight:400}
+.fy-view,.history-view{display:none;margin-top:8px;background:linear-gradient(150deg,#071822,#06151e);border:1.5px solid #30444e;border-radius:18px;padding:12px}
+.view-title{font-size:20px;font-weight:700;margin-bottom:10px}
+.fy-top{display:flex;justify-content:space-between;gap:10px;align-items:flex-end;border:1px solid #2c414c;border-radius:13px;padding:10px;margin-bottom:10px}
+.fy-range{font-size:17px;font-weight:700}.fy-sub{font-size:11px;color:#aeb8be;margin-top:3px}.fy-total{text-align:right;color:var(--green);font-size:17px;font-weight:700}
+.fy-row{display:flex;justify-content:space-between;align-items:center;border-top:1px solid #223944;padding:9px 3px;font-size:13px}.fy-row:first-child{border-top:0}.fy-pos{color:var(--green);font-weight:650}.fy-neg{color:#ff625e;font-weight:650}.fy-zero{color:#d0d6d9}
+.history-item{border-top:1px solid #223944;padding:8px 2px;font-size:12px}.history-item:first-child{border-top:0}.history-item b{display:block;font-size:13px}.history-meta{color:#aeb8be;margin-top:2px}
+@media(max-width:360px){.count{font-size:7.4px!important;letter-spacing:-.45px!important;transform:scaleX(.80);width:124%;margin-left:-12%}.bottom-nav button{font-size:10px}.bottom-nav .bn-icon{font-size:19px}}
+
 </style>
 </head>
 <body>
@@ -215,6 +234,14 @@ iframe[src*="netlify" i], iframe[title*="netlify" i], [class*="netlify" i], [id*
   <button class="nav-arrow" onclick="move(1)">›</button>
 </div>
  <div class="cal"><div class="head"><div>M</div><div>T</div><div>W</div><div>T</div><div>F</div><div>Gains</div></div><div id="weeks"></div></div>
+ <div class="fy-view" id="fyView"></div>
+ <div class="history-view" id="historyView"></div>
+ <div class="bottom-nav" id="bottomNav">
+   <button id="bnCalendar" class="active" onclick="showCalendarView()"><span class="bn-icon">▣</span><span>Calendar</span></button>
+   <button id="bnHistory" onclick="showHistoryView()"><span class="bn-icon">▤</span><span>History</span></button>
+   <button id="bnFy" onclick="showFySummary()"><span class="bn-icon">⌁</span><span>FY Summary</span></button>
+   <button id="bnMore" onclick="showMore()"><span class="bn-icon">⚙</span><span>More</span></button>
+ </div>
 </div>
 <div class="modal" id="modal"><div class="sheet">
  <div class="sheettop"><b id="dateTitle"></b><button class="close" onclick="closeModal()">×</button></div>
@@ -396,6 +423,15 @@ function deleteTrade(i){
     trades.splice(i,1);save();renderModal();
   }
 }
+
+function setBottomActive(id){document.querySelectorAll('#bottomNav button').forEach(b=>b.classList.remove('active'));const el=document.getElementById(id);if(el)el.classList.add('active')}
+function showCalendarView(){document.querySelector('.top').style.display='block';document.querySelector('.nav').style.display='grid';document.querySelector('.cal').style.display='block';fyView.style.display='none';historyView.style.display='none';setBottomActive('bnCalendar')}
+function fyStartYearForDate(d){const y=d.getFullYear(),m=d.getMonth();return m>=3?y:y-1}
+function renderFySummary(){const sy=fyStartYearForDate(cursor),ey=sy+1;let rows='',total=0;for(let i=0;i<12;i++){let dt=new Date(sy,3+i,1),y=dt.getFullYear(),m=dt.getMonth();let val=trades.filter(t=>{let d=new Date(tradeCalendarDate(t)+'T12:00:00');return d.getFullYear()===y&&d.getMonth()===m}).reduce((a,t)=>a+calcGross(t)-realisedCharges(t),0);total+=val;let cls=val>0?'fy-pos':val<0?'fy-neg':'fy-zero';let label=dt.toLocaleString('en-IN',{month:'short',year:'numeric'});rows+=`<div class="fy-row" onclick="cursor=new Date(${y},${m},1);render();updateStats();showCalendarView()"><span>${label}</span><span class="${cls}">${val?short(val):'₹0'}</span></div>`}fyView.innerHTML=`<div class="view-title">Financial Year Summary</div><div class="fy-top"><div><div class="fy-range">${sy} – ${ey}</div><div class="fy-sub">Apr ${sy} – Mar ${ey}</div></div><div><div class="fy-sub">FY Total P&L</div><div class="fy-total">${money(total)}</div></div></div>${rows}`}
+function showFySummary(){renderFySummary();document.querySelector('.top').style.display='none';document.querySelector('.nav').style.display='none';document.querySelector('.cal').style.display='none';historyView.style.display='none';fyView.style.display='block';setBottomActive('bnFy')}
+function showHistoryView(){let arr=trades.filter(t=>!isOpenTrade(t)).slice().sort((a,b)=>tradeCalendarDate(b).localeCompare(tradeCalendarDate(a)));historyView.innerHTML='<div class="view-title">History</div>'+ (arr.length?arr.map(t=>`<div class="history-item"><b>${t.stock}</b><div class="history-meta">${formatDateShort(tradeCalendarDate(t))} · ${money(calcGross(t)-realisedCharges(t))}</div></div>`).join(''):'<div class="fy-zero">No closed trades.</div>');document.querySelector('.top').style.display='none';document.querySelector('.nav').style.display='none';document.querySelector('.cal').style.display='none';fyView.style.display='none';historyView.style.display='block';setBottomActive('bnHistory')}
+function showMore(){alert('More options will be added here.');setBottomActive('bnMore');setTimeout(()=>setBottomActive('bnCalendar'),0)}
+
 function quickToday(){let t=new Date(),ds=key(t.getFullYear(),t.getMonth(),t.getDate());cursor=new Date(t.getFullYear(),t.getMonth(),1);render();updateStats();openDay(ds)}
 function exportData(){let blob=new Blob([JSON.stringify(trades,null,2)],{type:'application/json'}),a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='stock-pnl-calendar-backup.json';a.click();URL.revokeObjectURL(a.href)}
 function importData(e){let f=e.target.files[0];if(!f)return;let r=new FileReader();r.onload=()=>{try{let x=JSON.parse(r.result);if(!Array.isArray(x))throw 0;trades=x;save();alert('Backup imported.')}catch{alert('Invalid backup file.')}};r.readAsText(f);e.target.value=''}

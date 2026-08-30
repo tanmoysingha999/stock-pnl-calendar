@@ -2,7 +2,7 @@
   "id": "./stock-pnl-calendar-v18-trade-entry",
   "name": "Stock P&L Calendar",
   "short_name": "Stock P&L Calendar",
-  "start_url": "./index.html?v=21",
+  "start_url": "./index.html?v=26",
   "scope": "./",
   "display": "standalone",
   "background_color": "#06131c",
