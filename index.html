@@ -17,7 +17,7 @@
 
 
 
-<link rel="manifest" href="./manifest.json?v=24">
+<link rel="manifest" href="./manifest.json?v=25">
 <link rel="icon" type="image/png" sizes="192x192" href="./icons/stock-pnl-v17-192.png?v=17">
 <link rel="apple-touch-icon" href="./icons/stock-pnl-v17-192.png?v=17">
 <meta name="application-name" content="Stock P&L Calendar">
@@ -82,8 +82,8 @@ button,input{font:inherit}
 
 /* V24: open-trade calendar status + bottom navigation / FY summary */
 .day.has-open{gap:2px}
-.open-status{color:#ffd21f;font-size:10.5px;line-height:1;font-weight:700;white-space:nowrap}
-.open-count{color:#ffd21f;font-size:9.5px;line-height:1;font-weight:650;white-space:nowrap}
+.open-status{color:#ffd21f;font-size:8.6px;line-height:1;font-weight:700;white-space:nowrap;letter-spacing:-.25px}
+.open-count{display:none}
 .day.has-open .pnl{font-size:11.5px;margin-top:0}
 .bottom-nav{display:grid;grid-template-columns:repeat(4,1fr);gap:2px;margin-top:10px;padding:8px 4px 7px;background:linear-gradient(150deg,#071822,#06151e);border:1.5px solid #30444e;border-radius:16px}
 .bottom-nav button{border:0;background:transparent;color:#aeb8be;min-width:0;padding:3px 1px;font-size:10.5px;line-height:1.1;display:flex;flex-direction:column;align-items:center;gap:4px}
@@ -334,7 +334,7 @@ if(lc) lc.textContent=losses;
 function render(){
  let y=cursor.getFullYear(),m=cursor.getMonth();month.textContent=cursor.toLocaleString('en-IN',{month:'long',year:'numeric'});
  let first=new Date(y,m,1),last=new Date(y,m+1,0).getDate(),off=(first.getDay()+6)%7,slots=[];for(let i=0;i<off;i++)slots.push(0);for(let d=1;d<=last;d++)slots.push(d);while(slots.length%7)slots.push(0);
- let html='';for(let w=0;w<slots.length/7;w++){let days='',wt=0;for(let dow=0;dow<5;dow++){let d=slots[w*7+dow];if(!d){days+='<div class="day empty"></div>';continue}let ds=key(y,m,d),arr=byDate(ds),net=sumDay(ds),openCount=arr.filter(isOpenTrade).length,closedCount=arr.length-openCount;wt+=net;let cls=net>0?'profit':net<0?'loss':'';let pnl=closedCount?short(net):'';let openHtml=openCount?`<div class="open-status">OPEN</div><div class="open-count">• ${openCount} Trade${openCount>1?'s':''}</div>`:'';days+=`<div class="day ${cls} ${openCount?'has-open':''}" onclick="openDay('${ds}')"><div class="num">${d}</div><div class="pnl">${pnl}</div>${openHtml}</div>`}for(let dow=5;dow<7;dow++){let d=slots[w*7+dow];if(d)wt+=sumDay(key(y,m,d))}let wc=wt>0?'profit':wt<0?'loss':'';html+=`<div class="week">${days}<div class="gain ${wc}">${wt?short(wt):'—'}</div></div>`}weeks.innerHTML=html}
+ let html='';for(let w=0;w<slots.length/7;w++){let days='',wt=0;for(let dow=0;dow<5;dow++){let d=slots[w*7+dow];if(!d){days+='<div class="day empty"></div>';continue}let ds=key(y,m,d),arr=byDate(ds),net=sumDay(ds),openCount=arr.filter(isOpenTrade).length,closedCount=arr.length-openCount;wt+=net;let cls=net>0?'profit':net<0?'loss':'';let pnl=closedCount?short(net):'';let openHtml=openCount?`<div class="open-status">OPEN • ${openCount} Trade${openCount>1?'s':''}</div>`:'';days+=`<div class="day ${cls} ${openCount?'has-open':''}" onclick="openDay('${ds}')"><div class="num">${d}</div><div class="pnl">${pnl}</div>${openHtml}</div>`}for(let dow=5;dow<7;dow++){let d=slots[w*7+dow];if(d)wt+=sumDay(key(y,m,d))}let wc=wt>0?'profit':wt<0?'loss':'';html+=`<div class="week">${days}<div class="gain ${wc}">${wt?short(wt):'—'}</div></div>`}weeks.innerHTML=html}
 function fyStartYear(){const m=cursor.getMonth(),y=cursor.getFullYear();return m>=3?y:y-1}
 function showFY(){const sy=fyStartYear(),months=[];let total=0;for(let i=0;i<12;i++){let d=new Date(sy,3+i,1),y=d.getFullYear(),m=d.getMonth();let mt=trades.filter(t=>{let td=new Date(tradeCalendarDate(t)+'T12:00:00');return td.getFullYear()===y&&td.getMonth()===m});let n=mt.reduce((a,t)=>a+calcGross(t)-realisedCharges(t),0);total+=n;months.push({d,n});}fyYear.textContent=`${sy} – ${sy+1}`;fyRange.textContent=`(Apr ${sy} – Mar ${sy+1})`;fyTotal.textContent=money(total);fyTotal.style.color=total<0?'var(--red)':'var(--green)';fyList.innerHTML=months.map(x=>`<div class="fy-row"><button onclick="openFYMonth(${x.d.getFullYear()},${x.d.getMonth()})"><span>${x.d.toLocaleString('en-IN',{month:'short',year:'numeric'})}</span><b class="fy-val ${x.n>0?'pos':x.n<0?'neg':''}">${money(x.n)}</b></button></div>`).join('');fyPage.classList.add('show')}
 function openFYMonth(y,m){cursor=new Date(y,m,1);fyPage.classList.remove('show');render();updateStats();window.scrollTo(0,0)}
