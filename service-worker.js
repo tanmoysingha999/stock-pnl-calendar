@@ -1,4 +1,4 @@
-const CACHE='stock-pnl-calendar-v33-inline-local-logos-current-month';
+const CACHE='stock-pnl-calendar-v34-old-trade-logo-map';
 const CORE=['./index.html?v=33'];
 self.addEventListener('install',e=>{e.waitUntil(caches.open(CACHE).then(c=>c.addAll(CORE)));self.skipWaiting();});
 self.addEventListener('activate',e=>{e.waitUntil(caches.keys().then(ks=>Promise.all(ks.filter(k=>k!==CACHE).map(k=>caches.delete(k)))));self.clients.claim();});
