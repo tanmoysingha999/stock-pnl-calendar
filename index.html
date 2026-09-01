@@ -294,6 +294,24 @@ iframe[src*="netlify" i], iframe[title*="netlify" i], [class*="netlify" i], [id*
   .closing-cell b{font-size:8px!important}
 }
 
+/* v39 closing balance mobile correction */
+@media(max-width:420px){
+  .closing-card{grid-template-columns:minmax(0,1.55fr) minmax(0,.95fr) minmax(0,1fr) minmax(0,1.05fr)!important;gap:0!important;padding:8px 6px!important;min-height:62px!important;overflow:visible!important}
+  .closing-title{font-size:8.2px!important;line-height:1.25!important;white-space:normal!important;letter-spacing:-.18px!important;transform:none!important;width:auto!important;padding-right:5px!important}
+  .closing-title span{display:inline!important;font-size:7.8px!important;white-space:normal!important}
+  .closing-cell{padding:0 3px!important;min-width:0!important}
+  .closing-cell small{font-size:7.4px!important;line-height:1.05!important;white-space:nowrap!important;letter-spacing:-.18px!important}
+  .closing-cell b{font-size:8.2px!important;line-height:1.05!important;margin-top:5px!important;white-space:nowrap!important;letter-spacing:-.25px!important}
+}
+@media(max-width:360px){
+  .closing-card{grid-template-columns:minmax(0,1.48fr) minmax(0,.96fr) minmax(0,1fr) minmax(0,1.06fr)!important;padding:8px 5px!important}
+  .closing-title{font-size:7.8px!important;letter-spacing:-.25px!important}
+  .closing-title span{font-size:7.3px!important}
+  .closing-cell{padding:0 2px!important}
+  .closing-cell small{font-size:6.9px!important}
+  .closing-cell b{font-size:7.7px!important;letter-spacing:-.3px!important}
+}
+
 </style>
 </head>
 <body>
@@ -790,7 +808,7 @@ render();updateStats();
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', async () => {
     try {
-      const reg = await navigator.serviceWorker.register('./service-worker.js?v=38', {updateViaCache:'none'});
+      const reg = await navigator.serviceWorker.register('./service-worker.js?v=39', {updateViaCache:'none'});
       await reg.update();
     } catch(e) {}
   });
