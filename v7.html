@@ -312,6 +312,38 @@ iframe[src*="netlify" i], iframe[title*="netlify" i], [class*="netlify" i], [id*
   .closing-cell b{font-size:7.7px!important;letter-spacing:-.3px!important}
 }
 
+
+/* v40 final broker month visual correction */
+.fund-dep{color:#45e07f!important}.fund-wd{color:#ff5962!important}.fund-net{color:#58a7ff!important}
+.carry-card{border-color:#45df82!important}.carry-title{color:#59e98d!important}
+.month-summary-card,.closing-card{border-color:#428fe8!important}.month-summary-title,.closing-title{color:#59a9ff!important}
+.closing-card{display:block!important;padding:9px 10px!important;margin:6px 0 0!important;min-height:0!important;overflow:visible!important}
+.closing-head{display:flex;align-items:center;gap:7px;margin-bottom:7px;min-width:0}
+.closing-icon{display:inline-flex;align-items:center;justify-content:center;width:23px;height:23px;flex:0 0 23px;border:2px solid #4ca5ff;border-radius:50%;color:#58a7ff;font-size:12px;line-height:1}
+.closing-title{font-size:10px!important;line-height:1.15!important;white-space:nowrap!important;letter-spacing:0!important;transform:none!important;width:auto!important;padding:0!important}
+.closing-title span{display:inline!important;color:#d1d7da!important;font-weight:500!important;font-size:9.6px!important;white-space:nowrap!important}
+.closing-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:0;text-align:center}
+.closing-cell{padding:0 6px!important;min-width:0!important;border-left:1px solid #344650}
+.closing-cell:first-child{border-left:0}
+.closing-cell small{font-size:8.2px!important;line-height:1!important;white-space:nowrap!important;letter-spacing:0!important;color:#d1d7da!important}
+.closing-cell b{font-size:10px!important;line-height:1!important;margin-top:4px!important;white-space:nowrap!important;letter-spacing:0!important}
+@media(max-width:420px){
+ .closing-card{padding:8px 8px!important;border-radius:12px!important}
+ .closing-head{gap:6px;margin-bottom:6px}
+ .closing-icon{width:20px;height:20px;flex-basis:20px;font-size:10px}
+ .closing-title{font-size:8.6px!important}
+ .closing-title span{font-size:8.2px!important}
+ .closing-cell{padding:0 4px!important}
+ .closing-cell small{font-size:7.4px!important}
+ .closing-cell b{font-size:9.2px!important}
+}
+@media(max-width:360px){
+ .closing-title{font-size:8px!important}
+ .closing-title span{font-size:7.6px!important}
+ .closing-cell small{font-size:6.9px!important}
+ .closing-cell b{font-size:8.6px!important}
+}
+
 </style>
 </head>
 <body>
@@ -530,7 +562,7 @@ function renderBrokerSummary(){
  const prevDate=new Date(fundCursor.getFullYear(),fundCursor.getMonth()-1,1),nextDate=new Date(fundCursor.getFullYear(),fundCursor.getMonth()+1,1),prevLabel=prevDate.toLocaleString('en-IN',{month:'long',year:'numeric'}),monthLabel=fundCursor.toLocaleString('en-IN',{month:'short',year:'numeric'}),monthLong=fundCursor.toLocaleString('en-IN',{month:'long'}),nextLabel=nextDate.toLocaleString('en-IN',{month:'short',year:'numeric'});
  const carry=`<div class="carry-card"><div class="carry-title">↻ &nbsp; Previous Month Carry Forward (From ${prevLabel})</div><div class="carry-grid"><div><small>Deposit</small><b class="fund-dep">${fmtFund(prevTot.d)}</b></div><div><small>Withdraw</small><b class="fund-wd">${fmtFund(prevTot.w)}</b></div><div><small>Net Investment</small><b class="fund-net">${fmtFund(prevTot.n)}</b></div></div></div>`;
  const monthly=`<div class="month-summary-card"><div class="month-summary-title">▣ &nbsp; This Month Summary (${monthLabel} Only)</div><div class="carry-grid"><div><small>Deposit</small><b class="fund-dep">${fmtFund(monthTot.d)}</b></div><div><small>Withdraw</small><b class="fund-wd">${fmtFund(monthTot.w)}</b></div><div><small>Net Investment Change</small><b class="fund-net">${fmtFund(monthTot.n)}</b></div></div></div>`;
- const closingCard=`<div class="closing-card"><div class="closing-title">${monthLong} Closing Balance <span>(Carry Forward to ${nextLabel})</span></div><div class="closing-cell"><small>Total Deposit</small><b class="fund-dep">${fmtFund(closing.d)}</b></div><div class="closing-cell"><small>Total Withdraw</small><b class="fund-wd">${fmtFund(closing.w)}</b></div><div class="closing-cell"><small>Net Investment</small><b class="fund-net">${fmtFund(closing.n)}</b></div></div>`;
+ const closingCard=`<div class="closing-card"><div class="closing-head"><span class="closing-icon">▥</span><div class="closing-title">${monthLong} Closing Balance <span>(Carry Forward to ${nextLabel})</span></div></div><div class="closing-grid"><div class="closing-cell"><small>Total Deposit</small><b class="fund-dep">${fmtFund(closing.d)}</b></div><div class="closing-cell"><small>Total Withdraw</small><b class="fund-wd">${fmtFund(closing.w)}</b></div><div class="closing-cell"><small>Net Investment</small><b class="fund-net">${fmtFund(closing.n)}</b></div></div></div>`;
  transactionView.innerHTML=`<div class="broker-summary-top"><button class="broker-back" onclick="returnToTransaction()">‹</button>${brokerLogo(name,'broker-logo')}<b>${escapeHtml(name)}</b></div><div class="fund-month-nav"><button onclick="moveFundMonth(-1)">‹</button><div class="fund-month-title">${fundMonthLabel(fundCursor)}</div><button onclick="moveFundMonth(1)">›</button></div>${carry}${monthly}<div class="fund-table"><div class="fund-table-head"><div>Date</div><div>Type</div><div>Amount</div><div></div></div>${list.length?list.slice().sort((a,b)=>a.date.localeCompare(b.date)).map(t=>`<div class="fund-table-row"><div class="fund-date-logo">${brokerLogo(t.broker,'fund-table-logo')}<span>${formatDateShort(t.date)}</span></div><div class="${t.type==='deposit'?'fund-type-dep':'fund-type-wd'}">${t.type==='deposit'?'Deposit':'Withdraw'}</div><div class="${t.type==='deposit'?'fund-dep':'fund-wd'}">${fmtFund(t.amount)}</div><div class="fund-row-actions"><button class="fund-edit-btn" onclick="editFundEntry(${t.id})">Edit</button><button class="fund-delete-btn" onclick="deleteFundEntry(${t.id})">Delete</button></div></div>`).join(''):`<div class="fund-empty">No transactions in this month.</div>`}</div><div class="fund-actions"><button onclick="openFundModal('${encodeURIComponent(name)}')">＋ Add Transaction</button></div>${closingCard}`;
  setBottomActive('bnTransaction');
 }
