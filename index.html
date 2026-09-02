@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#0b1217">
 <!-- v46 FINAL: v45 fixed base + 3 approved points -->
+<!-- v47 FINAL: based strictly on v46 FINAL BASE; only 3 approved changes -->
 <title>Stock P&L Calendar</title>
 
 
@@ -431,6 +432,38 @@ iframe[src*="netlify" i], iframe[title*="netlify" i], [class*="netlify" i], [id*
 .delete-broker-list{display:grid;gap:7px;margin-top:8px}.delete-broker-row{display:grid;grid-template-columns:42px 1fr auto;gap:10px;align-items:center;border:1px solid #29414c;border-radius:12px;background:#091c27;padding:8px 9px}.delete-broker-row span{font-size:14px;font-weight:800}.delete-broker-row button{border:1px solid #f14f63;background:#32121a;color:#ff6275;border-radius:9px;padding:7px 9px;font-size:10px;font-weight:800}
 #bnHistory span:last-child{font-size:8px;line-height:1.05}
 @media(max-width:420px){.fund-add-broker,.fund-delete-broker{padding:7px 8px!important;font-size:9.5px!important}.history-item{grid-template-columns:48px minmax(0,1fr) auto 14px}.history-result{font-size:9px}}
+
+/* v47 - 3 point update on v46 FINAL BASE */
+.final-trade-card .trade-card-logo{
+  padding:0!important;
+  border:0!important;
+  background:transparent!important;
+  overflow:hidden!important;
+  box-shadow:none!important;
+}
+.final-trade-card .trade-card-logo img{
+  width:100%!important;
+  height:100%!important;
+  object-fit:contain!important;
+  display:block!important;
+  border:0!important;
+  padding:0!important;
+  margin:0!important;
+  background:transparent!important;
+}
+
+/* Point 2: trade actions are hidden by default and shown only for selected card */
+.final-trade-card .trade-actions{
+  display:none!important;
+}
+.final-trade-card.trade-actions-open .trade-actions{
+  display:grid!important;
+}
+
+/* Point 3: day Net P&L is slightly brighter than v46, but not neon */
+.day-net.profitT{color:#22a66f!important;}
+.day-net.lossT{color:#df594c!important;}
+
 </style>
 
 <style id="v46-final-three-points">
@@ -768,6 +801,11 @@ function renderAppShell(view){
 function pushSection(view){if(history.state&&history.state.view&&history.state.view!=='calendar')history.replaceState({pnlApp:true,view:'calendar'},'');history.pushState({pnlApp:true,view},'')}
 window.addEventListener('popstate',e=>{
  const s=e.state||{view:'calendar'};const v=s.view||'calendar';
+ if(selectedDayTradeActionIndex!==null){
+   selectedDayTradeActionIndex=null;
+   if(modal.classList.contains('show'))renderModal();
+   return;
+ }
  if(selectedRecentFundId!==null){selectedRecentFundId=null;appView='transaction';renderAppShell('transaction');renderFundHome();setBottomActive('bnTransaction');return;}
  if(fundModal.classList.contains('show'))closeFundModal()
  if(s.modal==='day'&&s.date){
@@ -864,8 +902,25 @@ function clearTradeForm(){
   editingIndex=null;
   if(document.getElementById('tradeSubmit')) tradeSubmit.textContent='Add';
 }
-function openDay(ds,push=true){selected=ds;clearTradeForm();modal.classList.add('show');renderModal();if(push)history.pushState({pnlApp:true,view:'calendar',modal:'day',date:ds},'')}
-function closeModal(fromPop=false){clearTradeForm();modal.classList.remove('show');if(!fromPop&&history.state&&history.state.modal==='day')history.back()}
+let selectedDayTradeActionIndex=null;
+function openDay(ds,push=true){
+  selected=ds;
+  selectedDayTradeActionIndex=null;
+  clearTradeForm();
+  modal.classList.add('show');
+  renderModal();
+  if(push)history.pushState({pnlApp:true,view:'calendar',modal:'day',date:ds},'');
+}
+function showDayTradeActions(i){
+  i=Number(i);
+  if(!Number.isInteger(i)||!trades[i])return;
+  if(selectedDayTradeActionIndex===i)return;
+  selectedDayTradeActionIndex=i;
+  renderModal();
+  history.pushState({pnlApp:true,view:'calendar',modal:'day',date:selected,tradeActions:i},'');
+}
+
+function closeModal(fromPop=false){selectedDayTradeActionIndex=null;clearTradeForm();modal.classList.remove('show');if(!fromPop&&history.state&&history.state.modal==='day')history.back()}
 function tradeGross(t){
   if(isOpenTrade(t)) return 0;
   if(Number.isFinite(+t.buyPrice)&&Number.isFinite(+t.buyQty)&&Number.isFinite(+t.sellPrice)&&Number.isFinite(+t.sellQty)){
@@ -907,7 +962,7 @@ function renderModal(){
     const remaining=Math.max(0,(Number(t.buyQty)||0)-(Number(t.sellQty)||0));
     const partial=Number(t.sellQty)>0&&remaining>0;
     const status=open?'OPEN / HOLDING':money(net);
-    return `<div class="row final-trade-card ${open?'open-card':(net>=0?'profit-card':'loss-card')}"><div class="rowtop"><div class="trade-with-logo">${assetLogoHTML(a,'trade-card-logo')}<div class="trade-main"><b>${escapeHtml(t.stock)}</b>${tradeDetail(t)}</div></div><div class="trade-side"><div class="net ${open?'open-status':(net>=0?'profitT':'lossT')}">${status}</div><div class="charges-box"><small>Charges</small><b>${money(+t.charges||0)}</b></div><div class="trade-actions"><button class="edit" onclick="editTrade(${idx})">✎ Edit</button><button class="del" onclick="deleteTrade(${idx})">🗑 Delete</button></div></div></div>${partial?'':''}</div>`;
+    return `<div class="row final-trade-card ${open?'open-card':(net>=0?'profit-card':'loss-card')} ${selectedDayTradeActionIndex===idx?'trade-actions-open':''}" onclick="showDayTradeActions(${idx})"><div class="rowtop"><div class="trade-with-logo">${assetLogoHTML(a,'trade-card-logo')}<div class="trade-main"><b>${escapeHtml(t.stock)}</b>${tradeDetail(t)}</div></div><div class="trade-side"><div class="net ${open?'open-status':(net>=0?'profitT':'lossT')}">${status}</div><div class="charges-box"><small>Charges</small><b>${money(+t.charges||0)}</b></div><div class="trade-actions"><button class="edit" onclick="event.stopPropagation();editTrade(${idx})">✎ Edit</button><button class="del" onclick="event.stopPropagation();deleteTrade(${idx})">🗑 Delete</button></div></div></div>${partial?'':''}</div>`;
   }).join('')||'<div class="small empty-dark">No trades added yet.</div>';
 }
 function addTrade(){
