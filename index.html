@@ -4,6 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#0b1217">
+<!-- v46 FINAL: v45 fixed base + 3 approved points -->
 <title>Stock P&L Calendar</title>
 
 
@@ -431,6 +432,15 @@ iframe[src*="netlify" i], iframe[title*="netlify" i], [class*="netlify" i], [id*
 #bnHistory span:last-child{font-size:8px;line-height:1.05}
 @media(max-width:420px){.fund-add-broker,.fund-delete-broker{padding:7px 8px!important;font-size:9.5px!important}.history-item{grid-template-columns:48px minmax(0,1fr) auto 14px}.history-result{font-size:9px}}
 </style>
+
+<style id="v46-final-three-points">
+.fund-row-delete-reveal{gap:7px;flex-wrap:wrap}.fund-row-delete-reveal .recent-edit{border-color:#2d7bc8;background:#0b2134;color:#65b5ff}
+.modal{background:#000b;align-items:center;padding:8px}.sheet{width:min(700px,100%);max-height:94vh;border-radius:18px;background:linear-gradient(150deg,#061722,#04131c);color:#eef4f6;border:1px solid #2c414c;padding:12px}.sheettop{top:-12px;background:#061722;border-bottom:1px solid #223844;padding:8px 4px 10px}.sheettop b{font-size:18px}.close{background:#24313a!important;color:#fff!important}
+#tradeForm.form{background:#071a25;border:1px solid #29404c;border-radius:12px;padding:10px;gap:8px}#tradeForm label,.asset-picker-title{color:#dce5e8!important}#tradeForm input{background:#081a25;color:#f2f6f7;border-color:#304653}#tradeForm input::placeholder{color:#8d9aa1}.asset-toggle{display:none}.asset-results{background:#0b202b;border-color:#304653;color:#fff}.asset-option{border-color:#263c47}.asset-option:active{background:#123026}.asset-name{color:#fff}.asset-symbol{color:#9aabb3}.asset-selected{background:#0c2b22;border-color:#2b7653;color:#fff}#tradeSubmit{background:linear-gradient(90deg,#0db65b,#18c96d)!important;color:#fff!important;font-weight:800!important}
+#daySummary.summary{display:block;margin:8px 0;background:#071a25;border:1px solid #223a46;border-radius:10px;padding:0}.day-total{min-height:48px;display:grid;grid-template-columns:1fr auto auto;align-items:center;gap:14px;padding:8px 12px;font-size:13px}.day-total>span:first-child b{color:#44e27e}.day-net-label{font-weight:800}.day-net{font-size:15px;font-weight:900;white-space:nowrap}
+.final-trade-card{background:linear-gradient(145deg,#071c27,#061722)!important;border-color:#29404b!important;color:#eef4f6!important;padding:10px!important;position:relative}.final-trade-card.profit-card{border-left:2px solid #20db6e!important}.final-trade-card.loss-card{border-left:2px solid #ff454f!important}.final-trade-card.open-card{border-left:2px solid #f2a31c!important}.final-trade-card .rowtop{align-items:stretch}.final-trade-card .trade-with-logo{flex:1;min-width:0}.final-trade-card .trade-main>b{color:#f5f7f8;font-size:13px}.final-trade-card .trade-card-logo{width:44px;height:44px;flex-basis:44px}.trade-ledger{display:grid;grid-template-columns:repeat(3,minmax(78px,1fr));border:1px solid #29404b;border-radius:7px;overflow:hidden;margin-top:7px;min-width:0}.trade-ledger>div{padding:6px 5px;text-align:center;border-right:1px solid #29404b}.trade-ledger>div:nth-child(3n){border-right:0}.trade-ledger>div:nth-child(n+4){border-top:1px solid #29404b}.trade-ledger small{display:block;color:#28dc70;font-size:7.5px;font-weight:800;white-space:nowrap}.trade-ledger .sell-cell small{color:#ff4e55}.trade-ledger b{display:block;color:#edf3f5;font-size:10px;margin-top:3px;white-space:nowrap}.trade-ledger .tl-open{color:#f5a51e;font-size:9px}.holding-remaining{grid-column:1/-1;margin-top:7px;border:1px solid #6c541d;border-radius:7px;padding:6px 8px;color:#f2a31c;display:flex;align-items:center;gap:7px;font-size:9px;flex-wrap:wrap}.holding-remaining span{color:#dce5e8;margin-left:auto}.final-trade-card .trade-side{width:112px;justify-content:flex-start}.final-trade-card .net{font-size:15px}.open-status{color:#f5a51e!important;font-size:11px!important;background:#5a3909;border-radius:999px;padding:4px 7px}.charges-box{text-align:center;color:#eef4f6;margin-top:auto}.charges-box small{display:block;font-size:8px;color:#b9c5ca}.charges-box b{font-size:10px}.final-trade-card .trade-actions{display:grid;width:100%;gap:5px}.final-trade-card .edit,.final-trade-card .del{background:#071a25;font-size:10px;padding:6px 7px}.final-trade-card .edit{color:#64aaff;border-color:#3579bf}.final-trade-card .del{color:#ff555d;border-color:#c83d45}.empty-dark{color:#aab7bd}
+@media(max-width:520px){.modal{padding:0;align-items:flex-end}.sheet{max-height:92vh;border-radius:20px 20px 0 0;padding:10px}.day-total{gap:8px;padding:7px 9px}.day-net-label{font-size:11px}.day-net{font-size:13px}.final-trade-card{padding:8px!important}.final-trade-card .rowtop{gap:6px}.final-trade-card .trade-with-logo{gap:6px}.final-trade-card .trade-card-logo{width:38px;height:38px;flex-basis:38px}.final-trade-card .trade-main>b{font-size:11px}.trade-ledger{grid-template-columns:repeat(3,minmax(62px,1fr))}.trade-ledger>div{padding:5px 2px}.trade-ledger small{font-size:6.2px}.trade-ledger b{font-size:8.2px}.final-trade-card .trade-side{width:82px}.final-trade-card .net{font-size:12px}.final-trade-card .edit,.final-trade-card .del{font-size:8.5px;padding:5px 3px}.charges-box b{font-size:8.5px}.holding-remaining{font-size:7.5px}.holding-remaining span{margin-left:0}}
+</style>
 </head>
 <body>
 <div class="app">
@@ -625,9 +635,15 @@ let selectedRecentFundId=null;
 function renderFundRecent(list){
  let x=list.slice().sort((a,b)=>(b.date||'').localeCompare(a.date||'')).slice(0,10);
  return `<div class="fund-recent"><div class="fund-recent-title"><b>Recent Fund Transactions</b><button class="fund-add-btn" onclick="openFundModal()">＋ Add Transaction</button></div>`+
- (x.length?x.map(t=>`<div class="fund-row-wrap"><div class="fund-row ${Number(selectedRecentFundId)===Number(t.id)?'selected':''}" onclick="toggleRecentFundDelete(${t.id})">${brokerLogo(t.broker,'fund-row-logo')}<div><div class="fund-row-main">${escapeHtml(t.broker)}</div><div class="fund-row-meta">${formatDateShort(t.date)} · ${t.type==='deposit'?'Deposit':'Withdraw'}${t.note?' · '+escapeHtml(t.note):''}</div></div><div class="fund-amount ${t.type==='deposit'?'fund-dep':'fund-wd'}">${t.type==='deposit'?'+':'-'}${fmtFund(t.amount)}</div></div>${Number(selectedRecentFundId)===Number(t.id)?`<div class="fund-row-delete-reveal"><button type="button" onclick="event.stopPropagation();deleteRecentFundEntry(${t.id})">🗑 Delete Transaction</button></div>`:''}</div>`).join(''):`<div class="fund-empty">No fund transactions yet.</div>`)+`</div>`;
+ (x.length?x.map(t=>`<div class="fund-row-wrap"><div class="fund-row ${Number(selectedRecentFundId)===Number(t.id)?'selected':''}" onclick="toggleRecentFundDelete(${t.id})">${brokerLogo(t.broker,'fund-row-logo')}<div><div class="fund-row-main">${escapeHtml(t.broker)}</div><div class="fund-row-meta">${formatDateShort(t.date)} · ${t.type==='deposit'?'Deposit':'Withdraw'}${t.note?' · '+escapeHtml(t.note):''}</div></div><div class="fund-amount ${t.type==='deposit'?'fund-dep':'fund-wd'}">${t.type==='deposit'?'+':'-'}${fmtFund(t.amount)}</div></div>${Number(selectedRecentFundId)===Number(t.id)?`<div class="fund-row-delete-reveal"><button class="recent-edit" type="button" onclick="event.stopPropagation();editRecentFundEntry(${t.id})">✎ Edit Transaction</button><button type="button" onclick="event.stopPropagation();deleteRecentFundEntry(${t.id})">🗑 Delete Transaction</button></div>`:''}</div>`).join(''):`<div class="fund-empty">No fund transactions yet.</div>`)+`</div>`;
 }
-function toggleRecentFundDelete(id){selectedRecentFundId=Number(selectedRecentFundId)===Number(id)?null:Number(id);renderFundHome()}
+function toggleRecentFundDelete(id){
+ const same=Number(selectedRecentFundId)===Number(id);
+ if(same){selectedRecentFundId=null;renderFundHome();return}
+ selectedRecentFundId=Number(id);renderFundHome();
+ history.pushState({pnlApp:true,view:'transaction',recentFundAction:Number(id)},'');
+}
+function editRecentFundEntry(id){selectedRecentFundId=null;renderFundHome();editFundEntry(id)}
 function deleteRecentFundEntry(id){const a=getFundTransactions();saveFundTransactions(a.filter(x=>Number(x.id)!==Number(id)));selectedRecentFundId=null;renderFundHome()}
 function renderFundHome(){
  currentBroker=null;transactionTab='fund';
@@ -752,6 +768,7 @@ function renderAppShell(view){
 function pushSection(view){if(history.state&&history.state.view&&history.state.view!=='calendar')history.replaceState({pnlApp:true,view:'calendar'},'');history.pushState({pnlApp:true,view},'')}
 window.addEventListener('popstate',e=>{
  const s=e.state||{view:'calendar'};const v=s.view||'calendar';
+ if(selectedRecentFundId!==null){selectedRecentFundId=null;appView='transaction';renderAppShell('transaction');renderFundHome();setBottomActive('bnTransaction');return;}
  if(fundModal.classList.contains('show'))closeFundModal()
  if(s.modal==='day'&&s.date){
    appView='calendar';renderAppShell('calendar');setBottomActive('bnCalendar');openDay(s.date,false);return;
@@ -871,19 +888,27 @@ function tradeDetail(t){
   const bd=effectiveBuyDate(t),sd=effectiveSellDate(t);
   const buyDateText=bd?formatDateShort(bd):'—';
   const sellDateText=sd?formatDateShort(sd):'—';
-  const buyText=(t.buyPrice!==undefined&&t.buyPrice!==null&&t.buyPrice!==''&&t.buyQty!==undefined&&t.buyQty!==null&&t.buyQty!=='')?`${money(+t.buyPrice)} × ${+t.buyQty}`:'—';
-  const sellText=isOpenTrade(t)?'<span class="tl-open">OPEN / HOLDING</span>':((t.sellPrice!==undefined&&t.sellPrice!==null&&t.sellPrice!==''&&t.sellQty!==undefined&&t.sellQty!==null&&t.sellQty!=='')?`${money(+t.sellPrice)} × ${+t.sellQty}`:'—');
-  return `<div class="trade-lines"><span class="tl-label">Buy Date</span><span class="tl-value">${buyDateText}</span><span class="tl-label">Buy</span><span class="tl-value">${buyText}</span><span class="tl-label">Sell Date</span><span class="tl-value">${sellDateText}</span><span class="tl-label">Sell</span><span class="tl-value">${sellText}</span><span class="tl-charges"><span class="tl-label">Charges</span>&nbsp; ${money(+t.charges||0)}</span></div>`;
+  const buyAmount=(t.buyPrice!==undefined&&t.buyPrice!==null&&t.buyPrice!=='')?money(+t.buyPrice):'—';
+  const buyQuantity=(t.buyQty!==undefined&&t.buyQty!==null&&t.buyQty!=='')?Number(t.buyQty):'—';
+  const hasSell=t.sellPrice!==undefined&&t.sellPrice!==null&&t.sellPrice!==''&&t.sellQty!==undefined&&t.sellQty!==null&&t.sellQty!=='';
+  const sellAmount=hasSell?money(+t.sellPrice):'<span class="tl-open">OPEN / HOLDING</span>';
+  const sellQuantity=hasSell?Number(t.sellQty):'—';
+  const remaining=Math.max(0,(Number(t.buyQty)||0)-(Number(t.sellQty)||0));
+  const partial=hasSell&&remaining>0;
+  return `<div class="trade-ledger"><div><small>BUY DATE</small><b>${buyDateText}</b></div><div><small>BUY AMOUNT</small><b>${buyAmount}</b></div><div><small>BUY QUANTITY</small><b>${buyQuantity}</b></div><div class="sell-cell"><small>SELL DATE</small><b>${sellDateText}</b></div><div class="sell-cell"><small>SELL AMOUNT</small><b>${sellAmount}</b></div><div class="sell-cell"><small>SELL QUANTITY</small><b>${sellQuantity}</b></div></div>${partial?`<div class="holding-remaining">🔒 <strong>HOLDING REMAINING</strong><span>${remaining} Qty @ Avg Buy ${money(+t.buyPrice||0)}</span></div>`:''}`;
 }
 function renderModal(){
   let d=new Date(selected+'T12:00:00');
   dateTitle.textContent=d.toLocaleDateString('en-IN',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
   let arr=byDate(selected),g=arr.reduce((a,t)=>a+tradeGross(t),0),c=arr.reduce((a,t)=>a+realisedCharges(t),0),n=g-c;
-  daySummary.innerHTML=`<div class="box"><small>Gross</small><b>${money(g)}</b></div><div class="box"><small>Charges</small><b>${money(c)}</b></div><div class="box"><small>Net</small><b>${money(n)}</b></div>`;
+  daySummary.innerHTML=`<div class="day-total"><span>Total&nbsp; <b>${arr.length}</b>&nbsp; Trade${arr.length===1?'':'s'}</span><span class="day-net-label">Net P&amp;L</span><b class="day-net ${n>=0?'profitT':'lossT'}">${n>=0?'+':''}${money(n)}</b></div>`;
   tradeList.innerHTML=arr.map(t=>{
     let idx=trades.indexOf(t),gross=tradeGross(t),net=gross-realisedCharges(t),open=isOpenTrade(t),a=resolveTradeAsset(t);
-    return `<div class="row"><div class="rowtop"><div class="trade-with-logo">${assetLogoHTML(a,'trade-card-logo')}<div class="trade-main"><b>${t.stock}</b><div class="small">${tradeDetail(t)}</div></div></div><div class="trade-side"><div class="net ${open?'':(net>=0?'profitT':'lossT')}">${open?'OPEN':money(net)}</div><div class="trade-actions"><button class="edit" onclick="editTrade(${idx})">✎ Edit</button><button class="del" onclick="deleteTrade(${idx})">🗑 Delete</button></div></div></div></div>`;
-  }).join('')||'<div class="small">No trades added yet.</div>';
+    const remaining=Math.max(0,(Number(t.buyQty)||0)-(Number(t.sellQty)||0));
+    const partial=Number(t.sellQty)>0&&remaining>0;
+    const status=open?'OPEN / HOLDING':money(net);
+    return `<div class="row final-trade-card ${open?'open-card':(net>=0?'profit-card':'loss-card')}"><div class="rowtop"><div class="trade-with-logo">${assetLogoHTML(a,'trade-card-logo')}<div class="trade-main"><b>${escapeHtml(t.stock)}</b>${tradeDetail(t)}</div></div><div class="trade-side"><div class="net ${open?'open-status':(net>=0?'profitT':'lossT')}">${status}</div><div class="charges-box"><small>Charges</small><b>${money(+t.charges||0)}</b></div><div class="trade-actions"><button class="edit" onclick="editTrade(${idx})">✎ Edit</button><button class="del" onclick="deleteTrade(${idx})">🗑 Delete</button></div></div></div>${partial?'':''}</div>`;
+  }).join('')||'<div class="small empty-dark">No trades added yet.</div>';
 }
 function addTrade(){
   let st=stock.value.trim(),bd=document.getElementById('buyDate').value.trim(),
