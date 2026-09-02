@@ -92,7 +92,7 @@ button,input{font:inherit}
 .form{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;background:white;border:1px solid #dce6ea;padding:10px;border-radius:14px;margin:10px 0}
 .field{min-width:0}
 .field label{display:block;color:#46575f;font-size:11px;font-weight:650;margin:0 0 5px 2px;white-space:nowrap}
-.field.stock-field,.field.charges-field,.form button{grid-column:1/-1}
+.field.stock-field,.field.buy-date-field,.field.charges-field,.form button{grid-column:1/-1}
 input{width:100%;border:1px solid #ccd9df;border-radius:10px;padding:10px 8px;background:#fff;color:#1c282e}
 .stock-field input{font-size:16px;padding:11px 9px}
 .form button{border:0;border-radius:10px;padding:10px;background:#8fe1c2;color:#0c4034;font-weight:800;font-size:16px}
@@ -104,6 +104,11 @@ input{width:100%;border:1px solid #ccd9df;border-radius:10px;padding:10px 8px;ba
 .net{font-weight:900;font-size:15px;white-space:nowrap}
 .profitT{color:#127058}.lossT{color:#c84737}
 .small{font-size:11px;color:#6b7c84;margin-top:5px;line-height:1.3}
+.trade-lines{display:grid;grid-template-columns:auto minmax(0,1fr) auto minmax(0,1fr);column-gap:7px;row-gap:3px;align-items:baseline;margin-top:6px;font-size:11px;color:#41535c;line-height:1.25}
+.trade-lines .tl-label{font-weight:700;color:#50636c;white-space:nowrap}
+.trade-lines .tl-value{min-width:0;white-space:nowrap}
+.trade-lines .tl-open{font-weight:800;color:#c97700}
+.trade-lines .tl-charges{grid-column:1/-1}
 .trade-actions{display:flex;gap:6px}
 .edit,.del{border-radius:8px;padding:6px 9px;font-size:12px;background:#fff}
 .edit{color:#174caa;border:1px solid #7da5ff}
@@ -345,7 +350,7 @@ iframe[src*="netlify" i], iframe[title*="netlify" i], [class*="netlify" i], [id*
 }
 
 
-/* v42 FINAL: Transaction color/logo polish + direct History Trade Details */
+/* v43 FINAL: calendar modal back fix + explicit Buy Date + correct holding duration */
 .transaction-view{background:linear-gradient(150deg,#061822,#06151e);border-color:#30444e}
 .tx-tabs button{background:#081923;border-color:#30444e;color:#b9c4ca}
 .tx-tabs button.active{background:#123a29;border-color:#45df82;color:#67ee98}
@@ -437,6 +442,7 @@ iframe[src*="netlify" i], iframe[title*="netlify" i], [class*="netlify" i], [id*
      <div class="asset-selected" id="assetSelected"></div>
      <div class="asset-results" id="assetResults"></div>
    </div>
+   <div class="field buy-date-field"><label for="buyDate">Buy Date</label><input id="buyDate" type="date"></div>
    <div class="field"><label for="buyPrice">Buying Price</label><input id="buyPrice" type="number" step="0.01" min="0" inputmode="decimal" placeholder="₹0.00"></div>
    <div class="field"><label for="buyQty">Buy Qty</label><input id="buyQty" type="number" step="1" min="0" inputmode="numeric" placeholder="0"></div>
    <div class="field"><label for="sellPrice">Selling Price</label><input id="sellPrice" type="number" step="0.01" min="0" inputmode="decimal" placeholder="₹0.00"></div>
@@ -629,6 +635,10 @@ function pushSection(view){if(history.state&&history.state.view&&history.state.v
 window.addEventListener('popstate',e=>{
  const s=e.state||{view:'calendar'};const v=s.view||'calendar';
  if(fundModal.classList.contains('show'))closeFundModal()
+ if(s.modal==='day'&&s.date){
+   appView='calendar';renderAppShell('calendar');setBottomActive('bnCalendar');openDay(s.date,false);return;
+ }
+ if(modal.classList.contains('show'))closeModal(true);
  if(v==='broker'){currentBroker=s.broker||currentBroker;appView='broker';renderAppShell('broker');renderBrokerSummary();return}
  if(v==='transaction'){currentBroker=null;transactionTab='fund';appView='transaction';renderAppShell('transaction');renderFundHome();setBottomActive('bnTransaction');return}
  if(v==='tradeDetails'){appView='tradeDetails';renderAppShell('tradeDetails');renderTradeDetails(Number(s.tradeIndex));return}
@@ -715,12 +725,12 @@ function render(){
  let html='';for(let w=0;w<slots.length/7;w++){let days='',wt=0;for(let dow=0;dow<5;dow++){let d=slots[w*7+dow];if(!d){days+='<div class="day empty"></div>';continue}let ds=key(y,m,d),arr=byDate(ds),net=sumDay(ds),openCount=arr.filter(isOpenTrade).length;wt+=net;let cls=net>0?'profit':net<0?'loss':'';days+=`<div class="day ${cls}" onclick="openDay('${ds}')"><div class="num">${d}</div><div class="pnl">${net?short(net):''}</div><div class="count">${openCount?'OPEN · '+openCount+' Trade'+(openCount>1?'s':''):''}</div></div>`}for(let dow=5;dow<7;dow++){let d=slots[w*7+dow];if(d)wt+=sumDay(key(y,m,d))}let wc=wt>0?'profit':wt<0?'loss':'';html+=`<div class="week">${days}<div class="gain ${wc}">${wt?short(wt):'—'}</div></div>`}weeks.innerHTML=html}
 function move(n){cursor=new Date(cursor.getFullYear(),cursor.getMonth()+n,1);render();updateStats()}
 function clearTradeForm(){
-  stock.value='';buyPrice.value='';buyQty.value='';sellPrice.value='';sellQty.value='';sellDate.value='';charges.value='';selectedAsset=null;if(window.assetSelected)assetSelected.classList.remove('show');if(window.assetResults)assetResults.classList.remove('show');setAssetType(activeMarket==='commodity'?'commodity':'company');
+  stock.value='';document.getElementById('buyDate').value='';buyPrice.value='';buyQty.value='';sellPrice.value='';sellQty.value='';sellDate.value='';charges.value='';selectedAsset=null;if(window.assetSelected)assetSelected.classList.remove('show');if(window.assetResults)assetResults.classList.remove('show');setAssetType(activeMarket==='commodity'?'commodity':'company');
   editingIndex=null;
   if(document.getElementById('tradeSubmit')) tradeSubmit.textContent='Add';
 }
-function openDay(ds){selected=ds;clearTradeForm();modal.classList.add('show');renderModal()}
-function closeModal(){clearTradeForm();modal.classList.remove('show')}
+function openDay(ds,push=true){selected=ds;clearTradeForm();modal.classList.add('show');renderModal();if(push)history.pushState({pnlApp:true,view:'calendar',modal:'day',date:ds},'')}
+function closeModal(fromPop=false){clearTradeForm();modal.classList.remove('show');if(!fromPop&&history.state&&history.state.modal==='day')history.back()}
 function tradeGross(t){
   if(isOpenTrade(t)) return 0;
   if(Number.isFinite(+t.buyPrice)&&Number.isFinite(+t.buyQty)&&Number.isFinite(+t.sellPrice)&&Number.isFinite(+t.sellQty)){
@@ -729,16 +739,23 @@ function tradeGross(t){
   return +t.gross||0;
 }
 function formatDateShort(ds){if(!ds)return '';const d=new Date(ds+'T12:00:00');return d.toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric'})}
+function effectiveBuyDate(t){
+  if(t.buyDate)return t.buyDate;
+  if(isOpenTrade(t))return t.date||'';
+  if(t.sellDate&&t.date&&t.date!==t.sellDate)return t.date;
+  return '';
+}
+function effectiveSellDate(t){
+  if(isOpenTrade(t))return '';
+  return t.sellDate||t.date||'';
+}
 function tradeDetail(t){
-  const hasBuy=[t.buyPrice,t.buyQty].every(v=>v!==undefined&&v!==null&&v!=='');
-  if(hasBuy && isOpenTrade(t)){
-    return `Buy ${money(+t.buyPrice)} × ${+t.buyQty} &nbsp;•&nbsp; <b>OPEN / HOLDING</b><br>Buy date ${formatDateShort(t.buyDate||t.date)} &nbsp;•&nbsp; Charges ${money(+t.charges||0)}`;
-  }
-  const hasNew=[t.buyPrice,t.buyQty,t.sellPrice,t.sellQty].every(v=>v!==undefined&&v!==null&&v!=='');
-  if(hasNew){
-    return `Buy ${money(+t.buyPrice)} × ${+t.buyQty} &nbsp;•&nbsp; Sell ${money(+t.sellPrice)} × ${+t.sellQty}<br>${t.buyDate?`Buy date ${formatDateShort(t.buyDate)} &nbsp;•&nbsp; `:''}${t.sellDate?`Sell date ${formatDateShort(t.sellDate)} &nbsp;•&nbsp; `:''}Charges ${money(+t.charges||0)}`;
-  }
-  return `Gross ${money(+t.gross||0)} &nbsp;•&nbsp; Charges ${money(+t.charges||0)}`;
+  const bd=effectiveBuyDate(t),sd=effectiveSellDate(t);
+  const buyDateText=bd?formatDateShort(bd):'—';
+  const sellDateText=sd?formatDateShort(sd):'—';
+  const buyText=(t.buyPrice!==undefined&&t.buyPrice!==null&&t.buyPrice!==''&&t.buyQty!==undefined&&t.buyQty!==null&&t.buyQty!=='')?`${money(+t.buyPrice)} × ${+t.buyQty}`:'—';
+  const sellText=isOpenTrade(t)?'<span class="tl-open">OPEN / HOLDING</span>':((t.sellPrice!==undefined&&t.sellPrice!==null&&t.sellPrice!==''&&t.sellQty!==undefined&&t.sellQty!==null&&t.sellQty!=='')?`${money(+t.sellPrice)} × ${+t.sellQty}`:'—');
+  return `<div class="trade-lines"><span class="tl-label">Buy Date</span><span class="tl-value">${buyDateText}</span><span class="tl-label">Buy</span><span class="tl-value">${buyText}</span><span class="tl-label">Sell Date</span><span class="tl-value">${sellDateText}</span><span class="tl-label">Sell</span><span class="tl-value">${sellText}</span><span class="tl-charges"><span class="tl-label">Charges</span>&nbsp; ${money(+t.charges||0)}</span></div>`;
 }
 function renderModal(){
   let d=new Date(selected+'T12:00:00');
@@ -751,28 +768,26 @@ function renderModal(){
   }).join('')||'<div class="small">No trades added yet.</div>';
 }
 function addTrade(){
-  let st=stock.value.trim(),
+  let st=stock.value.trim(),bd=document.getElementById('buyDate').value.trim(),
       bp=parseFloat(buyPrice.value),bq=parseFloat(buyQty.value),
       spText=sellPrice.value.trim(),sqText=sellQty.value.trim(),sd=sellDate.value.trim(),
       sp=spText===''?null:parseFloat(spText),sq=sqText===''?null:parseFloat(sqText),
       c=parseFloat(charges.value||0);
-  if(!st||Number.isNaN(bp)||Number.isNaN(bq)){alert('Enter stock name, buying price and buying quantity.');return}
+  if(!st||!bd||Number.isNaN(bp)||Number.isNaN(bq)){alert('Enter stock name, Buy Date, buying price and buying quantity.');return}
   if(bp<0||bq<=0){alert('Buying price must be 0 or more, and buying quantity must be greater than 0.');return}
   const sellBlank=(spText===''&&sqText==='');
   const sellComplete=(spText!==''&&sqText!=='');
   if(!sellBlank&&!sellComplete){alert('For a sold stock, enter both selling price and selling quantity. Otherwise leave both blank for OPEN / HOLDING.');return}
   if(sellComplete&&(Number.isNaN(sp)||Number.isNaN(sq)||sp<0||sq<=0)){alert('Selling price must be 0 or more, and selling quantity must be greater than 0.');return}
   if(sellBlank&&sd){alert('Selling Date is only needed when you enter Selling Price and Sell Qty.');return}
-  if(sellComplete&&!sd && editingIndex!==null && isOpenTrade(trades[editingIndex])){alert('Please select the Selling Date for this holding.');return}
+  if(sellComplete&&!sd){alert('Please select the Selling Date.');return}
+  if(sd&&sd<bd){alert('Selling Date cannot be before the Buy Date.');return}
   if(Number.isNaN(c)||c<0)c=0;
-  const old=editingIndex===null?null:trades[editingIndex];
-  const buyDate=(old&&(old.buyDate||old.date))||selected;
-  if(sd && sd<buyDate){alert('Selling Date cannot be before the Buy Date.');return}
   const g=sellBlank?0:(sp*sq)-(bp*bq);
   const a=selectedAsset||findAssetByName(st,assetType)||{name:st,type:assetType};
-  const item={date:sellBlank?buyDate:(sd||selected),buyDate:buyDate,stock:st,assetType:assetType,symbol:a.symbol||'',logo:a.logo||'',domain:a.domain||'',icon:a.icon||'',buyPrice:bp,buyQty:bq,sellPrice:sellBlank?'':sp,sellQty:sellBlank?'':sq,sellDate:sellBlank?'':(sd||''),gross:g,charges:c};
+  const item={date:sellBlank?bd:sd,buyDate:bd,stock:st,assetType:assetType,symbol:a.symbol||'',logo:a.logo||'',domain:a.domain||'',icon:a.icon||'',buyPrice:bp,buyQty:bq,sellPrice:sellBlank?'':sp,sellQty:sellBlank?'':sq,sellDate:sellBlank?'':sd,gross:g,charges:c};
   if(editingIndex===null) trades.push(item); else trades[editingIndex]=item;
-  const destination=(!sellBlank&&sd)?sd:selected;
+  const destination=sellBlank?bd:sd;
   clearTradeForm();
   localStorage.setItem(MARKET_KEYS[activeMarket],JSON.stringify(trades));
   if(destination!==selected){const d=new Date(destination+'T12:00:00');cursor=new Date(d.getFullYear(),d.getMonth(),1);selected=destination;}
@@ -783,11 +798,12 @@ function editTrade(i){
   editingIndex=i;
   setAssetType(t.assetType||'company');
   selectedAsset=resolveTradeAsset(t);stock.value=t.stock||'';assetSelected.innerHTML=`${assetLogoHTML(selectedAsset)}<div><div class="asset-name">${t.stock||''}</div><div class="asset-symbol">${t.symbol||''}</div></div><button class="asset-clear" type="button" onclick="clearSelectedAsset()">×</button>`;assetSelected.classList.add('show');assetResults.classList.remove('show');
+  document.getElementById('buyDate').value=effectiveBuyDate(t);
   buyPrice.value=t.buyPrice??'';
   buyQty.value=t.buyQty??'';
   sellPrice.value=t.sellPrice??'';
   sellQty.value=t.sellQty??'';
-  sellDate.value=t.sellDate??'';
+  sellDate.value=effectiveSellDate(t);
   charges.value=t.charges??'';
   tradeSubmit.textContent='Update';
   tradeForm.scrollIntoView({behavior:'smooth',block:'start'});
@@ -807,13 +823,13 @@ function renderFySummary(){const sy=fyStartYearForDate(cursor),ey=sy+1;let rows=
 function showFySummary(push=true){renderFySummary();appView='fy';renderAppShell('fy');setBottomActive('bnFy');if(push)pushSection('fy')}
 function showHistoryView(push=true){let arr=trades.filter(t=>!isOpenTrade(t)).slice().sort((a,b)=>tradeCalendarDate(b).localeCompare(tradeCalendarDate(a)));historyView.innerHTML='<div class="view-title">History</div>'+ (arr.length?arr.map(t=>{const a=resolveTradeAsset(t),idx=trades.indexOf(t);return `<div class="history-item" onclick="openHistoryTrade(${idx})">${assetLogoHTML(a,'history-logo')}<div class="history-copy"><b>${t.stock}</b><div class="history-meta">${formatDateShort(tradeCalendarDate(t))} · ${money(calcGross(t)-realisedCharges(t))}</div></div><div class="history-chevron">›</div></div>`}).join(''):'<div class="fy-zero">No closed trades.</div>');appView='history';renderAppShell('history');setBottomActive('bnHistory');if(push)pushSection('history')}
 function tdDate(ds){if(!ds)return 'Not recorded';return formatDateShort(ds)}
-function tdHoldingDays(t){const a=new Date((t.date||tradeCalendarDate(t))+'T12:00:00'),b=new Date((t.sellDate||tradeCalendarDate(t))+'T12:00:00');if(isNaN(a)||isNaN(b))return 0;return Math.max(0,Math.round((b-a)/86400000))}
-function renderTradeDetails(i){const t=trades[i];if(!t||isOpenTrade(t)){history.back();return}const a=resolveTradeAsset(t),gross=calcGross(t),ch=realisedCharges(t),net=gross-ch,cls=net>=0?'pos':'neg',buyDate=t.date||'',sellDate=t.sellDate||tradeCalendarDate(t)||'',qty=Number(t.sellQty||t.buyQty||0),days=tdHoldingDays(t);tradeDetailsView.innerHTML=`<div class="td-head"><button class="td-back" onclick="history.back()">‹</button><div class="td-title">Trade Details</div></div><div class="td-card"><div class="td-company">${assetLogoHTML(a,'history-logo')}<div class="td-company-copy"><div class="td-company-name">${escapeHtml(t.stock)}</div><div class="td-date">${formatDateShort(tradeCalendarDate(t))}</div></div></div><div class="td-metrics"><div class="td-metric"><small>Gross</small><b class="td-gross">${money(gross)}</b></div><div class="td-metric"><small>Charges</small><b class="td-charges">${money(ch)}</b></div><div class="td-metric"><small>Net</small><b class="td-net ${cls}">${money(net)}</b></div></div><div class="td-ledger"><div class="td-ledger-head"><div>Action</div><div>Date</div><div class="td-price">Price</div></div><div class="td-ledger-row"><div class="td-buy">Buy</div><div>${tdDate(buyDate)}</div><div class="td-price">${money(+t.buyPrice||0)}</div></div><div class="td-ledger-row"><div class="td-sell">Sell</div><div>${tdDate(sellDate)}</div><div class="td-price">${money(+t.sellPrice||0)}</div></div><div class="td-ledger-kv"><span>Quantity</span><span>${qty}</span></div><div class="td-ledger-kv"><span>Charges</span><span>${money(ch)}</span></div></div><div class="td-result"><div class="td-result-main">${net>=0?'Net Profit':'Net Loss'} : <span class="${cls}">${net>=0?'+':''}${money(net)}</span></div><div class="td-duration">Holding Duration : ${days} Day${days===1?'':'s'}</div></div></div>`;appView='tradeDetails';renderAppShell('tradeDetails')}
+function tdHoldingDays(t){const bd=effectiveBuyDate(t),sd=effectiveSellDate(t);if(!bd||!sd)return null;const a=new Date(bd+'T12:00:00'),b=new Date(sd+'T12:00:00');if(isNaN(a)||isNaN(b))return null;return Math.max(0,Math.round((b-a)/86400000))}
+function renderTradeDetails(i){const t=trades[i];if(!t||isOpenTrade(t)){history.back();return}const a=resolveTradeAsset(t),gross=calcGross(t),ch=realisedCharges(t),net=gross-ch,cls=net>=0?'pos':'neg',buyDate=effectiveBuyDate(t),sellDate=effectiveSellDate(t),qty=Number(t.sellQty||t.buyQty||0),days=tdHoldingDays(t),durationText=days===null?'—':`${days} Day${days===1?'':'s'}`;tradeDetailsView.innerHTML=`<div class="td-head"><button class="td-back" onclick="history.back()">‹</button><div class="td-title">Trade Details</div></div><div class="td-card"><div class="td-company">${assetLogoHTML(a,'history-logo')}<div class="td-company-copy"><div class="td-company-name">${escapeHtml(t.stock)}</div><div class="td-date">${formatDateShort(tradeCalendarDate(t))}</div></div></div><div class="td-metrics"><div class="td-metric"><small>Gross</small><b class="td-gross">${money(gross)}</b></div><div class="td-metric"><small>Charges</small><b class="td-charges">${money(ch)}</b></div><div class="td-metric"><small>Net</small><b class="td-net ${cls}">${money(net)}</b></div></div><div class="td-ledger"><div class="td-ledger-head"><div>Action</div><div>Date</div><div class="td-price">Price</div></div><div class="td-ledger-row"><div class="td-buy">Buy</div><div>${tdDate(buyDate)}</div><div class="td-price">${money(+t.buyPrice||0)}</div></div><div class="td-ledger-row"><div class="td-sell">Sell</div><div>${tdDate(sellDate)}</div><div class="td-price">${money(+t.sellPrice||0)}</div></div><div class="td-ledger-kv"><span>Quantity</span><span>${qty}</span></div><div class="td-ledger-kv"><span>Charges</span><span>${money(ch)}</span></div></div><div class="td-result"><div class="td-result-main">${net>=0?'Net Profit':'Net Loss'} : <span class="${cls}">${net>=0?'+':''}${money(net)}</span></div><div class="td-duration">Holding Duration : ${durationText}</div></div></div>`;appView='tradeDetails';renderAppShell('tradeDetails')}
 function openHistoryTrade(i){i=Number(i);if(!Number.isInteger(i)||!trades[i])return;appView='tradeDetails';renderAppShell('tradeDetails');renderTradeDetails(i);history.pushState({pnlApp:true,view:'tradeDetails',tradeIndex:i},'')}
 function showTransactionView(push=true){currentBroker=null;transactionTab='fund';appView='transaction';renderAppShell('transaction');setBottomActive('bnTransaction');renderFundHome();if(push)pushSection('transaction')}
 
 function quickToday(){let t=new Date(),ds=key(t.getFullYear(),t.getMonth(),t.getDate());cursor=new Date(t.getFullYear(),t.getMonth(),1);render();updateStats();openDay(ds)}
-function exportData(){let payload={version:42,trades,customCompanies:getCustomCompanies(),customCommodities:getCustomCommodities(),fundTransactions:getFundTransactions(),brokers:getBrokers()};let blob=new Blob([JSON.stringify(payload,null,2)],{type:'application/json'}),a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='stock-pnl-calendar-backup.json';a.click();URL.revokeObjectURL(a.href)}
+function exportData(){let payload={version:43,trades,customCompanies:getCustomCompanies(),customCommodities:getCustomCommodities(),fundTransactions:getFundTransactions(),brokers:getBrokers()};let blob=new Blob([JSON.stringify(payload,null,2)],{type:'application/json'}),a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='stock-pnl-calendar-backup.json';a.click();URL.revokeObjectURL(a.href)}
 function importData(e){let f=e.target.files[0];if(!f)return;let r=new FileReader();r.onload=()=>{try{let x=JSON.parse(r.result);if(Array.isArray(x)){trades=x}else if(x&&Array.isArray(x.trades)){trades=x.trades;if(Array.isArray(x.customCompanies))localStorage.setItem(ASSET_CUSTOM_COMPANY_KEY,JSON.stringify(x.customCompanies));if(Array.isArray(x.customCommodities))localStorage.setItem(ASSET_CUSTOM_COMMODITY_KEY,JSON.stringify(x.customCommodities));if(Array.isArray(x.fundTransactions))saveFundTransactions(x.fundTransactions);if(Array.isArray(x.brokers)&&x.brokers.length)saveBrokers(x.brokers)}else throw 0;save();alert('Backup imported.')}catch{alert('Invalid backup file.')}};r.readAsText(f);e.target.value=''}
 modal.addEventListener('click',e=>{if(e.target===modal)closeModal()});document.addEventListener('click',e=>{if(assetResults&&!e.target.closest('.asset-picker'))assetResults.classList.remove('show')});
 document.querySelectorAll('.market-tab').forEach(btn=>{
@@ -867,7 +883,7 @@ render();updateStats();
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', async () => {
     try {
-      const reg = await navigator.serviceWorker.register('./service-worker.js?v=39', {updateViaCache:'none'});
+      const reg = await navigator.serviceWorker.register('./service-worker.js?v=43', {updateViaCache:'none'});
       await reg.update();
     } catch(e) {}
   });
