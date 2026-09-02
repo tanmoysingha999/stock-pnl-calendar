@@ -1,4 +1,4 @@
-const CACHE='stock-pnl-calendar-v44-complete';
+const CACHE='stock-pnl-calendar-v45-final';
 const CORE=['./','./index.html'];
 
 self.addEventListener('install', event => {
@@ -8,7 +8,6 @@ self.addEventListener('install', event => {
       .then(() => self.skipWaiting())
   );
 });
-
 self.addEventListener('activate', event => {
   event.waitUntil(
     caches.keys()
@@ -16,25 +15,19 @@ self.addEventListener('activate', event => {
       .then(() => self.clients.claim())
   );
 });
-
 self.addEventListener('fetch', event => {
   if (event.request.method !== 'GET') return;
-
   if (event.request.mode === 'navigate') {
     event.respondWith(
       fetch(event.request, {cache:'no-store'})
         .then(response => {
-          const copy = response.clone();
-          caches.open(CACHE).then(cache => cache.put('./index.html', copy));
+          const copy=response.clone();
+          caches.open(CACHE).then(cache=>cache.put('./index.html',copy));
           return response;
         })
-        .catch(() => caches.match('./index.html'))
+        .catch(()=>caches.match('./index.html'))
     );
     return;
   }
-
-  event.respondWith(
-    fetch(event.request, {cache:'no-store'})
-      .catch(() => caches.match(event.request))
-  );
+  event.respondWith(fetch(event.request,{cache:'no-store'}).catch(()=>caches.match(event.request)));
 });
