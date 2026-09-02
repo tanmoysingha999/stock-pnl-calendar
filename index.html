@@ -420,39 +420,16 @@ iframe[src*="netlify" i], iframe[title*="netlify" i], [class*="netlify" i], [id*
 }
 
 
-/* v45 point-wise update */
-.tx-tabs.single{grid-template-columns:1fr!important}
-.tx-tabs.single button{width:100%}
-.fund-head{gap:8px}
+/* v45 fixed: Point 1-3 on v44 master */
+.tx-tabs.tx-tabs-single{grid-template-columns:1fr}
 .broker-head-actions{display:flex;align-items:center;gap:7px;flex-wrap:wrap;justify-content:flex-end}
-.fund-delete-broker{border:1px solid #f14f63!important;background:#32121a!important;color:#ff6275!important;border-radius:10px;padding:8px 10px;font-weight:800;font-size:11px;white-space:nowrap}
-.fund-row-wrap{border-top:1px solid #1d313c}
-.fund-row-wrap:first-of-type{border-top:0}
-.fund-row-wrap .fund-row{border-top:0!important;cursor:pointer}
-.fund-row.selected{background:#0c2330;border-radius:9px}
-.fund-row-delete-reveal{display:flex;justify-content:flex-end;padding:0 0 8px}
-.fund-row-delete-reveal button{border:1px solid #f14f63;background:#32121a;color:#ff6275;border-radius:9px;padding:7px 10px;font-size:10px;font-weight:800}
-.history-item{grid-template-columns:54px minmax(0,1fr) auto 18px!important}
-.history-status{font-size:10px;font-weight:900;white-space:nowrap;text-align:right}
-.history-status.tx-profit{color:#52df7d}.history-status.tx-loss{color:#ff5364}.history-status.tx-open{color:#ffd84d}
-.delete-broker-note{font-size:11px;line-height:1.45;color:#91a4ae;background:#07151e;border:1px solid #263b47;border-radius:10px;padding:10px;margin-bottom:9px}
-.broker-picker-option.delete-option i{color:#ff6275}
-.app-confirm-modal{position:fixed;inset:0;z-index:1800;background:#000b;display:none;align-items:center;justify-content:center;padding:20px}
-.app-confirm-modal.show{display:flex}
-.app-confirm-box{width:min(360px,100%);background:#081923;color:#eef4f6;border:1px solid #30444e;border-radius:17px;padding:16px;box-shadow:0 24px 70px #0009}
-.app-confirm-box>b{display:block;font-size:18px;margin-bottom:8px}
-#appConfirmText{font-size:12px;line-height:1.5;color:#aab9c0}
-.app-confirm-actions{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-top:15px}
-.app-confirm-actions button{border:1px solid #30444e;background:#10232d;color:#d9e2e6;border-radius:10px;padding:10px;font-weight:800}
-.app-confirm-actions button.danger{border-color:#f14f63;background:#32121a;color:#ff6275}
-.bottom-nav #bnHistory span:last-child{font-size:8px;line-height:1.05}
-@media(max-width:420px){
- .broker-head-actions{gap:5px}
- .fund-add-broker,.fund-delete-broker{padding:7px 8px!important;font-size:9.5px!important}
- .history-item{grid-template-columns:48px minmax(0,1fr) auto 14px!important}
- .history-status{font-size:9px}
-}
-
+.fund-delete-broker{border:1px solid #f14f63;background:#32121a;color:#ff6275;border-radius:10px;padding:8px 10px;font-weight:800;font-size:11px;white-space:nowrap}
+.fund-row-wrap{border-top:1px solid #1d313c}.fund-row-wrap .fund-row{border-top:0;cursor:pointer}.fund-row.selected{background:#0d2330;border-radius:10px}
+.fund-row-delete-reveal{display:flex;justify-content:flex-end;padding:0 8px 8px}.fund-row-delete-reveal button{border:1px solid #f14f63;background:#32121a;color:#ff6275;border-radius:9px;padding:7px 10px;font-size:10px;font-weight:800}
+.history-item{grid-template-columns:54px minmax(0,1fr) auto 18px}.history-result{font-size:10px;font-weight:900;white-space:nowrap}.history-result.profit{color:#50df7b}.history-result.loss{color:#ff5667}
+.delete-broker-list{display:grid;gap:7px;margin-top:8px}.delete-broker-row{display:grid;grid-template-columns:42px 1fr auto;gap:10px;align-items:center;border:1px solid #29414c;border-radius:12px;background:#091c27;padding:8px 9px}.delete-broker-row span{font-size:14px;font-weight:800}.delete-broker-row button{border:1px solid #f14f63;background:#32121a;color:#ff6275;border-radius:9px;padding:7px 9px;font-size:10px;font-weight:800}
+#bnHistory span:last-child{font-size:8px;line-height:1.05}
+@media(max-width:420px){.fund-add-broker,.fund-delete-broker{padding:7px 8px!important;font-size:9.5px!important}.history-item{grid-template-columns:48px minmax(0,1fr) auto 14px}.history-result{font-size:9px}}
 </style>
 </head>
 <body>
@@ -621,7 +598,7 @@ const BROKER_CATALOG=[
 let transactionTab='fund', currentBroker=null, fundType='deposit', fundCursor=new Date(APP_TODAY.getFullYear(),APP_TODAY.getMonth(),1), appView='calendar';
 function getFundTransactions(){try{return JSON.parse(localStorage.getItem(FUND_TX_KEY)||'[]')}catch{return []}}
 function saveFundTransactions(x){localStorage.setItem(FUND_TX_KEY,JSON.stringify(x))}
-function getBrokers(){try{let x=JSON.parse(localStorage.getItem(BROKER_KEY)||'null');return Array.isArray(x)&&x.length?x:DEFAULT_BROKERS}catch{return DEFAULT_BROKERS}}
+function getBrokers(){try{let x=JSON.parse(localStorage.getItem(BROKER_KEY)||'null');return Array.isArray(x)?x:DEFAULT_BROKERS}catch{return DEFAULT_BROKERS}}
 function saveBrokers(x){localStorage.setItem(BROKER_KEY,JSON.stringify(x))}
 function brokerByName(n){const b=getBrokers().find(x=>x.name===n)||{name:n,logo:''};return BROKER_LOGOS[n]?{...b,logo:BROKER_LOGOS[n]}:b}
 function brokerLogo(n,cls='broker-logo'){const b=brokerByName(n);return b.logo?`<img class="${cls}" src="${b.logo}" alt="">`:`<div class="${cls}" style="display:grid;place-items:center;background:#132833;color:#82949c">${(n||'?').slice(0,1)}</div>`}
@@ -648,16 +625,14 @@ let selectedRecentFundId=null;
 function renderFundRecent(list){
  let x=list.slice().sort((a,b)=>(b.date||'').localeCompare(a.date||'')).slice(0,10);
  return `<div class="fund-recent"><div class="fund-recent-title"><b>Recent Fund Transactions</b><button class="fund-add-btn" onclick="openFundModal()">＋ Add Transaction</button></div>`+
- (x.length?x.map(t=>`<div class="fund-row-wrap"><div class="fund-row ${Number(selectedRecentFundId)===Number(t.id)?'selected':''}" onclick="toggleRecentFundDelete(${t.id})">${brokerLogo(t.broker,'fund-row-logo')}<div><div class="fund-row-main">${escapeHtml(t.broker)}</div><div class="fund-row-meta">${formatDateShort(t.date)} · ${t.type==='deposit'?'Deposit':'Withdraw'}${t.note?' · '+escapeHtml(t.note):''}</div></div><div class="fund-amount ${t.type==='deposit'?'fund-dep':'fund-wd'}">${t.type==='deposit'?'+':'-'}${fmtFund(t.amount)}</div></div>${Number(selectedRecentFundId)===Number(t.id)?`<div class="fund-row-delete-reveal"><button onclick="event.stopPropagation();requestDeleteFundEntry(${t.id})">🗑 Delete Transaction</button></div>`:''}</div>`).join(''):`<div class="fund-empty">No fund transactions yet.</div>`)+`</div>`;
+ (x.length?x.map(t=>`<div class="fund-row-wrap"><div class="fund-row ${Number(selectedRecentFundId)===Number(t.id)?'selected':''}" onclick="toggleRecentFundDelete(${t.id})">${brokerLogo(t.broker,'fund-row-logo')}<div><div class="fund-row-main">${escapeHtml(t.broker)}</div><div class="fund-row-meta">${formatDateShort(t.date)} · ${t.type==='deposit'?'Deposit':'Withdraw'}${t.note?' · '+escapeHtml(t.note):''}</div></div><div class="fund-amount ${t.type==='deposit'?'fund-dep':'fund-wd'}">${t.type==='deposit'?'+':'-'}${fmtFund(t.amount)}</div></div>${Number(selectedRecentFundId)===Number(t.id)?`<div class="fund-row-delete-reveal"><button type="button" onclick="event.stopPropagation();deleteRecentFundEntry(${t.id})">🗑 Delete Transaction</button></div>`:''}</div>`).join(''):`<div class="fund-empty">No fund transactions yet.</div>`)+`</div>`;
 }
-function toggleRecentFundDelete(id){
- selectedRecentFundId=Number(selectedRecentFundId)===Number(id)?null:Number(id);
- renderFundHome();
-}
+function toggleRecentFundDelete(id){selectedRecentFundId=Number(selectedRecentFundId)===Number(id)?null:Number(id);renderFundHome()}
+function deleteRecentFundEntry(id){const a=getFundTransactions();saveFundTransactions(a.filter(x=>Number(x.id)!==Number(id)));selectedRecentFundId=null;renderFundHome()}
 function renderFundHome(){
  currentBroker=null;transactionTab='fund';
  const list=getFundTransactions();
- transactionView.innerHTML=`<div class="view-title">Transaction</div><div class="tx-tabs single"><button class="active">Fund Transaction</button></div><div id="txTabBody"></div>`;
+ transactionView.innerHTML=`<div class="view-title">Transaction</div><div class="tx-tabs tx-tabs-single"><button class="active">Fund Transaction</button></div><div id="txTabBody"></div>`;
  const body=document.getElementById('txTabBody');
  body.innerHTML=renderFundSummaryCards(list)+`<div class="fund-actions"><button onclick="openFundModal()">＋ Add Transaction</button></div>`+renderFundChart(list)+renderBrokerCards()+renderFundRecent(list);
 }
@@ -694,19 +669,10 @@ function editFundEntry(id){
  editingFundId=t.id;const sel=document.getElementById('fundBroker');sel.innerHTML=getBrokers().map(b=>`<option ${b.name===t.broker?'selected':''}>${escapeHtml(b.name)}</option>`).join('');
  document.getElementById('fundDate').value=t.date||'';document.getElementById('fundAmount').value=t.amount??'';document.getElementById('fundNote').value=t.note||'';document.getElementById('fundModalTitle').textContent='Edit Fund Transaction';document.getElementById('fundSaveBtn').textContent='Update Transaction';setFundType(t.type==='withdraw'?'withdraw':'deposit');fundModal.classList.add('show');
 }
-let pendingFundDeleteId=null;
-function requestDeleteFundEntry(id){
- const a=getFundTransactions(),t=a.find(x=>Number(x.id)===Number(id));if(!t)return;
- pendingFundDeleteId=Number(id);
- showAppConfirm('Delete Transaction',`Delete ${t.type==='deposit'?'deposit':'withdraw'} ${fmtFund(t.amount)} on ${formatDateShort(t.date)}?`,confirmDeleteFundEntry);
+function deleteFundEntry(id){
+ const a=getFundTransactions(),t=a.find(x=>Number(x.id)===Number(id));if(!t)return;if(!confirm(`Delete ${t.type==='deposit'?'deposit':'withdraw'} ${fmtFund(t.amount)} on ${formatDateShort(t.date)}?`))return;
+ saveFundTransactions(a.filter(x=>Number(x.id)!==Number(id)));if(currentBroker)renderBrokerSummary();else renderFundHome();
 }
-function confirmDeleteFundEntry(){
- const id=pendingFundDeleteId;if(id===null)return;
- const a=getFundTransactions();saveFundTransactions(a.filter(x=>Number(x.id)!==Number(id)));
- pendingFundDeleteId=null;selectedRecentFundId=null;closeAppConfirm();
- if(currentBroker)renderBrokerSummary();else renderFundHome();
-}
-function deleteFundEntry(id){requestDeleteFundEntry(id)}
 function closeFundModal(){fundModal.classList.remove('show');editingFundId=null}
 function setFundType(t){fundType=t;document.getElementById('fundDepBtn').classList.toggle('active',t==='deposit');document.getElementById('fundWdBtn').classList.toggle('active',t==='withdraw')}
 function saveFundEntry(){
@@ -715,6 +681,19 @@ function saveFundEntry(){
  const a=getFundTransactions();if(editingFundId!==null){const i=a.findIndex(x=>Number(x.id)===Number(editingFundId));if(i>=0)a[i]={...a[i],broker,date,type:fundType,amount,note};else a.push({id:Date.now(),broker,date,type:fundType,amount,note})}else a.push({id:Date.now(),broker,date,type:fundType,amount,note});saveFundTransactions(a);editingFundId=null;fundModal.classList.remove('show');
  if(currentBroker){let d=new Date(date+'T12:00:00');fundCursor=new Date(d.getFullYear(),d.getMonth(),1);renderBrokerSummary()}else renderFundHome();
 }
+function openDeleteBrokerPicker(){
+ let modal=document.getElementById('deleteBrokerModal');
+ if(!modal){
+  modal=document.createElement('div');modal.id='deleteBrokerModal';modal.className='broker-picker-modal';
+  modal.innerHTML=`<div class="broker-picker-sheet"><div class="broker-picker-top"><b>Delete Broker</b><button type="button" onclick="closeDeleteBrokerPicker()">×</button></div><div class="delete-broker-list" id="deleteBrokerList"></div><button type="button" class="broker-picker-cancel" onclick="closeDeleteBrokerPicker()">Cancel</button></div>`;
+  document.body.appendChild(modal);modal.addEventListener('click',e=>{if(e.target===modal)closeDeleteBrokerPicker()});
+ }
+ const list=document.getElementById('deleteBrokerList');
+ list.innerHTML=getBrokers().length?getBrokers().map(b=>`<div class="delete-broker-row">${brokerLogo(b.name,'broker-picker-logo')}<span>${escapeHtml(b.name)}</span><button type="button" onclick="removeBrokerFromList('${encodeURIComponent(b.name)}')">🗑 Delete</button></div>`).join(''):`<div class="broker-picker-empty">No brokers added.</div>`;
+ modal.classList.add('show');
+}
+function closeDeleteBrokerPicker(){const m=document.getElementById('deleteBrokerModal');if(m)m.classList.remove('show')}
+function removeBrokerFromList(encoded){const name=decodeURIComponent(encoded),arr=getBrokers().filter(b=>b.name!==name);saveBrokers(arr);closeDeleteBrokerPicker();renderFundHome()}
 function ensureBrokerPicker(){
  let modal=document.getElementById('brokerPickerModal');
  if(modal)return modal;
@@ -757,52 +736,6 @@ function closeBrokerPicker(){
  const modal=document.getElementById('brokerPickerModal');
  if(modal)modal.classList.remove('show');
 }
-
-function openDeleteBrokerPicker(){
- let modal=document.getElementById('deleteBrokerModal');
- if(!modal){
-   modal=document.createElement('div');modal.id='deleteBrokerModal';modal.className='broker-picker-modal';
-   modal.innerHTML=`<div class="broker-picker-sheet">
-     <div class="broker-picker-top"><b>Delete Broker</b><button type="button" onclick="closeDeleteBrokerPicker()">×</button></div>
-     <div class="delete-broker-note">Select the broker you want to remove. Fund transactions will stay saved and will reappear if the broker is added again.</div>
-     <div id="deleteBrokerResults" class="broker-picker-results"></div>
-     <button type="button" class="broker-picker-cancel" onclick="closeDeleteBrokerPicker()">Cancel</button>
-   </div>`;
-   document.body.appendChild(modal);
-   modal.addEventListener('click',e=>{if(e.target===modal)closeDeleteBrokerPicker()});
- }
- document.getElementById('deleteBrokerResults').innerHTML=getBrokers().map(b=>`<button type="button" class="broker-picker-option delete-option" onclick="requestDeleteBroker('${encodeURIComponent(b.name)}')">${brokerLogo(b.name,'broker-picker-logo')}<span>${escapeHtml(b.name)}</span><i>🗑</i></button>`).join('')||`<div class="broker-picker-empty">No brokers to delete.</div>`;
- modal.classList.add('show');
-}
-function closeDeleteBrokerPicker(){document.getElementById('deleteBrokerModal')?.classList.remove('show')}
-let pendingBrokerDelete='';
-function requestDeleteBroker(encoded){
- const name=decodeURIComponent(encoded);pendingBrokerDelete=name;closeDeleteBrokerPicker();
- showAppConfirm('Delete Broker',`Remove ${name} from the Brokers list? Fund transactions will remain saved.`,confirmDeleteBroker);
-}
-function confirmDeleteBroker(){
- const name=pendingBrokerDelete;if(!name)return;
- const arr=getBrokers().filter(b=>b.name!==name);saveBrokers(arr);
- pendingBrokerDelete='';closeAppConfirm();renderFundHome();
-}
-let appConfirmAction=null;
-function ensureAppConfirm(){
- let modal=document.getElementById('appConfirmModal');
- if(modal)return modal;
- modal=document.createElement('div');modal.id='appConfirmModal';modal.className='app-confirm-modal';
- modal.innerHTML=`<div class="app-confirm-box"><b id="appConfirmTitle">Confirm</b><div id="appConfirmText"></div><div class="app-confirm-actions"><button onclick="closeAppConfirm()">Cancel</button><button class="danger" onclick="runAppConfirm()">Delete</button></div></div>`;
- document.body.appendChild(modal);
- modal.addEventListener('click',e=>{if(e.target===modal)closeAppConfirm()});
- return modal;
-}
-function showAppConfirm(title,text,action){
- const modal=ensureAppConfirm();appConfirmAction=action;
- document.getElementById('appConfirmTitle').textContent=title;
- document.getElementById('appConfirmText').textContent=text;
- modal.classList.add('show');
-}
-function closeAppConfirm(){document.getElementById('appConfirmModal')?.classList.remove('show');appConfirmAction=null}
-function runAppConfirm(){const fn=appConfirmAction;appConfirmAction=null;if(typeof fn==='function')fn()}
 function addCustomBroker(){
  const modal=ensureBrokerPicker();
  modal.classList.add('show');
@@ -1006,13 +939,19 @@ function showCalendarView(fromPop=false){appView='calendar';renderAppShell('cale
 function fyStartYearForDate(d){const y=d.getFullYear(),m=d.getMonth();return m>=3?y:y-1}
 function renderFySummary(){const sy=fyStartYearForDate(cursor),ey=sy+1;let rows='',total=0;for(let i=0;i<12;i++){let dt=new Date(sy,3+i,1),y=dt.getFullYear(),m=dt.getMonth();let val=trades.filter(t=>{let d=new Date(tradeCalendarDate(t)+'T12:00:00');return d.getFullYear()===y&&d.getMonth()===m}).reduce((a,t)=>a+calcGross(t)-realisedCharges(t),0);total+=val;let cls=val>0?'fy-pos':val<0?'fy-neg':'fy-zero';let label=dt.toLocaleString('en-IN',{month:'short',year:'numeric'});rows+=`<div class="fy-row" onclick="cursor=new Date(${y},${m},1);render();updateStats();showCalendarView()"><span>${label}</span><span class="${cls}">${val?short(val):'₹0'}</span></div>`}fyView.innerHTML=`<div class="view-title">Financial Year Summary</div><div class="fy-top"><div><div class="fy-range">${sy} – ${ey}</div><div class="fy-sub">Apr ${sy} – Mar ${ey}</div></div><div><div class="fy-sub">FY Total P&L</div><div class="fy-total">${money(total)}</div></div></div>${rows}`}
 function showFySummary(push=true){renderFySummary();appView='fy';renderAppShell('fy');setBottomActive('bnFy');if(push)pushSection('fy')}
-function showHistoryView(push=true){
- let arr=trades.slice().sort((a,b)=>tradeCalendarDate(b).localeCompare(tradeCalendarDate(a)));
- historyView.innerHTML='<div class="view-title">Stock P&amp;L Summary</div>'+ (arr.length?arr.map(t=>{
-   const a=resolveTradeAsset(t),idx=trades.indexOf(t),open=isOpenTrade(t),net=calcGross(t)-realisedCharges(t),status=open?'OPEN':(net>=0?'PROFIT':'LOSS'),cls=open?'tx-open':(net>=0?'tx-profit':'tx-loss');
-   return `<div class="history-item" onclick="openHistoryTrade(${idx})">${assetLogoHTML(a,'history-logo')}<div class="history-copy"><b>${t.stock}</b><div class="history-meta">${formatDateShort(tradeCalendarDate(t))} · ${open?'OPEN / HOLDING':money(net)}</div></div><div class="history-status ${cls}">${status}</div><div class="history-chevron">›</div></div>`;
- }).join(''):'<div class="fy-zero">No trades.</div>');
- appView='history';renderAppShell('history');setBottomActive('bnHistory');if(push)pushSection('history')
+function showHistoryView(push=true){let arr=trades.filter(t=>!isOpenTrade(t)).slice().sort((a,b)=>tradeCalendarDate(b).localeCompare(tradeCalendarDate(a)));historyView.innerHTML='<div class="view-title">Stock P&amp;L Summary</div>'+ (arr.length?arr.map(t=>{const a=resolveTradeAsset(t),idx=trades.indexOf(t),net=calcGross(t)-realisedCharges(t),profit=net>=0;return `<div class="history-item" onclick="openHistoryTrade(${idx})">${assetLogoHTML(a,'history-logo')}<div class="history-copy"><b>${t.stock}</b><div class="history-meta">${formatDateShort(tradeCalendarDate(t))} · ${money(net)}</div></div><div class="history-result ${profit?'profit':'loss'}">${profit?'PROFIT':'LOSS'}</div><div class="history-chevron">›</div></div>`}).join(''):'<div class="fy-zero">No closed trades.</div>');appView='history';renderAppShell('history');setBottomActive('bnHistory');if(push)pushSection('history')}
+function tdDate(ds){if(!ds)return 'Not recorded';return formatDateShort(ds)}
+function tdHoldingDays(t){const bd=effectiveBuyDate(t),sd=effectiveSellDate(t);if(!bd||!sd)return null;const a=new Date(bd+'T12:00:00'),b=new Date(sd+'T12:00:00');if(isNaN(a)||isNaN(b))return null;return Math.max(0,Math.round((b-a)/86400000))}
+function renderTradeDetails(i){const t=trades[i];if(!t||isOpenTrade(t)){history.back();return}const a=resolveTradeAsset(t),gross=calcGross(t),ch=realisedCharges(t),net=gross-ch,cls=net>=0?'pos':'neg',buyDate=effectiveBuyDate(t),sellDate=effectiveSellDate(t),qty=Number(t.sellQty||t.buyQty||0),days=tdHoldingDays(t),durationText=days===null?'—':`${days} Day${days===1?'':'s'}`;tradeDetailsView.innerHTML=`<div class="td-head"><button class="td-back" onclick="history.back()">‹</button><div class="td-title">Trade Details</div></div><div class="td-card"><div class="td-company">${assetLogoHTML(a,'history-logo')}<div class="td-company-copy"><div class="td-company-name">${escapeHtml(t.stock)}</div><div class="td-date">${formatDateShort(tradeCalendarDate(t))}</div></div></div><div class="td-metrics"><div class="td-metric"><small>Gross</small><b class="td-gross">${money(gross)}</b></div><div class="td-metric"><small>Charges</small><b class="td-charges">${money(ch)}</b></div><div class="td-metric"><small>Net</small><b class="td-net ${cls}">${money(net)}</b></div></div><div class="td-ledger"><div class="td-ledger-head"><div>Action</div><div>Date</div><div class="td-price">Price</div></div><div class="td-ledger-row"><div class="td-buy">Buy</div><div>${tdDate(buyDate)}</div><div class="td-price">${money(+t.buyPrice||0)}</div></div><div class="td-ledger-row"><div class="td-sell">Sell</div><div>${tdDate(sellDate)}</div><div class="td-price">${money(+t.sellPrice||0)}</div></div><div class="td-ledger-kv"><span>Quantity</span><span>${qty}</span></div><div class="td-ledger-kv"><span>Charges</span><span>${money(ch)}</span></div></div><div class="td-result"><div class="td-result-main">${net>=0?'Net Profit':'Net Loss'} : <span class="${cls}">${net>=0?'+':''}${money(net)}</span></div><div class="td-duration">Holding Duration : ${durationText}</div></div></div>`;appView='tradeDetails';renderAppShell('tradeDetails')}
+function openHistoryTrade(i){i=Number(i);if(!Number.isInteger(i)||!trades[i])return;appView='tradeDetails';renderAppShell('tradeDetails');renderTradeDetails(i);history.pushState({pnlApp:true,view:'tradeDetails',tradeIndex:i},'')}
+function showTransactionView(push=true){currentBroker=null;transactionTab='fund';appView='transaction';renderAppShell('transaction');setBottomActive('bnTransaction');renderFundHome();if(push)pushSection('transaction')}
+
+function quickToday(){let t=new Date(),ds=key(t.getFullYear(),t.getMonth(),t.getDate());cursor=new Date(t.getFullYear(),t.getMonth(),1);render();updateStats();openDay(ds)}
+function exportData(){let payload={version:43,trades,customCompanies:getCustomCompanies(),customCommodities:getCustomCommodities(),fundTransactions:getFundTransactions(),brokers:getBrokers()};let blob=new Blob([JSON.stringify(payload,null,2)],{type:'application/json'}),a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='stock-pnl-calendar-backup.json';a.click();URL.revokeObjectURL(a.href)}
+function importData(e){let f=e.target.files[0];if(!f)return;let r=new FileReader();r.onload=()=>{try{let x=JSON.parse(r.result);if(Array.isArray(x)){trades=x}else if(x&&Array.isArray(x.trades)){trades=x.trades;if(Array.isArray(x.customCompanies))localStorage.setItem(ASSET_CUSTOM_COMPANY_KEY,JSON.stringify(x.customCompanies));if(Array.isArray(x.customCommodities))localStorage.setItem(ASSET_CUSTOM_COMMODITY_KEY,JSON.stringify(x.customCommodities));if(Array.isArray(x.fundTransactions))saveFundTransactions(x.fundTransactions);if(Array.isArray(x.brokers)&&x.brokers.length)saveBrokers(x.brokers)}else throw 0;save();alert('Backup imported.')}catch{alert('Invalid backup file.')}};r.readAsText(f);e.target.value=''}
+modal.addEventListener('click',e=>{if(e.target===modal)closeModal()});document.addEventListener('click',e=>{if(assetResults&&!e.target.closest('.asset-picker'))assetResults.classList.remove('show')});
+document.querySelectorAll('.market-tab').forEach(btn=>{
+  btn.addEventListener('click',()=>switchMarket(btn.dataset.market));
 });
 render();updateStats();
 </script>
