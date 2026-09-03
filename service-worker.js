@@ -1,12 +1,9 @@
-const CACHE='stock-pnl-calendar-v52-final';
-const SHELL='./index.html?v=52';
-const CORE=[SHELL];
-
+const CACHE='stock-pnl-calendar-v53-final';
+const APP_SHELL='./index.html';
 self.addEventListener('install',event=>{
-  event.waitUntil(caches.open(CACHE).then(cache=>cache.addAll(CORE)));
+  event.waitUntil(caches.open(CACHE).then(cache=>cache.add(new Request(APP_SHELL,{cache:'reload'}))));
   self.skipWaiting();
 });
-
 self.addEventListener('activate',event=>{
   event.waitUntil((async()=>{
     const keys=await caches.keys();
@@ -14,25 +11,17 @@ self.addEventListener('activate',event=>{
     await self.clients.claim();
   })());
 });
-
 self.addEventListener('fetch',event=>{
-  if(event.request.method!=='GET')return;
+  if(event.request.method!=='GET') return;
   if(event.request.mode==='navigate'){
     event.respondWith((async()=>{
       try{
-        const response=await fetch(event.request,{cache:'no-store'});
-        if(response&&response.ok){
-          const cache=await caches.open(CACHE);
-          cache.put(SHELL,response.clone()).catch(()=>{});
-        }
-        return response;
-      }catch(err){
-        return (await caches.match(SHELL)) || Response.error();
-      }
+        const fresh=await fetch(event.request,{cache:'no-store'});
+        if(fresh&&fresh.ok){const cache=await caches.open(CACHE);cache.put(APP_SHELL,fresh.clone());}
+        return fresh;
+      }catch(e){return (await caches.match(APP_SHELL))||Response.error();}
     })());
     return;
   }
-  event.respondWith((async()=>{
-    try{return await fetch(event.request,{cache:'no-store'});}catch(err){return (await caches.match(event.request)) || Response.error();}
-  })());
+  event.respondWith(fetch(event.request,{cache:'no-store'}).catch(()=>caches.match(event.request)));
 });
