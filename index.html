@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#0b1217">
 <!-- v46 FINAL: v45 fixed base + 3 approved points -->
-<!-- v47 FINAL: based strictly on v46 FINAL BASE; only 3 approved changes -->
+<!-- v48 FINAL: based on installed v47; Option Chain + Option lot layout + Commodity Future/Option -->
 <title>Stock P&L Calendar</title>
 
 
@@ -464,6 +464,41 @@ iframe[src*="netlify" i], iframe[title*="netlify" i], [class*="netlify" i], [id*
 .day-net.profitT{color:#22a66f!important;}
 .day-net.lossT{color:#df594c!important;}
 
+
+/* v48: approved Option layout + Commodity Future/Option */
+.option-chain-row,.option-detail-block{display:none}
+.option-chain-row.show,.option-detail-block.show{display:block}
+.option-chain-row{grid-column:1/-1;border:1px solid #28424d;border-radius:13px;background:#071822;padding:10px}
+.option-chain-row>label{display:block;font-size:12px;font-weight:800;color:#edf3f5;margin-bottom:7px}
+.option-chain-grid{display:grid;grid-template-columns:1.05fr 1fr 1fr;gap:8px;align-items:start}
+.option-strike-wrap input,.option-side-btn{width:100%;height:46px;border:1px solid #30444e;border-radius:10px;background:#07151e;color:#fff;font-size:16px}
+.option-strike-wrap input{padding:0 11px;text-align:center}
+.option-strike-wrap small{display:block;text-align:center;color:#8ca0aa;font-size:9px;margin-top:4px}
+.option-side-btn{font-weight:800}
+.option-side-btn.call.active{background:linear-gradient(135deg,#0d783a,#11a857);border-color:#22c56a;color:white}
+.option-side-btn.put.active{background:linear-gradient(135deg,#9b242d,#d53843);border-color:#ef4d59;color:white}
+
+.option-detail-block{grid-column:1/-1;border:1px solid #28424d;border-radius:13px;background:#071822;padding:9px 8px}
+.option-block-title{font-size:11px;font-weight:900;margin:0 0 8px;letter-spacing:.2px}
+.option-block-title.buy-title{color:#39a9ff}.option-block-title.sell-title{color:#ff4d55}
+.option-detail-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px}
+.option-field{min-width:0}
+.option-field label{display:block;font-size:9.5px;font-weight:750;color:#dbe4e8;margin-bottom:5px;white-space:normal;line-height:1.1}
+.option-field input{width:100%;height:47px;border:1px solid #30444e;border-radius:9px;background:#07151e;color:#eef3f5;padding:0 8px;font-size:14px;min-width:0}
+.option-field.total-field input{color:#35a8ff;font-weight:850;text-align:center}
+.option-field.sell-total input{color:#ff554f}
+.option-calc{text-align:right;color:#7f939d;font-size:9.5px;margin-top:6px;min-height:11px}
+.commodity-subtabs{display:none}
+
+@media(max-width:420px){
+ .option-chain-grid{grid-template-columns:1fr .86fr .86fr}
+ .option-chain-row{padding:8px}
+ .option-detail-grid{gap:4px}
+ .option-field label{font-size:8.1px}
+ .option-field input{height:43px;font-size:12px;padding:0 5px}
+ .option-calc{font-size:8.4px}
+}
+
 </style>
 
 <style id="v46-final-three-points">
@@ -492,6 +527,10 @@ iframe[src*="netlify" i], iframe[title*="netlify" i], [class*="netlify" i], [id*
 </div><div class="fno-tabs" id="fnoTabs" style="display:none">
 <button class="fno-tab active" data-fno="future">Future</button>
 <button class="fno-tab" data-fno="option">Option</button>
+</div>
+<div class="fno-tabs commodity-subtabs" id="commodityTabs" style="display:none">
+<button class="fno-tab commodity-subtab active" data-commodity="future">Future</button>
+<button class="fno-tab commodity-subtab" data-commodity="option">Option</button>
 </div>
   <div class="actions">
    
@@ -544,12 +583,45 @@ iframe[src*="netlify" i], iframe[title*="netlify" i], [class*="netlify" i], [id*
      <div class="asset-selected" id="assetSelected"></div>
      <div class="asset-results" id="assetResults"></div>
    </div>
+   <div class="option-chain-row" id="optionChainRow">
+     <label>Option Chain</label>
+     <div class="option-chain-grid">
+       <div class="option-strike-wrap"><input id="optionStrike" type="number" min="0" step="1" inputmode="numeric" placeholder="1500"><small>Strike / Chain No.</small></div>
+       <button type="button" id="optionCallBtn" class="option-side-btn call active" onclick="setOptionSide('CE')">Call</button>
+       <button type="button" id="optionPutBtn" class="option-side-btn put" onclick="setOptionSide('PE')">Put</button>
+     </div>
+   </div>
    <div class="field buy-date-field"><label for="buyDate">Buy Date</label><input id="buyDate" type="date"></div>
-   <div class="field"><label for="buyPrice">Buying Price</label><input id="buyPrice" type="number" step="0.01" min="0" inputmode="decimal" placeholder="₹0.00"></div>
-   <div class="field"><label for="buyQty">Buy Qty</label><input id="buyQty" type="number" step="1" min="0" inputmode="numeric" placeholder="0"></div>
-   <div class="field"><label for="sellPrice">Selling Price</label><input id="sellPrice" type="number" step="0.01" min="0" inputmode="decimal" placeholder="₹0.00"></div>
-   <div class="field"><label for="sellQty">Sell Qty</label><input id="sellQty" type="number" step="1" min="0" inputmode="numeric" placeholder="0"></div>
-   <div class="field charges-field"><label for="sellDate">Selling Date (for Holding)</label><input id="sellDate" type="date"></div>
+
+   <div class="field standard-trade-field"><label for="buyPrice">Buying Price</label><input id="buyPrice" type="number" step="0.01" min="0" inputmode="decimal" placeholder="₹0.00"></div>
+   <div class="field standard-trade-field"><label for="buyQty">Buy Qty</label><input id="buyQty" type="number" step="1" min="0" inputmode="numeric" placeholder="0"></div>
+   <div class="field standard-trade-field"><label for="sellPrice">Selling Price</label><input id="sellPrice" type="number" step="0.01" min="0" inputmode="decimal" placeholder="₹0.00"></div>
+   <div class="field standard-trade-field"><label for="sellQty">Sell Qty</label><input id="sellQty" type="number" step="1" min="0" inputmode="numeric" placeholder="0"></div>
+
+   <div class="option-detail-block option-buy-block" id="optionBuyDetails">
+     <div class="option-block-title buy-title">BUY DETAILS</div>
+     <div class="option-detail-grid">
+       <div class="option-field"><label>Buy Price</label><input id="optBuyPrice" type="number" step="0.01" min="0" inputmode="decimal" placeholder="₹0.00" oninput="updateOptionTotals()"></div>
+       <div class="option-field"><label>Lot Size</label><input id="optBuyLotSize" type="number" step="1" min="1" inputmode="numeric" placeholder="0" oninput="syncOptionLotSize();updateOptionTotals()"></div>
+       <div class="option-field"><label>Quantity Per Lot</label><input id="optBuyQtyPerLot" type="number" step="1" min="1" inputmode="numeric" placeholder="0" oninput="updateOptionTotals()"></div>
+       <div class="option-field total-field"><label>Total Buying Amount</label><input id="optBuyTotal" type="text" readonly placeholder="₹0.00"></div>
+     </div>
+     <div class="option-calc" id="optBuyCalc"></div>
+   </div>
+
+   <div class="field charges-field sell-date-field"><label id="sellDateLabel" for="sellDate">Selling Date (for Holding)</label><input id="sellDate" type="date"></div>
+
+   <div class="option-detail-block option-sell-block" id="optionSellDetails">
+     <div class="option-block-title sell-title">SELL DETAILS</div>
+     <div class="option-detail-grid">
+       <div class="option-field"><label>Sell Price</label><input id="optSellPrice" type="number" step="0.01" min="0" inputmode="decimal" placeholder="₹0.00" oninput="updateOptionTotals()"></div>
+       <div class="option-field"><label>Lot Size</label><input id="optSellLotSize" type="number" step="1" min="1" inputmode="numeric" placeholder="0" oninput="updateOptionTotals()"></div>
+       <div class="option-field"><label>Quantity Per Lot</label><input id="optSellQtyPerLot" type="number" step="1" min="1" inputmode="numeric" placeholder="0" oninput="updateOptionTotals()"></div>
+       <div class="option-field total-field sell-total"><label>Total Selling Amount</label><input id="optSellTotal" type="text" readonly placeholder="₹0.00"></div>
+     </div>
+     <div class="option-calc" id="optSellCalc"></div>
+   </div>
+
    <div class="field charges-field"><label for="charges">Charges</label><input id="charges" type="number" step="0.01" min="0" inputmode="decimal" placeholder="₹0.00"></div>
    <button class="accent" id="tradeSubmit" onclick="addTrade()">Add</button>
  </div>
@@ -617,11 +689,11 @@ function clearSelectedAsset(){selectedAsset=null;stock.value='';assetSelected.cl
 function openAssetAdd(){assetAddTitle.textContent=assetType==='company'?'Add New Company':'Add New Commodity';assetAddName.value=stock.value.trim();assetAddSymbol.value='';assetAddLogo.value='';assetAddDialog.classList.add('show');assetResults.classList.remove('show')}
 function closeAssetAdd(){assetAddDialog.classList.remove('show')}
 function saveNewAsset(){const name=assetAddName.value.trim();if(!name){alert('Enter a name.');return}const obj={name,symbol:assetAddSymbol.value.trim()};if(assetType==='company'){obj.logo=assetAddLogo.value.trim();const x=allCompanies().filter(a=>(a.name||'').toLowerCase()!==name.toLowerCase());const custom=getCustomCompanies().filter(a=>(a.name||'').toLowerCase()!==name.toLowerCase());custom.push(obj);localStorage.setItem(ASSET_CUSTOM_COMPANY_KEY,JSON.stringify(custom))}else{obj.icon='◆';const custom=getCustomCommodities().filter(a=>(a.name||'').toLowerCase()!==name.toLowerCase());custom.push(obj);localStorage.setItem(ASSET_CUSTOM_COMMODITY_KEY,JSON.stringify(custom))}closeAssetAdd();selectedAsset={...obj,type:assetType};stock.value=name;assetSelected.innerHTML=`${assetLogoHTML(selectedAsset)}<div><div class="asset-name">${name}</div><div class="asset-symbol">${obj.symbol||''}</div></div><button class="asset-clear" type="button" onclick="clearSelectedAsset()">×</button>`;assetSelected.classList.add('show')}
-function resolveTradeAsset(t){const type=t.assetType||'company';const a=findAssetByName(t.stock,type)||{name:t.stock,symbol:t.symbol||'',logo:t.logo||'',domain:t.domain||'',icon:t.icon||'',type};return {...a,type,logo:t.logo||a.logo||'',domain:t.domain||a.domain||'',icon:t.icon||a.icon||''}}
+function resolveTradeAsset(t){const type=t.assetType||'company';const lookup=t.baseStock||t.stock;const a=findAssetByName(lookup,type)||{name:lookup,symbol:t.symbol||'',logo:t.logo||'',domain:t.domain||'',icon:t.icon||'',type};return {...a,type,logo:t.logo||a.logo||'',domain:t.domain||a.domain||'',icon:t.icon||a.icon||''}}
 
 const SEED=[{"date":"2026-06-02","stock":"TATA TECHNOLOGIES LIMITED","buyPrice":721.76,"buyQty":200,"sellPrice":736.0,"sellQty":200,"gross":2848.0,"charges":295.42},{"date":"2026-06-03","stock":"VIP INDUSTRIES LTD","buyPrice":317.38,"buyQty":455,"sellPrice":323.0,"sellQty":455,"gross":2557.1,"charges":295.24},{"date":"2026-06-04","stock":"ADANI TOTAL GAS LIMITED","buyPrice":740.0,"buyQty":343,"sellPrice":748.0,"sellQty":343,"gross":2744.0,"charges":517.15},{"date":"2026-06-04","stock":"AMBER ENTERPRISES (I) LTD","buyPrice":7478.0,"buyQty":19,"sellPrice":7650.0,"sellQty":19,"gross":3268.0,"charges":291.24},{"date":"2026-06-05","stock":"IFCI LTD","buyPrice":81.4,"buyQty":1200,"sellPrice":80.71,"sellQty":1200,"gross":-828.0,"charges":197.11},{"date":"2026-06-15","stock":"USHA MARTIN LTD.","buyPrice":518.0,"buyQty":190,"sellPrice":496.0,"sellQty":190,"gross":-4180.0,"charges":195.22},{"date":"2026-06-15","stock":"USHA MARTIN LTD.","buyPrice":498.0,"buyQty":800,"sellPrice":496.0,"sellQty":800,"gross":-1600.0,"charges":805.75},{"date":"2026-06-18","stock":"HCL TECHNOLOGIES LTD","buyPrice":1155.0,"buyQty":425,"sellPrice":1158.01,"sellQty":425,"gross":1279.25,"charges":996.07},{"date":"2026-06-19","stock":"IFCI LTD","buyPrice":82.5,"buyQty":5950,"sellPrice":85.2,"sellQty":5950,"gross":16065.0,"charges":1011.05},{"date":"2026-07-31","stock":"HDFC AMC LIMITED","buyPrice":2565.0,"buyQty":248,"sellPrice":2606.0,"sellQty":248,"gross":10168.0,"charges":1299.42},{"date":"2026-08-03","stock":"ABB INDIA LIMITED","buyPrice":7230.0,"buyQty":88,"sellPrice":7430.0,"sellQty":88,"gross":17600.0,"charges":1307.19},{"date":"2026-08-03","stock":"MUTHOOT FINANCE LIMITED","buyPrice":2830.0,"buyQty":225,"sellPrice":2880.0,"sellQty":225,"gross":11250.0,"charges":1301.79},{"date":"2026-08-05","stock":"PRESTIGE ESTATE LTD","buyPrice":1598.0,"buyQty":460,"sellPrice":1624.03,"sellQty":460,"gross":11973.8,"charges":1501.79},{"date":"2026-08-11","stock":"PRESTIGE ESTATE LTD","buyPrice":1587.0,"buyQty":469,"sellPrice":1627.43,"sellQty":469,"gross":18961.67,"charges":1527.56},{"date":"2026-08-12","stock":"BAJAJ AUTO LIMITED","buyPrice":11640.0,"buyQty":64,"sellPrice":11805.0,"sellQty":64,"gross":10560.0,"charges":1520.38},{"date":"2026-08-12","stock":"BALRAMPUR CHINI MILLS LTD","buyPrice":596.5,"buyQty":1250,"sellPrice":606.41,"sellQty":1250,"gross":12387.5,"charges":1523.58},{"date":"2026-08-14","stock":"ACUTAAS CHEMICALS LIMITED","buyPrice":3108.81,"buyQty":235,"sellPrice":3149.96,"sellQty":235,"gross":9670.25,"charges":1490.32},{"date":"2026-08-17","stock":"PRESTIGE ESTATE LTD","buyPrice":1566.5,"buyQty":638,"sellPrice":1583.0,"sellQty":638,"gross":10527.0,"charges":2036.03},{"date":"2026-08-25","stock":"KALYAN JEWELLERS IND LTD","buyPrice":609.5,"buyQty":1635,"sellPrice":622.35,"sellQty":1635,"gross":21009.75,"charges":2040.79},{"date":"2026-08-28","stock":"ICICI PRUDENTIAL AMC LTD","buyPrice":3100.0,"buyQty":322,"sellPrice":3152.28,"sellQty":322,"gross":16834.16,"charges":2039.94}];
-const MARKET_KEYS={stock:'stockPnLCalendar_pwa_v21',future:'stockPnLCalendar_future_v21',option:'stockPnLCalendar_option_v21',commodity:'stockPnLCalendar_commodity_v21'};
-let activeMarket='stock';let activeFno='future';
+const MARKET_KEYS={stock:'stockPnLCalendar_pwa_v21',future:'stockPnLCalendar_future_v21',option:'stockPnLCalendar_option_v21',commodity:'stockPnLCalendar_commodity_v21',commodityOption:'stockPnLCalendar_commodity_option_v48'};
+let activeMarket='stock';let activeFno='future';let activeCommodity='future';let optionSide='CE';
 let trades=JSON.parse(localStorage.getItem(MARKET_KEYS[activeMarket])||'null')||SEED;
 const APP_TODAY=new Date();
 let cursor=new Date(APP_TODAY.getFullYear(),APP_TODAY.getMonth(),1), selected=null, deferredPrompt=null, editingIndex=null;
@@ -825,12 +897,32 @@ const money=v=>new Intl.NumberFormat('en-IN',{style:'currency',currency:'INR',ma
 const short=v=>{let a=Math.abs(v),s=v>=0?'+':'-';if(a>=100000)return s+(a/100000).toFixed(1)+'L';if(a>=1000)return s+(a/1000).toFixed(1)+'K';return s+a.toFixed(0)};
 const key=(y,m,d)=>`${y}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
 function save(){localStorage.setItem(MARKET_KEYS[activeMarket],JSON.stringify(trades));render();updateStats()}
-	function switchMarket(market){
+	function isOptionMarket(){return activeMarket==='option'||activeMarket==='commodityOption'}
+function isCommodityMarket(){return activeMarket==='commodity'||activeMarket==='commodityOption'}
+function refreshTradeModeUI(){
+  const opt=isOptionMarket();
+  document.getElementById('optionChainRow')?.classList.toggle('show',opt);
+  document.getElementById('optionBuyDetails')?.classList.toggle('show',opt);
+  document.getElementById('optionSellDetails')?.classList.toggle('show',opt);
+  document.querySelectorAll('.standard-trade-field').forEach(el=>el.style.display=opt?'none':'');
+  const lbl=document.getElementById('sellDateLabel');
+  if(lbl)lbl.textContent=opt?'Selling Date':'Selling Date (for Holding)';
+  if(opt)updateOptionTotals();
+}
+function switchMarket(market){
+  const fnoTabs=document.getElementById('fnoTabs');
+  const commodityTabs=document.getElementById('commodityTabs');
   if(market==='fno'){
-    document.getElementById('fnoTabs').style.display='grid';
+    fnoTabs.style.display='grid';
+    commodityTabs.style.display='none';
     activeMarket=activeFno;
+  }else if(market==='commodity'){
+    fnoTabs.style.display='none';
+    commodityTabs.style.display='grid';
+    activeMarket=activeCommodity==='option'?'commodityOption':'commodity';
   }else{
-    document.getElementById('fnoTabs').style.display='none';
+    fnoTabs.style.display='none';
+    commodityTabs.style.display='none';
     activeMarket=market;
   }
 
@@ -840,25 +932,35 @@ function save(){localStorage.setItem(MARKET_KEYS[activeMarket],JSON.stringify(tr
   document.querySelectorAll('.market-tab').forEach(btn=>{
     btn.classList.toggle('active',
       (market==='fno' && btn.dataset.market==='fno') ||
+      (market==='commodity' && btn.dataset.market==='commodity') ||
       btn.dataset.market===activeMarket
     );
   });
 
+  refreshTradeModeUI();
   render();
   updateStats();
 }
-document.querySelectorAll('.fno-tab').forEach(btn=>{
+document.querySelectorAll('.fno-tab[data-fno]').forEach(btn=>{
   btn.addEventListener('click',()=>{
     activeFno=btn.dataset.fno;
     activeMarket=activeFno;
-
     const saved=JSON.parse(localStorage.getItem(MARKET_KEYS[activeMarket])||'null');
     trades=saved||[];
-
-    document.querySelectorAll('.fno-tab').forEach(b=>{
-      b.classList.toggle('active',b.dataset.fno===activeFno);
-    });
-
+    document.querySelectorAll('.fno-tab[data-fno]').forEach(b=>b.classList.toggle('active',b.dataset.fno===activeFno));
+    refreshTradeModeUI();
+    render();
+    updateStats();
+  });
+});
+document.querySelectorAll('.commodity-subtab').forEach(btn=>{
+  btn.addEventListener('click',()=>{
+    activeCommodity=btn.dataset.commodity;
+    activeMarket=activeCommodity==='option'?'commodityOption':'commodity';
+    const saved=JSON.parse(localStorage.getItem(MARKET_KEYS[activeMarket])||'null');
+    trades=saved||[];
+    document.querySelectorAll('.commodity-subtab').forEach(b=>b.classList.toggle('active',b.dataset.commodity===activeCommodity));
+    refreshTradeModeUI();
     render();
     updateStats();
   });
@@ -897,10 +999,43 @@ function render(){
  let first=new Date(y,m,1),last=new Date(y,m+1,0).getDate(),off=(first.getDay()+6)%7,slots=[];for(let i=0;i<off;i++)slots.push(0);for(let d=1;d<=last;d++)slots.push(d);while(slots.length%7)slots.push(0);
  let html='';for(let w=0;w<slots.length/7;w++){let days='',wt=0;for(let dow=0;dow<5;dow++){let d=slots[w*7+dow];if(!d){days+='<div class="day empty"></div>';continue}let ds=key(y,m,d),arr=byDate(ds),net=sumDay(ds),openCount=arr.filter(isOpenTrade).length;wt+=net;let cls=net>0?'profit':net<0?'loss':'';days+=`<div class="day ${cls}" onclick="openDay('${ds}')"><div class="num">${d}</div><div class="pnl">${net?short(net):''}</div><div class="count">${openCount?'OPEN · '+openCount+' Trade'+(openCount>1?'s':''):''}</div></div>`}for(let dow=5;dow<7;dow++){let d=slots[w*7+dow];if(d)wt+=sumDay(key(y,m,d))}let wc=wt>0?'profit':wt<0?'loss':'';html+=`<div class="week">${days}<div class="gain ${wc}">${wt?short(wt):'—'}</div></div>`}weeks.innerHTML=html}
 function move(n){cursor=new Date(cursor.getFullYear(),cursor.getMonth()+n,1);render();updateStats()}
+function setOptionSide(side){
+  optionSide=side==='PE'?'PE':'CE';
+  document.getElementById('optionCallBtn')?.classList.toggle('active',optionSide==='CE');
+  document.getElementById('optionPutBtn')?.classList.toggle('active',optionSide==='PE');
+}
+function optionNumber(id){const el=document.getElementById(id);return el&&el.value!==''?Number(el.value):NaN}
+function optionMoney(v){return Number.isFinite(v)?money(v):'₹0.00'}
+function updateOptionTotals(){
+  const bp=optionNumber('optBuyPrice'),bl=optionNumber('optBuyLotSize'),bq=optionNumber('optBuyQtyPerLot');
+  const sp=optionNumber('optSellPrice'),sl=optionNumber('optSellLotSize'),sq=optionNumber('optSellQtyPerLot');
+  const bt=bp*bl*bq,st=sp*sl*sq;
+  const bTotal=document.getElementById('optBuyTotal'),sTotal=document.getElementById('optSellTotal');
+  if(bTotal)bTotal.value=Number.isFinite(bt)?optionMoney(bt):'';
+  if(sTotal)sTotal.value=Number.isFinite(st)?optionMoney(st):'';
+  const bc=document.getElementById('optBuyCalc'),sc=document.getElementById('optSellCalc');
+  if(bc)bc.textContent=Number.isFinite(bt)?`${bp.toFixed(2)} × ${bl} × ${bq} = ${optionMoney(bt)}`:'';
+  if(sc)sc.textContent=Number.isFinite(st)?`${sp.toFixed(2)} × ${sl} × ${sq} = ${optionMoney(st)}`:'';
+}
+function syncOptionLotSize(){
+  const b=document.getElementById('optBuyLotSize'),s=document.getElementById('optSellLotSize');
+  if(b&&s&&!s.value)s.value=b.value;
+}
+function clearOptionFields(){
+  ['optionStrike','optBuyPrice','optBuyLotSize','optBuyQtyPerLot','optBuyTotal','optSellPrice','optSellLotSize','optSellQtyPerLot','optSellTotal'].forEach(id=>{const e=document.getElementById(id);if(e)e.value=''});
+  const bc=document.getElementById('optBuyCalc'),sc=document.getElementById('optSellCalc');if(bc)bc.textContent='';if(sc)sc.textContent='';
+  setOptionSide('CE');
+}
 function clearTradeForm(){
-  stock.value='';document.getElementById('buyDate').value='';buyPrice.value='';buyQty.value='';sellPrice.value='';sellQty.value='';sellDate.value='';charges.value='';selectedAsset=null;if(window.assetSelected)assetSelected.classList.remove('show');if(window.assetResults)assetResults.classList.remove('show');setAssetType(activeMarket==='commodity'?'commodity':'company');
+  stock.value='';document.getElementById('buyDate').value='';buyPrice.value='';buyQty.value='';sellPrice.value='';sellQty.value='';sellDate.value='';charges.value='';
+  clearOptionFields();
+  selectedAsset=null;
+  if(window.assetSelected)assetSelected.classList.remove('show');
+  if(window.assetResults)assetResults.classList.remove('show');
+  setAssetType(isCommodityMarket()?'commodity':'company');
   editingIndex=null;
   if(document.getElementById('tradeSubmit')) tradeSubmit.textContent='Add';
+  refreshTradeModeUI();
 }
 let selectedDayTradeActionIndex=null;
 function openDay(ds,push=true){
@@ -943,10 +1078,13 @@ function tradeDetail(t){
   const bd=effectiveBuyDate(t),sd=effectiveSellDate(t);
   const buyDateText=bd?formatDateShort(bd):'—';
   const sellDateText=sd?formatDateShort(sd):'—';
-  const buyAmount=(t.buyPrice!==undefined&&t.buyPrice!==null&&t.buyPrice!=='')?money(+t.buyPrice):'—';
+  const optionTrade=!!t.optionTrade;
+  const buyTotal=optionTrade?(Number(t.totalBuyAmount)||((+t.buyPrice||0)*(+t.buyQty||0))):(+t.buyPrice||0);
+  const buyAmount=(t.buyPrice!==undefined&&t.buyPrice!==null&&t.buyPrice!=='')?money(buyTotal):'—';
   const buyQuantity=(t.buyQty!==undefined&&t.buyQty!==null&&t.buyQty!=='')?Number(t.buyQty):'—';
   const hasSell=t.sellPrice!==undefined&&t.sellPrice!==null&&t.sellPrice!==''&&t.sellQty!==undefined&&t.sellQty!==null&&t.sellQty!=='';
-  const sellAmount=hasSell?money(+t.sellPrice):'<span class="tl-open">OPEN / HOLDING</span>';
+  const sellTotal=optionTrade?(Number(t.totalSellAmount)||((+t.sellPrice||0)*(+t.sellQty||0))):(+t.sellPrice||0);
+  const sellAmount=hasSell?money(sellTotal):'<span class="tl-open">OPEN / HOLDING</span>';
   const sellQuantity=hasSell?Number(t.sellQty):'—';
   const remaining=Math.max(0,(Number(t.buyQty)||0)-(Number(t.sellQty)||0));
   const partial=hasSell&&remaining>0;
@@ -966,11 +1104,54 @@ function renderModal(){
   }).join('')||'<div class="small empty-dark">No trades added yet.</div>';
 }
 function addTrade(){
-  let st=stock.value.trim(),bd=document.getElementById('buyDate').value.trim(),
-      bp=parseFloat(buyPrice.value),bq=parseFloat(buyQty.value),
-      spText=sellPrice.value.trim(),sqText=sellQty.value.trim(),sd=sellDate.value.trim(),
-      sp=spText===''?null:parseFloat(spText),sq=sqText===''?null:parseFloat(sqText),
-      c=parseFloat(charges.value||0);
+  let st=stock.value.trim(),bd=document.getElementById('buyDate').value.trim(),sd=sellDate.value.trim(),c=parseFloat(charges.value||0);
+  if(Number.isNaN(c)||c<0)c=0;
+
+  if(isOptionMarket()){
+    const strike=(document.getElementById('optionStrike')?.value||'').trim();
+    const bp=optionNumber('optBuyPrice'),bl=optionNumber('optBuyLotSize'),bpl=optionNumber('optBuyQtyPerLot');
+    const spTxt=(document.getElementById('optSellPrice')?.value||'').trim();
+    const slTxt=(document.getElementById('optSellLotSize')?.value||'').trim();
+    const splTxt=(document.getElementById('optSellQtyPerLot')?.value||'').trim();
+    const sp=spTxt===''?null:Number(spTxt),sl=slTxt===''?null:Number(slTxt),spl=splTxt===''?null:Number(splTxt);
+
+    if(!st||!strike||!bd||!Number.isFinite(bp)||!Number.isFinite(bl)||!Number.isFinite(bpl)){
+      alert('Enter stock/commodity name, Chain Number, Buy Date, Buy Price, Lot Size and Quantity Per Lot.');return;
+    }
+    if(bp<0||bl<=0||bpl<=0){alert('Buy Price must be 0 or more; Lot Size and Quantity Per Lot must be greater than 0.');return}
+    const sellBlank=spTxt===''&&slTxt===''&&splTxt==='';
+    const sellComplete=spTxt!==''&&slTxt!==''&&splTxt!=='';
+    if(!sellBlank&&!sellComplete){alert('For a sold option, enter Sell Price, Lot Size and Quantity Per Lot together. Otherwise leave all three blank for OPEN / HOLDING.');return}
+    if(sellComplete&&(!Number.isFinite(sp)||!Number.isFinite(sl)||!Number.isFinite(spl)||sp<0||sl<=0||spl<=0)){alert('Sell Price must be 0 or more; Lot Size and Quantity Per Lot must be greater than 0.');return}
+    if(sellBlank&&sd){alert('Selling Date is only needed when sell details are entered.');return}
+    if(sellComplete&&!sd){alert('Please select the Selling Date.');return}
+    if(sd&&sd<bd){alert('Selling Date cannot be before the Buy Date.');return}
+
+    const buyUnits=bl*bpl;
+    const sellUnits=sellBlank?'':sl*spl;
+    const totalBuy=bp*buyUnits;
+    const totalSell=sellBlank?'':sp*sellUnits;
+    const displayStock=`${st} ${strike} ${optionSide}`;
+    const a=selectedAsset||findAssetByName(st,assetType)||{name:st,type:assetType};
+    const item={
+      date:sellBlank?bd:sd,buyDate:bd,stock:displayStock,baseStock:st,optionTrade:true,optionMarket:activeMarket,
+      strike,optionSide,assetType:assetType,symbol:a.symbol||'',logo:a.logo||'',domain:a.domain||'',icon:a.icon||'',
+      buyPrice:bp,buyQty:buyUnits,buyLotSize:bl,buyQtyPerLot:bpl,totalBuyAmount:totalBuy,
+      sellPrice:sellBlank?'':sp,sellQty:sellBlank?'':sellUnits,sellLotSize:sellBlank?'':sl,sellQtyPerLot:sellBlank?'':spl,totalSellAmount:sellBlank?'':totalSell,
+      sellDate:sellBlank?'':sd,gross:sellBlank?0:(totalSell-totalBuy),charges:c
+    };
+    if(editingIndex===null)trades.push(item);else trades[editingIndex]=item;
+    const destination=sellBlank?bd:sd;
+    clearTradeForm();
+    localStorage.setItem(MARKET_KEYS[activeMarket],JSON.stringify(trades));
+    if(destination!==selected){const d=new Date(destination+'T12:00:00');cursor=new Date(d.getFullYear(),d.getMonth(),1);selected=destination;}
+    render();updateStats();renderModal();
+    return;
+  }
+
+  let bp=parseFloat(buyPrice.value),bq=parseFloat(buyQty.value),
+      spText=sellPrice.value.trim(),sqText=sellQty.value.trim(),
+      sp=spText===''?null:parseFloat(spText),sq=sqText===''?null:parseFloat(sqText);
   if(!st||!bd||Number.isNaN(bp)||Number.isNaN(bq)){alert('Enter stock name, Buy Date, buying price and buying quantity.');return}
   if(bp<0||bq<=0){alert('Buying price must be 0 or more, and buying quantity must be greater than 0.');return}
   const sellBlank=(spText===''&&sqText==='');
@@ -980,7 +1161,6 @@ function addTrade(){
   if(sellBlank&&sd){alert('Selling Date is only needed when you enter Selling Price and Sell Qty.');return}
   if(sellComplete&&!sd){alert('Please select the Selling Date.');return}
   if(sd&&sd<bd){alert('Selling Date cannot be before the Buy Date.');return}
-  if(Number.isNaN(c)||c<0)c=0;
   const g=sellBlank?0:(sp*sq)-(bp*bq);
   const a=selectedAsset||findAssetByName(st,assetType)||{name:st,type:assetType};
   const item={date:sellBlank?bd:sd,buyDate:bd,stock:st,assetType:assetType,symbol:a.symbol||'',logo:a.logo||'',domain:a.domain||'',icon:a.icon||'',buyPrice:bp,buyQty:bq,sellPrice:sellBlank?'':sp,sellQty:sellBlank?'':sq,sellDate:sellBlank?'':sd,gross:g,charges:c};
@@ -995,14 +1175,32 @@ function editTrade(i){
   const t=trades[i]; if(!t)return;
   editingIndex=i;
   setAssetType(t.assetType||'company');
-  selectedAsset=resolveTradeAsset(t);stock.value=t.stock||'';assetSelected.innerHTML=`${assetLogoHTML(selectedAsset)}<div><div class="asset-name">${t.stock||''}</div><div class="asset-symbol">${t.symbol||''}</div></div><button class="asset-clear" type="button" onclick="clearSelectedAsset()">×</button>`;assetSelected.classList.add('show');assetResults.classList.remove('show');
+  selectedAsset=resolveTradeAsset(t);
+  const baseName=t.baseStock||t.stock||'';
+  stock.value=baseName;
+  assetSelected.innerHTML=`${assetLogoHTML(selectedAsset)}<div><div class="asset-name">${baseName}</div><div class="asset-symbol">${t.symbol||''}</div></div><button class="asset-clear" type="button" onclick="clearSelectedAsset()">×</button>`;
+  assetSelected.classList.add('show');assetResults.classList.remove('show');
   document.getElementById('buyDate').value=effectiveBuyDate(t);
-  buyPrice.value=t.buyPrice??'';
-  buyQty.value=t.buyQty??'';
-  sellPrice.value=t.sellPrice??'';
-  sellQty.value=t.sellQty??'';
   sellDate.value=effectiveSellDate(t);
   charges.value=t.charges??'';
+
+  if(t.optionTrade){
+    const strike=document.getElementById('optionStrike');if(strike)strike.value=t.strike??'';
+    setOptionSide(t.optionSide||'CE');
+    document.getElementById('optBuyPrice').value=t.buyPrice??'';
+    document.getElementById('optBuyLotSize').value=t.buyLotSize??'';
+    document.getElementById('optBuyQtyPerLot').value=t.buyQtyPerLot??'';
+    document.getElementById('optSellPrice').value=t.sellPrice??'';
+    document.getElementById('optSellLotSize').value=t.sellLotSize??t.buyLotSize??'';
+    document.getElementById('optSellQtyPerLot').value=t.sellQtyPerLot??'';
+    updateOptionTotals();
+  }else{
+    buyPrice.value=t.buyPrice??'';
+    buyQty.value=t.buyQty??'';
+    sellPrice.value=t.sellPrice??'';
+    sellQty.value=t.sellQty??'';
+  }
+  refreshTradeModeUI();
   tradeSubmit.textContent='Update';
   tradeForm.scrollIntoView({behavior:'smooth',block:'start'});
 }
