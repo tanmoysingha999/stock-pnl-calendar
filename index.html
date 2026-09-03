@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#0b1217">
 <!-- v46 FINAL: v45 fixed base + 3 approved points -->
-<!-- v48 FINAL: based on installed v47; Option Chain + Option lot layout + Commodity Future/Option -->
+<!-- v49 FINAL: based strictly on installed v48; only 3 approved Option layout changes -->
 <title>Stock P&L Calendar</title>
 
 
@@ -509,6 +509,157 @@ iframe[src*="netlify" i], iframe[title*="netlify" i], [class*="netlify" i], [id*
 .final-trade-card{background:linear-gradient(145deg,#071c27,#061722)!important;border-color:#29404b!important;color:#eef4f6!important;padding:10px!important;position:relative}.final-trade-card.profit-card{border-left:2px solid #20db6e!important}.final-trade-card.loss-card{border-left:2px solid #ff454f!important}.final-trade-card.open-card{border-left:2px solid #f2a31c!important}.final-trade-card .rowtop{align-items:stretch}.final-trade-card .trade-with-logo{flex:1;min-width:0}.final-trade-card .trade-main>b{color:#f5f7f8;font-size:13px}.final-trade-card .trade-card-logo{width:44px;height:44px;flex-basis:44px}.trade-ledger{display:grid;grid-template-columns:repeat(3,minmax(78px,1fr));border:1px solid #29404b;border-radius:7px;overflow:hidden;margin-top:7px;min-width:0}.trade-ledger>div{padding:6px 5px;text-align:center;border-right:1px solid #29404b}.trade-ledger>div:nth-child(3n){border-right:0}.trade-ledger>div:nth-child(n+4){border-top:1px solid #29404b}.trade-ledger small{display:block;color:#28dc70;font-size:7.5px;font-weight:800;white-space:nowrap}.trade-ledger .sell-cell small{color:#ff4e55}.trade-ledger b{display:block;color:#edf3f5;font-size:10px;margin-top:3px;white-space:nowrap}.trade-ledger .tl-open{color:#f5a51e;font-size:9px}.holding-remaining{grid-column:1/-1;margin-top:7px;border:1px solid #6c541d;border-radius:7px;padding:6px 8px;color:#f2a31c;display:flex;align-items:center;gap:7px;font-size:9px;flex-wrap:wrap}.holding-remaining span{color:#dce5e8;margin-left:auto}.final-trade-card .trade-side{width:112px;justify-content:flex-start}.final-trade-card .net{font-size:15px}.open-status{color:#f5a51e!important;font-size:11px!important;background:#5a3909;border-radius:999px;padding:4px 7px}.charges-box{text-align:center;color:#eef4f6;margin-top:auto}.charges-box small{display:block;font-size:8px;color:#b9c5ca}.charges-box b{font-size:10px}.final-trade-card .trade-actions{display:grid;width:100%;gap:5px}.final-trade-card .edit,.final-trade-card .del{background:#071a25;font-size:10px;padding:6px 7px}.final-trade-card .edit{color:#64aaff;border-color:#3579bf}.final-trade-card .del{color:#ff555d;border-color:#c83d45}.empty-dark{color:#aab7bd}
 @media(max-width:520px){.modal{padding:0;align-items:flex-end}.sheet{max-height:92vh;border-radius:20px 20px 0 0;padding:10px}.day-total{gap:8px;padding:7px 9px}.day-net-label{font-size:11px}.day-net{font-size:13px}.final-trade-card{padding:8px!important}.final-trade-card .rowtop{gap:6px}.final-trade-card .trade-with-logo{gap:6px}.final-trade-card .trade-card-logo{width:38px;height:38px;flex-basis:38px}.final-trade-card .trade-main>b{font-size:11px}.trade-ledger{grid-template-columns:repeat(3,minmax(62px,1fr))}.trade-ledger>div{padding:5px 2px}.trade-ledger small{font-size:6.2px}.trade-ledger b{font-size:8.2px}.final-trade-card .trade-side{width:82px}.final-trade-card .net{font-size:12px}.final-trade-card .edit,.final-trade-card .del{font-size:8.5px;padding:5px 3px}.charges-box b{font-size:8.5px}.holding-remaining{font-size:7.5px}.holding-remaining span{margin-left:0}}
 </style>
+
+<style id="v49-option-final-layout">
+/* v49 Point 1: Chain No + Call + Put stay on ONE row */
+#tradeForm .option-chain-grid{
+  display:grid!important;
+  grid-template-columns:minmax(0,1.15fr) minmax(88px,.8fr) minmax(88px,.8fr)!important;
+  gap:8px!important;
+  align-items:start!important;
+}
+#tradeForm .option-chain-grid .option-side-btn{
+  grid-column:auto!important;
+  width:100%!important;
+  min-width:0!important;
+  height:46px!important;
+  margin:0!important;
+  padding:0 8px!important;
+}
+#tradeForm .option-chain-grid .option-strike-wrap{min-width:0!important}
+
+/* v49 Point 2: Edit/Delete hidden until the trade card is tapped */
+.final-trade-card .trade-actions{display:none!important}
+.final-trade-card.trade-actions-open .trade-actions{
+  display:grid!important;
+  grid-template-columns:1fr 1fr!important;
+  gap:7px!important;
+  width:100%!important;
+  margin-top:7px!important;
+}
+
+/* v49 Point 3: F&O Option + Commodity Option use the same spacious BUY / SELL summary */
+.final-trade-card.option-summary-card .rowtop{
+  display:grid!important;
+  grid-template-columns:minmax(0,1fr) auto!important;
+  gap:10px!important;
+  align-items:start!important;
+}
+.final-trade-card.option-summary-card .trade-with-logo{
+  min-width:0!important;
+  width:100%!important;
+}
+.final-trade-card.option-summary-card .trade-main{min-width:0!important;width:100%!important}
+.final-trade-card.option-summary-card .trade-main>b{
+  font-size:14px!important;
+  line-height:1.2!important;
+}
+.option-summary-ledger{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:10px;
+  margin-top:9px;
+  min-width:0;
+}
+.option-summary-side{
+  min-width:0;
+  padding:8px 9px;
+  border:1px solid #29404b;
+  border-radius:9px;
+  background:#061720;
+}
+.option-summary-title{
+  display:block;
+  font-size:11px;
+  font-weight:900;
+  margin-bottom:7px;
+}
+.buy-summary .option-summary-title{color:#23df70}
+.sell-summary .option-summary-title{color:#ff514f}
+.open-card .sell-summary .option-summary-title{color:#f0a11b}
+.option-summary-cols{
+  display:grid;
+  grid-template-columns:1.2fr .95fr 1.15fr;
+  gap:8px;
+  align-items:start;
+}
+.option-summary-cols>div{min-width:0}
+.option-summary-cols small{
+  display:block;
+  color:#aab8bf;
+  font-size:8.5px;
+  line-height:1.15;
+  margin-bottom:4px;
+  white-space:normal;
+}
+.option-summary-cols b{
+  display:block;
+  color:#eef4f6;
+  font-size:10.5px;
+  line-height:1.2;
+  white-space:normal;
+  overflow-wrap:anywhere;
+}
+.buy-summary .option-summary-cols>div:last-child b{color:#31d978}
+.sell-summary .option-summary-cols>div:last-child b{color:#ff625e}
+.open-card .sell-summary .option-summary-cols>div:last-child b{color:#f0a11b}
+
+.final-trade-card.option-summary-card .trade-side{
+  width:104px!important;
+  min-width:104px!important;
+  gap:6px!important;
+}
+.final-trade-card.option-summary-card.trade-actions-open .trade-side{
+  width:138px!important;
+  min-width:138px!important;
+}
+.final-trade-card.option-summary-card .charges-box{
+  margin-top:4px!important;
+  text-align:right!important;
+}
+.final-trade-card.option-summary-card .charges-box small{font-size:8px!important}
+.final-trade-card.option-summary-card .charges-box b{font-size:10px!important}
+
+@media(max-width:520px){
+  #tradeForm .option-chain-grid{
+    grid-template-columns:minmax(0,1.2fr) minmax(72px,.8fr) minmax(72px,.8fr)!important;
+    gap:6px!important;
+  }
+  #tradeForm .option-chain-grid .option-side-btn{
+    height:43px!important;
+    font-size:13px!important;
+    padding:0 4px!important;
+  }
+  .final-trade-card.option-summary-card .rowtop{
+    grid-template-columns:minmax(0,1fr) 80px!important;
+    gap:7px!important;
+  }
+  .final-trade-card.option-summary-card.trade-actions-open .rowtop{
+    grid-template-columns:minmax(0,1fr) 112px!important;
+  }
+  .final-trade-card.option-summary-card .trade-card-logo{
+    width:36px!important;height:36px!important;flex-basis:36px!important;
+  }
+  .final-trade-card.option-summary-card .trade-main>b{font-size:11px!important}
+  .option-summary-ledger{grid-template-columns:1fr 1fr;gap:5px;margin-top:7px}
+  .option-summary-side{padding:6px 5px}
+  .option-summary-title{font-size:9px;margin-bottom:5px}
+  .option-summary-cols{grid-template-columns:1.12fr .95fr 1.1fr;gap:4px}
+  .option-summary-cols small{font-size:6.7px;margin-bottom:3px}
+  .option-summary-cols b{font-size:8.3px}
+  .final-trade-card.option-summary-card .trade-side{
+    width:80px!important;min-width:80px!important;
+  }
+  .final-trade-card.option-summary-card.trade-actions-open .trade-side{
+    width:112px!important;min-width:112px!important;
+  }
+  .final-trade-card.trade-actions-open .trade-actions{
+    grid-template-columns:1fr!important;
+    gap:5px!important;
+  }
+}
+</style>
+
 </head>
 <body>
 <div class="app">
@@ -1088,6 +1239,28 @@ function tradeDetail(t){
   const sellQuantity=hasSell?Number(t.sellQty):'—';
   const remaining=Math.max(0,(Number(t.buyQty)||0)-(Number(t.sellQty)||0));
   const partial=hasSell&&remaining>0;
+
+  if(optionTrade){
+    return `<div class="option-summary-ledger">
+      <section class="option-summary-side buy-summary">
+        <strong class="option-summary-title">BUY</strong>
+        <div class="option-summary-cols">
+          <div><small>Buy Date</small><b>${buyDateText}</b></div>
+          <div><small>Buy Quantity</small><b>${buyQuantity}</b></div>
+          <div><small>Buy Amount</small><b>${buyAmount}</b></div>
+        </div>
+      </section>
+      <section class="option-summary-side sell-summary">
+        <strong class="option-summary-title">${hasSell?'SELL':'OPEN / HOLDING'}</strong>
+        <div class="option-summary-cols">
+          <div><small>Sell Date</small><b>${sellDateText}</b></div>
+          <div><small>Sell Quantity</small><b>${sellQuantity}</b></div>
+          <div><small>Sell Amount</small><b>${sellAmount}</b></div>
+        </div>
+      </section>
+    </div>${partial?`<div class="holding-remaining">🔒 <strong>HOLDING REMAINING</strong><span>${remaining} Qty @ Avg Buy ${money(+t.buyPrice||0)}</span></div>`:''}`;
+  }
+
   return `<div class="trade-ledger"><div><small>BUY DATE</small><b>${buyDateText}</b></div><div><small>BUY AMOUNT</small><b>${buyAmount}</b></div><div><small>BUY QUANTITY</small><b>${buyQuantity}</b></div><div class="sell-cell"><small>SELL DATE</small><b>${sellDateText}</b></div><div class="sell-cell"><small>SELL AMOUNT</small><b>${sellAmount}</b></div><div class="sell-cell"><small>SELL QUANTITY</small><b>${sellQuantity}</b></div></div>${partial?`<div class="holding-remaining">🔒 <strong>HOLDING REMAINING</strong><span>${remaining} Qty @ Avg Buy ${money(+t.buyPrice||0)}</span></div>`:''}`;
 }
 function renderModal(){
@@ -1100,7 +1273,7 @@ function renderModal(){
     const remaining=Math.max(0,(Number(t.buyQty)||0)-(Number(t.sellQty)||0));
     const partial=Number(t.sellQty)>0&&remaining>0;
     const status=open?'OPEN / HOLDING':money(net);
-    return `<div class="row final-trade-card ${open?'open-card':(net>=0?'profit-card':'loss-card')} ${selectedDayTradeActionIndex===idx?'trade-actions-open':''}" onclick="showDayTradeActions(${idx})"><div class="rowtop"><div class="trade-with-logo">${assetLogoHTML(a,'trade-card-logo')}<div class="trade-main"><b>${escapeHtml(t.stock)}</b>${tradeDetail(t)}</div></div><div class="trade-side"><div class="net ${open?'open-status':(net>=0?'profitT':'lossT')}">${status}</div><div class="charges-box"><small>Charges</small><b>${money(+t.charges||0)}</b></div><div class="trade-actions"><button class="edit" onclick="event.stopPropagation();editTrade(${idx})">✎ Edit</button><button class="del" onclick="event.stopPropagation();deleteTrade(${idx})">🗑 Delete</button></div></div></div>${partial?'':''}</div>`;
+    return `<div class="row final-trade-card ${t.optionTrade?'option-summary-card':''} ${open?'open-card':(net>=0?'profit-card':'loss-card')} ${selectedDayTradeActionIndex===idx?'trade-actions-open':''}" onclick="showDayTradeActions(${idx})"><div class="rowtop"><div class="trade-with-logo">${assetLogoHTML(a,'trade-card-logo')}<div class="trade-main"><b>${escapeHtml(t.stock)}</b>${tradeDetail(t)}</div></div><div class="trade-side"><div class="net ${open?'open-status':(net>=0?'profitT':'lossT')}">${status}</div><div class="charges-box"><small>Charges</small><b>${money(+t.charges||0)}</b></div><div class="trade-actions"><button class="edit" onclick="event.stopPropagation();editTrade(${idx})">✎ Edit</button><button class="del" onclick="event.stopPropagation();deleteTrade(${idx})">🗑 Delete</button></div></div></div>${partial?'':''}</div>`;
   }).join('')||'<div class="small empty-dark">No trades added yet.</div>';
 }
 function addTrade(){
