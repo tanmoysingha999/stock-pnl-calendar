@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#0b1217">
 <!-- v46 FINAL: v45 fixed base + 3 approved points -->
-<!-- v50 FINAL: based strictly on installed v49; 5 approved fixes + sequence-aware Back -->
+<!-- v52 FINAL CANDIDATE: clean v50 base + 5 approved fixes; data-safe -->
 <title>Stock P&L Calendar</title>
 
 
@@ -788,6 +788,23 @@ iframe[src*="netlify" i], iframe[title*="netlify" i], [class*="netlify" i], [id*
 }
 </style>
 
+
+<style id="v52-final-five-points">
+/* v52 Point 1 — independent Stock P&L Summary hierarchy */
+.summary-shell{display:grid;gap:9px}
+.summary-market-tabs{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:7px;margin:2px 0 8px}
+.summary-market-tabs button,.summary-filter-tabs button{border:1.5px solid #30444e;border-radius:11px;background:#071821;color:#cfd8dc;min-height:40px;font-size:13px;font-weight:700}
+.summary-market-tabs button.active{background:linear-gradient(135deg,var(--mint1),var(--mint2));border-color:#84e6c5;color:#071913}
+.summary-category-card{display:grid;grid-template-columns:1fr auto;align-items:center;border:1px solid #29404b;border-radius:13px;background:#081a24;padding:12px 11px;cursor:pointer}
+.summary-category-card b{font-size:14px}.summary-category-card small{display:block;color:#8fa0a8;font-size:10px;margin-top:3px}.summary-category-card .history-chevron{font-size:26px}
+.summary-detail-head{display:flex;align-items:center;gap:8px;margin-bottom:8px}.summary-back{border:0;background:transparent;color:#fff;font-size:29px;line-height:1;padding:0 3px}.summary-detail-title{font-size:17px;font-weight:800}
+.summary-metrics{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin:6px 0 8px}.summary-metric{border:1px solid #29404b;border-radius:11px;background:#081923;text-align:center;padding:8px 4px}.summary-metric small{display:block;color:#8fa0a8;font-size:8.5px}.summary-metric b{display:block;margin-top:4px;font-size:11px}.summary-profit{color:var(--green)}.summary-loss{color:#ff625e}.summary-net{color:#5fa9ff}
+.summary-filter-tabs{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin:7px 0 8px}.summary-filter-tabs button{min-height:34px;font-size:10px}.summary-filter-tabs button.active{background:#123628;border-color:#39d97b;color:#57e98e}
+.summary-list .history-item{cursor:pointer}.summary-list .history-meta{white-space:normal}.summary-empty{padding:18px 8px;text-align:center;color:#81939c;font-size:11px}
+/* v52 Point 2 — Future uses the approved derivative layout */
+.future-mode .option-chain-row>label{color:#edf3f5}.future-mode #optionStrike{text-align:center}.future-mode .option-side-btn.call.active{background:linear-gradient(135deg,#0d783a,#11a857);border-color:#22c56a}.future-mode .option-side-btn.put.active{background:linear-gradient(135deg,#9b242d,#d53843);border-color:#ef4d59}
+</style>
+
 </head>
 <body>
 <div class="app">
@@ -1149,45 +1166,41 @@ function renderAppShell(view){
  document.querySelector('.cal').style.display=view==='calendar'?'block':'none';
  fyView.style.display=view==='fy'?'block':'none';historyView.style.display=view==='history'?'block':'none';tradeDetailsView.style.display=view==='tradeDetails'?'block':'none';transactionView.style.display=(view==='transaction'||view==='broker')?'block':'none';document.getElementById('bottomNav').style.display=view==='tradeDetails'?'none':'grid';
 }
-function pushSection(view){if(history.state&&history.state.view&&history.state.view!=='calendar')history.replaceState({pnlApp:true,view:'calendar',marketGroup:'stock',marketSub:null},'');history.pushState({pnlApp:true,view},'')}
+function pushSection(view,extra={}){
+ const cur=history.state||{};
+ if(cur.view===view&&!cur.modal){history.replaceState({pnlApp:true,view,...extra},'');return;}
+ history.pushState({pnlApp:true,view,...extra},'');
+}
 window.addEventListener('popstate',e=>{
- const s=e.state||{view:'calendar',marketGroup:'stock',marketSub:null};const v=s.view||'calendar';
+ const s=e.state||{view:'calendar',marketGroup:'stock',marketSub:null};
+ const v=s.view||'calendar';
 
- if(document.getElementById('appValidationNotice')?.classList.contains('show')){
-   closeAppNotice();
-   return;
- }
- if(selectedDayTradeActionIndex!==null){
-   selectedDayTradeActionIndex=null;
-   if(modal.classList.contains('show'))renderModal();
-   return;
- }
- if(selectedRecentFundId!==null){
-   selectedRecentFundId=null;appView='transaction';renderAppShell('transaction');renderFundHome();setBottomActive('bnTransaction');return;
- }
+ if(document.getElementById('appValidationNotice')?.classList.contains('show')){closeAppNotice();return;}
+ if(selectedDayTradeActionIndex!==null){selectedDayTradeActionIndex=null;if(modal.classList.contains('show'))renderModal();return;}
+ if(selectedRecentFundId!==null){selectedRecentFundId=null;appView='transaction';renderAppShell('transaction');renderFundHome();setBottomActive('bnTransaction');return;}
  if(fundModal.classList.contains('show'))closeFundModal();
-
- if(s.modal==='day'&&s.date){
-   appView='calendar';renderAppShell('calendar');setBottomActive('bnCalendar');openDay(s.date,false);return;
- }
 
  if(modal.classList.contains('show'))closeModal(true);
 
- if(v==='broker'){currentBroker=s.broker||currentBroker;appView='broker';renderAppShell('broker');renderBrokerSummary();return}
- if(v==='transaction'){currentBroker=null;transactionTab='fund';appView='transaction';renderAppShell('transaction');renderFundHome();setBottomActive('bnTransaction');return}
- if(v==='tradeDetails'){appView='tradeDetails';renderAppShell('tradeDetails');renderTradeDetails(Number(s.tradeIndex));return}
- if(v==='history'){appView='history';renderAppShell('history');showHistoryView(false);return}
- if(v==='fy'){appView='fy';renderAppShell('fy');showFySummary(false);return}
+ if(s.modal==='day'&&s.date){
+   if(s.marketGroup)applyMarketSelection(s.marketGroup,s.marketSub||null,false);
+   appView='calendar';renderAppShell('calendar');setBottomActive('bnCalendar');
+   const d=new Date(s.date+'T12:00:00');if(!isNaN(d))cursor=new Date(d.getFullYear(),d.getMonth(),1);
+   render();updateStats();openDay(s.date,false);return;
+ }
+ if(v==='broker'){currentBroker=s.broker||currentBroker;appView='broker';renderAppShell('broker');renderBrokerSummary();return;}
+ if(v==='transaction'){currentBroker=null;transactionTab='fund';appView='transaction';renderAppShell('transaction');renderFundHome();setBottomActive('bnTransaction');return;}
+ if(v==='tradeDetails'){appView='tradeDetails';renderAppShell('tradeDetails');renderTradeDetails(Number(s.tradeIndex));return;}
+ if(v==='history'){showHistoryView(false,s.summaryCategory??null,s.summaryFilter||'all');return;}
+ if(v==='fy'){showFySummary(false);return;}
 
  appView='calendar';renderAppShell('calendar');setBottomActive('bnCalendar');
- if(s.marketGroup){
-   applyMarketSelection(s.marketGroup,s.marketSub||null,false);
- }else{
-   applyMarketSelection('stock',null,false);
+ applyMarketSelection(s.marketGroup||'stock',s.marketSub||null,false);
+ if(Number.isInteger(s.cursorYear)&&Number.isInteger(s.cursorMonth)){
+   cursor=new Date(s.cursorYear,s.cursorMonth,1);render();updateStats();
  }
 });
-history.replaceState({pnlApp:true,view:'calendar'},'');
-
+history.replaceState({pnlApp:true,view:'calendar',marketGroup:'stock',marketSub:null,cursorYear:cursor.getFullYear(),cursorMonth:cursor.getMonth()},'');
 
 function ensureAppNotice(){
   let n=document.getElementById('appValidationNotice');
@@ -1652,13 +1665,161 @@ function openHistoryTrade(i){i=Number(i);if(!Number.isInteger(i)||!trades[i])ret
 function showTransactionView(push=true){currentBroker=null;transactionTab='fund';appView='transaction';renderAppShell('transaction');setBottomActive('bnTransaction');renderFundHome();if(push)pushSection('transaction')}
 
 function quickToday(){if(isMarketFolderOnly()){showAppNotice('Select Future or Option first.');return;}let t=new Date(),ds=key(t.getFullYear(),t.getMonth(),t.getDate());cursor=new Date(t.getFullYear(),t.getMonth(),1);render();updateStats();openDay(ds)}
-function exportData(){let payload={version:43,trades,customCompanies:getCustomCompanies(),customCommodities:getCustomCommodities(),fundTransactions:getFundTransactions(),brokers:getBrokers()};let blob=new Blob([JSON.stringify(payload,null,2)],{type:'application/json'}),a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='stock-pnl-calendar-backup.json';a.click();URL.revokeObjectURL(a.href)}
+function exportData(){let payload={version:52,trades,customCompanies:getCustomCompanies(),customCommodities:getCustomCommodities(),fundTransactions:getFundTransactions(),brokers:getBrokers()};let blob=new Blob([JSON.stringify(payload,null,2)],{type:'application/json'}),a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='stock-pnl-calendar-backup.json';a.click();URL.revokeObjectURL(a.href)}
 function importData(e){let f=e.target.files[0];if(!f)return;let r=new FileReader();r.onload=()=>{try{let x=JSON.parse(r.result);if(Array.isArray(x)){trades=x}else if(x&&Array.isArray(x.trades)){trades=x.trades;if(Array.isArray(x.customCompanies))localStorage.setItem(ASSET_CUSTOM_COMPANY_KEY,JSON.stringify(x.customCompanies));if(Array.isArray(x.customCommodities))localStorage.setItem(ASSET_CUSTOM_COMMODITY_KEY,JSON.stringify(x.customCommodities));if(Array.isArray(x.fundTransactions))saveFundTransactions(x.fundTransactions);if(Array.isArray(x.brokers)&&x.brokers.length)saveBrokers(x.brokers)}else throw 0;save();alert('Backup imported.')}catch{alert('Invalid backup file.')}};r.readAsText(f);e.target.value=''}
 modal.addEventListener('click',e=>{if(e.target===modal)closeModal()});document.addEventListener('click',e=>{if(assetResults&&!e.target.closest('.asset-picker'))assetResults.classList.remove('show')});
 document.querySelectorAll('.market-tab').forEach(btn=>{
   btn.addEventListener('click',()=>switchMarket(btn.dataset.market));
 });
 render();updateStats();
+</script>
+
+
+<script id="v52-final-five-points-js">
+/* v52 FINAL CANDIDATE — clean v50 base + 5 approved fixes. No localStorage keys are deleted or renamed. */
+let summaryCategory=null,summaryFilter='all',futureSide='BUY';
+function isFutureMarket(){return activeMarket==='future'||activeMarket==='commodity'}
+function activeSubKey(){return activeMarketGroup==='fno'?activeFno:(activeMarketGroup==='commodity'?activeCommodity:null)}
+function futureOrdinal(n){const v=n%100;return n+((v>=11&&v<=13)?'th':({1:'st',2:'nd',3:'rd'}[n%10]||'th'))}
+function futureDateLabel(ds){if(!ds)return '';const d=new Date(ds+'T12:00:00');if(isNaN(d))return ds;return `${futureOrdinal(d.getDate())} ${d.toLocaleString('en-IN',{month:'short'})} ${d.getFullYear()}`}
+function setFutureSide(side){futureSide=side==='SELL'?'SELL':'BUY';const b=document.getElementById('optionCallBtn'),s=document.getElementById('optionPutBtn');if(b)b.classList.toggle('active',futureSide==='BUY');if(s)s.classList.toggle('active',futureSide==='SELL')}
+
+const v50RefreshTradeModeUI=refreshTradeModeUI;
+refreshTradeModeUI=function(){
+ const derivative=isOptionMarket()||isFutureMarket(),future=isFutureMarket();
+ document.body.classList.toggle('future-mode',future);
+ document.getElementById('optionChainRow')?.classList.toggle('show',derivative);
+ document.getElementById('optionBuyDetails')?.classList.toggle('show',derivative);
+ document.getElementById('optionSellDetails')?.classList.toggle('show',derivative);
+ document.querySelectorAll('.standard-trade-field').forEach(el=>el.style.display=derivative?'none':'');
+ const row=document.getElementById('optionChainRow'),label=row?.querySelector(':scope > label'),small=row?.querySelector('.option-strike-wrap small'),input=document.getElementById('optionStrike'),call=document.getElementById('optionCallBtn'),put=document.getElementById('optionPutBtn'),sellLbl=document.getElementById('sellDateLabel');
+ if(future){
+   if(label)label.textContent='Future Date';if(small)small.textContent='Contract / Expiry Date';
+   if(input){input.type='date';input.removeAttribute('min');input.removeAttribute('step');input.placeholder='';}
+   if(call){call.textContent='Buy';call.setAttribute('onclick',"setFutureSide('BUY')");}
+   if(put){put.textContent='Sell';put.setAttribute('onclick',"setFutureSide('SELL')");}
+   if(sellLbl)sellLbl.textContent='Selling Date';setFutureSide(futureSide);
+ }else if(isOptionMarket()){
+   if(label)label.textContent='Option Chain';if(small)small.textContent='Strike / Chain No.';
+   if(input){input.type='number';input.min='0';input.step='1';input.inputMode='numeric';}
+   if(call){call.textContent='Call';call.setAttribute('onclick',"setOptionSide('CE')");}
+   if(put){put.textContent='Put';put.setAttribute('onclick',"setOptionSide('PE')");}
+   if(sellLbl)sellLbl.textContent='Selling Date';setOptionSide(optionSide);
+ }else{
+   if(input){input.type='number';input.min='0';input.step='1';}
+   if(call){call.textContent='Call';call.setAttribute('onclick',"setOptionSide('CE')");}
+   if(put){put.textContent='Put';put.setAttribute('onclick',"setOptionSide('PE')");}
+   if(sellLbl)sellLbl.textContent='Selling Date (for Holding)';
+ }
+ if(derivative)updateOptionTotals();
+};
+
+const v50ClearOptionFields=clearOptionFields;
+clearOptionFields=function(){
+ ['optionStrike','optBuyPrice','optBuyLotSize','optBuyQtyPerLot','optBuyTotal','optSellPrice','optSellLotSize','optSellQtyPerLot','optSellTotal'].forEach(id=>{const e=document.getElementById(id);if(e)e.value=''});
+ const bc=document.getElementById('optBuyCalc'),sc=document.getElementById('optSellCalc');if(bc)bc.textContent='';if(sc)sc.textContent='';
+ if(isFutureMarket())setFutureSide('BUY');else setOptionSide('CE');
+};
+
+const v50CalcGross=calcGross,v50TradeGross=tradeGross,v50IsOptionTradeRecord=isOptionTradeRecord,v50EditTrade=editTrade,v50AddTrade=addTrade;
+calcGross=function(t){
+ if(t?.futureTrade&&!isOpenTrade(t)){
+   const buy=Number(t.totalBuyAmount)||((+t.buyPrice||0)*(+t.buyQty||0)),sell=Number(t.totalSellAmount)||((+t.sellPrice||0)*(+t.sellQty||0));
+   return t.futureSide==='SELL'?(buy-sell):(sell-buy);
+ }
+ return v50CalcGross(t);
+};
+tradeGross=function(t){if(t?.futureTrade)return calcGross(t);return v50TradeGross(t)};
+isOptionTradeRecord=function(t){return !!(t?.futureTrade)||v50IsOptionTradeRecord(t)};
+
+addTrade=function(){
+ if(!isFutureMarket())return v50AddTrade();
+ let st=stock.value.trim(),bd=document.getElementById('buyDate').value.trim(),sd=sellDate.value.trim(),c=parseFloat(charges.value||0);if(Number.isNaN(c)||c<0)c=0;
+ const futureDate=(document.getElementById('optionStrike')?.value||'').trim();
+ const bpTxt=(document.getElementById('optBuyPrice')?.value||'').trim(),blTxt=(document.getElementById('optBuyLotSize')?.value||'').trim(),bplTxt=(document.getElementById('optBuyQtyPerLot')?.value||'').trim();
+ const spTxt=(document.getElementById('optSellPrice')?.value||'').trim(),slTxt=(document.getElementById('optSellLotSize')?.value||'').trim(),splTxt=(document.getElementById('optSellQtyPerLot')?.value||'').trim();
+ const bp=bpTxt===''?NaN:Number(bpTxt),bl=blTxt===''?NaN:Number(blTxt),bpl=bplTxt===''?NaN:Number(bplTxt),sp=spTxt===''?null:Number(spTxt),sl=slTxt===''?null:Number(slTxt),spl=splTxt===''?null:Number(splTxt);
+ if(!st){showAppNotice('Select the company, index or commodity name.','stock');return}
+ if(!futureDate){showAppNotice('Select the Future Date.','optionStrike');return}
+ if(!bd){showAppNotice('Select the Buy Date.','buyDate');return}
+ if(!Number.isFinite(bp)||bp<0){showAppNotice('Enter a valid Buy Price.','optBuyPrice');return}
+ if(!Number.isFinite(bl)||bl<=0){showAppNotice('Enter a Lot Size greater than 0.','optBuyLotSize');return}
+ if(!Number.isFinite(bpl)||bpl<=0){showAppNotice('Enter Quantity Per Lot greater than 0.','optBuyQtyPerLot');return}
+ const sellHasDate=!!sd,sellHasPrice=spTxt!==''&&Number(spTxt)!==0,sellHasLot=slTxt!==''&&Number(slTxt)!==0,sellHasQty=splTxt!==''&&Number(splTxt)!==0,anySell=sellHasDate||sellHasPrice||sellHasLot||sellHasQty;
+ const sellBlank=!anySell,sellComplete=sellHasDate&&spTxt!==''&&slTxt!==''&&splTxt!=='';
+ if(!sellBlank&&!sellComplete){showAppNotice('For a closed Future trade, enter Selling Date, Sell Price, Lot Size and Quantity Per Lot together. Otherwise keep the Sell section blank for OPEN / HOLDING.',!sellHasDate?'sellDate':!sellHasPrice?'optSellPrice':!sellHasLot?'optSellLotSize':'optSellQtyPerLot');return}
+ if(sellComplete){if(!Number.isFinite(sp)||sp<0){showAppNotice('Enter a valid Sell Price.','optSellPrice');return}if(!Number.isFinite(sl)||sl<=0){showAppNotice('Sell Lot Size must be greater than 0.','optSellLotSize');return}if(!Number.isFinite(spl)||spl<=0){showAppNotice('Sell Quantity Per Lot must be greater than 0.','optSellQtyPerLot');return}if(sd<bd){showAppNotice('Selling Date cannot be before the Buy Date.','sellDate');return}}
+ const buyUnits=bl*bpl,sellUnits=sellBlank?'':sl*spl,totalBuy=bp*buyUnits,totalSell=sellBlank?'':sp*sellUnits;
+ const displayStock=`${st} ${futureDateLabel(futureDate)} Future ${futureSide==='SELL'?'Sell':'Buy'}`;
+ const a=selectedAsset||findAssetByName(st,assetType)||{name:st,type:assetType};
+ const gross=sellBlank?0:(futureSide==='SELL'?(totalBuy-totalSell):(totalSell-totalBuy));
+ const item={date:sellBlank?bd:sd,buyDate:bd,stock:displayStock,baseStock:st,optionTrade:true,futureTrade:true,futureDate,futureSide,optionMarket:activeMarket,strike:futureDate,optionSide:futureSide,assetType:assetType,symbol:a.symbol||'',logo:a.logo||'',domain:a.domain||'',icon:a.icon||'',buyPrice:bp,buyQty:buyUnits,buyLotSize:bl,buyQtyPerLot:bpl,totalBuyAmount:totalBuy,sellPrice:sellBlank?'':sp,sellQty:sellBlank?'':sellUnits,sellLotSize:sellBlank?'':sl,sellQtyPerLot:sellBlank?'':spl,totalSellAmount:sellBlank?'':totalSell,sellDate:sellBlank?'':sd,gross,charges:c};
+ if(editingIndex===null)trades.push(item);else trades[editingIndex]=item;
+ const destination=sellBlank?bd:sd;clearTradeForm();localStorage.setItem(MARKET_KEYS[activeMarket],JSON.stringify(trades));
+ if(destination!==selected){const d=new Date(destination+'T12:00:00');cursor=new Date(d.getFullYear(),d.getMonth(),1);selected=destination;}
+ render();updateStats();renderModal();
+};
+
+editTrade=function(i){
+ const t=trades[i];if(!t)return;
+ v50EditTrade(i);
+ if(t.futureTrade){
+   const input=document.getElementById('optionStrike');if(input){input.type='date';input.value=t.futureDate||t.strike||'';}
+   futureSide=t.futureSide==='SELL'?'SELL':'BUY';refreshTradeModeUI();setFutureSide(futureSide);updateOptionTotals();
+ }
+};
+
+function summarySourceDefs(cat){
+ if(cat==='fno')return [{key:'future',group:'fno',sub:'future'},{key:'option',group:'fno',sub:'option'}];
+ if(cat==='commodity')return [{key:'commodity',group:'commodity',sub:'future'},{key:'commodityOption',group:'commodity',sub:'option'}];
+ return [{key:'stock',group:'stock',sub:null}];
+}
+function storedTradesFor(keyName){
+ const k=MARKET_KEYS[keyName];let a=null;try{a=JSON.parse(localStorage.getItem(k)||'null')}catch(e){};
+ if(Array.isArray(a))return a;if(keyName==='stock')return Array.isArray(SEED)?SEED:[];return [];
+}
+function summaryEntries(cat){
+ const out=[];summarySourceDefs(cat).forEach(src=>storedTradesFor(src.key).forEach((t,index)=>{if(!isOpenTrade(t)){out.push({t,index,...src})}}));
+ return out.sort((a,b)=>tradeCalendarDate(b.t).localeCompare(tradeCalendarDate(a.t)));
+}
+function summaryCategoryLabel(cat){return cat==='fno'?'F&O':cat==='commodity'?'Commodity':'Stock'}
+function renderSummaryRoot(){
+ const cats=['stock','fno','commodity'];
+ historyView.innerHTML=`<div class="view-title">Stock P&amp;L Summary</div><div class="summary-shell"><div class="summary-market-tabs">${cats.map(c=>`<button onclick="selectSummaryCategory('${c}')">${summaryCategoryLabel(c)}</button>`).join('')}</div>${cats.map(c=>{const a=summaryEntries(c),net=a.reduce((z,e)=>z+calcGross(e.t)-realisedCharges(e.t),0);return `<div class="summary-category-card" onclick="selectSummaryCategory('${c}')"><div><b>${summaryCategoryLabel(c)}</b><small>${a.length} closed trade${a.length===1?'':'s'} · ${money(net)}</small></div><div class="history-chevron">›</div></div>`}).join('')}</div>`;
+}
+function renderSummaryCategory(cat,filter='all'){
+ const all=summaryEntries(cat),profits=all.filter(e=>calcGross(e.t)-realisedCharges(e.t)>=0),losses=all.filter(e=>calcGross(e.t)-realisedCharges(e.t)<0),profitAmt=profits.reduce((z,e)=>z+calcGross(e.t)-realisedCharges(e.t),0),lossAmt=losses.reduce((z,e)=>z+Math.abs(calcGross(e.t)-realisedCharges(e.t)),0),net=profitAmt-lossAmt;
+ const arr=filter==='profit'?profits:filter==='loss'?losses:all;
+ const tabs=['stock','fno','commodity'];
+ historyView.innerHTML=`<div class="view-title">Stock P&amp;L Summary</div><div class="summary-market-tabs">${tabs.map(c=>`<button class="${c===cat?'active':''}" onclick="selectSummaryCategory('${c}')">${summaryCategoryLabel(c)}</button>`).join('')}</div><div class="summary-detail-head"><button class="summary-back" onclick="history.back()">‹</button><div class="summary-detail-title">${summaryCategoryLabel(cat)} Profit / Loss</div></div><div class="summary-metrics"><div class="summary-metric"><small>Profit</small><b class="summary-profit">${money(profitAmt)}</b></div><div class="summary-metric"><small>Loss</small><b class="summary-loss">${money(lossAmt)}</b></div><div class="summary-metric"><small>Net P&amp;L</small><b class="summary-net">${money(net)}</b></div></div><div class="summary-filter-tabs"><button class="${filter==='all'?'active':''}" onclick="setSummaryFilter('all')">All (${all.length})</button><button class="${filter==='profit'?'active':''}" onclick="setSummaryFilter('profit')">Profit (${profits.length})</button><button class="${filter==='loss'?'active':''}" onclick="setSummaryFilter('loss')">Loss (${losses.length})</button></div><div class="summary-list">${arr.length?arr.map(e=>{const t=e.t,a=resolveTradeAsset(t),v=calcGross(t)-realisedCharges(t),pos=v>=0;return `<div class="history-item" onclick="openSummaryTrade('${e.key}',${e.index},'${cat}')">${assetLogoHTML(a,'history-logo')}<div class="history-copy"><b>${escapeHtml(t.stock)}</b><div class="history-meta">${formatDateShort(tradeCalendarDate(t))} · ${money(v)}</div></div><div class="history-result ${pos?'profit':'loss'}">${pos?'PROFIT':'LOSS'}</div><div class="history-chevron">›</div></div>`}).join(''):`<div class="summary-empty">No ${filter==='all'?'closed':filter} trades.</div>`}</div>`;
+}
+function selectSummaryCategory(cat){summaryCategory=cat;summaryFilter='all';renderSummaryCategory(cat,'all');appView='history';renderAppShell('history');setBottomActive('bnHistory');const st={pnlApp:true,view:'history',summaryCategory:cat,summaryFilter:'all'};if(history.state?.view==='history'&&history.state?.summaryCategory)history.replaceState(st,'');else history.pushState(st,'')}
+function setSummaryFilter(filter){summaryFilter=filter;renderSummaryCategory(summaryCategory,summaryFilter);history.replaceState({...(history.state||{}),pnlApp:true,view:'history',summaryCategory,summaryFilter},'')}
+showHistoryView=function(push=true,category=null,filter='all'){
+ summaryCategory=category;summaryFilter=filter||'all';appView='history';renderAppShell('history');setBottomActive('bnHistory');
+ if(summaryCategory)renderSummaryCategory(summaryCategory,summaryFilter);else renderSummaryRoot();
+ if(push)pushSection('history',{summaryCategory:null,summaryFilter:'all'});
+};
+function marketFromStorageName(name){if(name==='future')return['fno','future'];if(name==='option')return['fno','option'];if(name==='commodity')return['commodity','future'];if(name==='commodityOption')return['commodity','option'];return['stock',null]}
+function openSummaryTrade(storageName,index,cat){
+ const [group,sub]=marketFromStorageName(storageName);applyMarketSelection(group,sub,false);const t=trades[index];if(!t)return;const ds=tradeCalendarDate(t),d=new Date(ds+'T12:00:00');if(!isNaN(d))cursor=new Date(d.getFullYear(),d.getMonth(),1);render();updateStats();appView='calendar';renderAppShell('calendar');setBottomActive('bnCalendar');openDay(ds,false);history.pushState({pnlApp:true,view:'calendar',modal:'day',date:ds,marketGroup:group,marketSub:sub,fromSummary:true,summaryCategory:cat},'');
+}
+
+/* v52 Point 4/5 — sequence-aware Android Back for Future and FY Summary */
+showCalendarView=function(fromPop=false){
+ appView='calendar';renderAppShell('calendar');setBottomActive('bnCalendar');
+ if(!fromPop){const state={pnlApp:true,view:'calendar',marketGroup:activeMarketGroup,marketSub:activeSubKey(),cursorYear:cursor.getFullYear(),cursorMonth:cursor.getMonth()};if(history.state?.view==='calendar'&&!history.state?.modal)history.replaceState(state,'');else history.pushState(state,'');}
+};
+renderFySummary=function(){
+ const sy=fyStartYearForDate(cursor),ey=sy+1;let rows='',total=0;
+ for(let i=0;i<12;i++){const dt=new Date(sy,3+i,1),y=dt.getFullYear(),m=dt.getMonth();let val=trades.filter(t=>{const d=new Date(tradeCalendarDate(t)+'T12:00:00');return d.getFullYear()===y&&d.getMonth()===m}).reduce((a,t)=>a+calcGross(t)-realisedCharges(t),0);total+=val;const cls=val>0?'fy-pos':val<0?'fy-neg':'fy-zero',label=dt.toLocaleString('en-IN',{month:'short',year:'numeric'});rows+=`<div class="fy-row" onclick="openFyMonth(${y},${m})"><span>${label}</span><span class="${cls}">${val?short(val):'₹0'}</span></div>`;}
+ fyView.innerHTML=`<div class="view-title">Financial Year Summary</div><div class="fy-top"><div><div class="fy-range">${sy} – ${ey}</div><div class="fy-sub">Apr ${sy} – Mar ${ey}</div></div><div><div class="fy-sub">FY Total P&amp;L</div><div class="fy-total">${money(total)}</div></div></div>${rows}`;
+};
+showFySummary=function(push=true){renderFySummary();appView='fy';renderAppShell('fy');setBottomActive('bnFy');if(push)pushSection('fy')};
+function openFyMonth(y,m){cursor=new Date(y,m,1);render();updateStats();appView='calendar';renderAppShell('calendar');setBottomActive('bnCalendar');history.pushState({pnlApp:true,view:'calendar',marketGroup:activeMarketGroup,marketSub:activeSubKey(),cursorYear:y,cursorMonth:m,fromFy:true},'')}
+
+/* Keep the active derivative controls correct after initial v50 render. */
+refreshTradeModeUI();
 </script>
 
 <script id="hide-netlify-helper">
@@ -1706,7 +1867,7 @@ render();updateStats();
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', async () => {
     try {
-      const reg = await navigator.serviceWorker.register('./service-worker.js', {updateViaCache:'none'});
+      const reg = await navigator.serviceWorker.register('./service-worker.js?v=52', {updateViaCache:'none'});
       await reg.update();
     } catch(e) {}
   });
