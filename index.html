@@ -2118,7 +2118,7 @@ refreshTradeModeUI();
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', async () => {
     try {
-      const reg = await navigator.serviceWorker.register('./service-worker.js?v=52-main-page-calc-cache-fix-final-1', {updateViaCache:'none'});
+      const reg = await navigator.serviceWorker.register('./service-worker.js?v=52-stable-calc-auto-update-final-1', {updateViaCache:'none'});
       await reg.update();
     } catch(e) {}
   });
@@ -2426,6 +2426,26 @@ history.replaceState({pnlApp:true,view:'frontFinal',cursorYear:cursor.getFullYea
   };
   /* Repaint after all P&L overrides are loaded, so initial app-open total is also correct. */
   if(app.classList.contains('front-final'))window.paintFront();
+})();
+</script>
+
+<script id="v52-stock-partial-card-calc-final">
+/* STOCK PARTIAL-SALE CARD FIX:
+   tradeGross had captured the older gross function before the partial-sale calcGross patch.
+   Route plain Stock partial sales through the corrected realized-quantity calculation too. */
+(function(){
+  'use strict';
+  const previousTradeGrossFinal=tradeGross;
+  tradeGross=function(t){
+    try{
+      const plainStock=t&&!t.futureTrade&&!t.optionTrade&&!(typeof isOptionTradeRecord==='function'&&isOptionTradeRecord(t));
+      const bq=Number(t&&t.buyQty),sq=Number(t&&t.sellQty),bp=Number(t&&t.buyPrice),sp=Number(t&&t.sellPrice);
+      if(plainStock&&Number.isFinite(bq)&&Number.isFinite(sq)&&Number.isFinite(bp)&&Number.isFinite(sp)&&bq>0&&sq>0&&sq<bq){
+        return calcGross(t);
+      }
+    }catch(e){}
+    return previousTradeGrossFinal(t);
+  };
 })();
 </script>
 
