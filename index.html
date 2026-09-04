@@ -2273,5 +2273,27 @@ history.replaceState({pnlApp:true,view:'frontFinal',cursorYear:cursor.getFullYea
   };
 })();
 </script>
+
+<script>
+/* v52 PARTIAL SELL P&L FIX FINAL
+   For a partially sold long Stock trade, realized P&L is calculated only on
+   the quantity actually sold. Remaining quantity stays HOLDING and is not
+   counted as a realized loss. Other trade types/legacy cases remain unchanged. */
+(function(){
+  const previousCalcGross = calcGross;
+  calcGross = function(t){
+    try{
+      const isPlainStock = t && !t.futureTrade && !t.optionTrade && !isOptionTradeRecord(t);
+      const bq = Number(t?.buyQty), sq = Number(t?.sellQty);
+      const bp = Number(t?.buyPrice), sp = Number(t?.sellPrice);
+      const partialLongSale = isPlainStock && !isOpenTrade(t) &&
+        Number.isFinite(bq) && Number.isFinite(sq) && Number.isFinite(bp) && Number.isFinite(sp) &&
+        bq > 0 && sq > 0 && sq < bq;
+      if(partialLongSale) return (sp - bp) * sq;
+    }catch(e){}
+    return previousCalcGross(t);
+  };
+})();
+</script>
 </body>
 </html>

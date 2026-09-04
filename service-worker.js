@@ -1,4 +1,5 @@
-const CACHE='stock-pnl-calendar-v52-stock-trade-card-width-fix-final';
-self.addEventListener('install',()=>self.skipWaiting());
-self.addEventListener('activate',e=>{e.waitUntil((async()=>{for(const k of await caches.keys())if(/^stock-pnl-calendar-/i.test(k))await caches.delete(k);await self.clients.claim();})())});
-self.addEventListener('fetch',e=>{if(e.request.method!=='GET')return;e.respondWith(fetch(new Request(e.request,{cache:'no-store'})).catch(()=>caches.match(e.request)));});
+const CACHE='stock-pnl-calendar-v52-partial-sell-pnl-fix-final';
+const SHELL='./index.html';
+self.addEventListener('install',e=>{self.skipWaiting();});
+self.addEventListener('activate',e=>{e.waitUntil((async()=>{for(const k of await caches.keys())if(k!==CACHE)await caches.delete(k);await self.clients.claim();})());});
+self.addEventListener('fetch',e=>{if(e.request.method!=='GET')return;if(e.request.mode==='navigate'){e.respondWith((async()=>{try{const r=await fetch(e.request,{cache:'no-store'});if(r&&r.ok){const c=await caches.open(CACHE);c.put(SHELL,r.clone()).catch(()=>{});}return r;}catch(err){return(await caches.match(SHELL))||Response.error();}})());return;}e.respondWith(fetch(e.request,{cache:'no-store'}).catch(()=>caches.match(e.request)));});
