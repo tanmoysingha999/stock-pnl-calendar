@@ -816,6 +816,15 @@ iframe[src*="netlify" i], iframe[title*="netlify" i], [class*="netlify" i], [id*
 .front-final .cal::after{display:none!important;content:none!important}
 </style>
 
+
+<style id="v52-segment-layout-final-css">
+/* Selected Stock / F&O / Commodity calendar pages — final requested sizing/layout. */
+.app:not(.front-final) #netStat{font-size:17px!important}
+.app:not(.front-final) .top .actions .export-btn,
+.app:not(.front-final) .top .actions .import-btn{display:none!important}
+.app:not(.front-final) .top .actions{grid-template-columns:1fr!important}
+.app:not(.front-final) .top .actions .add-today{grid-column:1/-1!important}
+</style>
 </head>
 <body>
 <div class="app">
@@ -1878,7 +1887,7 @@ refreshTradeModeUI();
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', async () => {
     try {
-      const reg = await navigator.serviceWorker.register('./service-worker.js?v=52-front-fy-size-final', {updateViaCache:'none'});
+      const reg = await navigator.serviceWorker.register('./service-worker.js?v=52-segment-layout-final', {updateViaCache:'none'});
       await reg.update();
     } catch(e) {}
   });
