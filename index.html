@@ -1937,7 +1937,7 @@ refreshTradeModeUI();
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', async () => {
     try {
-      const reg = await navigator.serviceWorker.register('./service-worker.js?v=52-recovery-open-fix', {updateViaCache:'none'});
+      const reg = await navigator.serviceWorker.register('./service-worker.js?v=52-recovery-points-1-2-safe', {updateViaCache:'none'});
       await reg.update();
     } catch(e) {}
   });
@@ -2074,5 +2074,23 @@ history.replaceState({pnlApp:true,view:'frontFinal',cursorYear:cursor.getFullYea
 })();
 </script>
 
+
+<script id="v52-point1-no-native-alert-safe-patch">
+/* Point 1 locked: never show browser-native alert dialogs in Stock/F&O/Commodity flows.
+   Existing v52 in-app validation overlay is reused. This is intentionally an additive,
+   late-loading patch so startup and the recovered working layout remain untouched. */
+(function(){
+  'use strict';
+  window.alert=function(message){
+    try{
+      if(typeof window.showAppNotice==='function'){
+        window.showAppNotice(String(message==null?'Please check the details.':message));
+        return;
+      }
+    }catch(e){}
+    /* Native alert deliberately suppressed. */
+  };
+})();
+</script>
 </body>
 </html>
