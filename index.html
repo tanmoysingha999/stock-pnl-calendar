@@ -1878,7 +1878,7 @@ refreshTradeModeUI();
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', async () => {
     try {
-      const reg = await navigator.serviceWorker.register('./service-worker.js?v=52-front-final-locked', {updateViaCache:'none'});
+      const reg = await navigator.serviceWorker.register('./service-worker.js?v=52-front-fy-size-final', {updateViaCache:'none'});
       await reg.update();
     } catch(e) {}
   });
@@ -1900,7 +1900,7 @@ if ('serviceWorker' in navigator) {
 .front-final .stats.single-stat{display:block!important}
 .front-final .stat.net-only{text-align:left!important}
 .front-final #netLabel{font-size:16px!important;color:#aeb9be!important}
-.front-final #netStat{font-size:29px!important}
+.front-final #netStat{font-size:17px!important}
 .front-final .nav{grid-template-columns:74px minmax(0,1fr) 74px!important;align-items:center!important}
 .front-final .month-wrap{display:flex!important;justify-content:center!important;align-items:center!important;width:100%!important}
 .front-final .month-divider,
