@@ -967,6 +967,95 @@ iframe[src*="netlify" i], iframe[title*="netlify" i], [class*="netlify" i], [id*
 }
 </style>
 
+
+<style id="v52-stock-trade-card-width-fix-final-css">
+/* Stock-only final width fix: keep the enlarged card, but give the 3-column ledger the full usable width. */
+.final-trade-card.stock-saved-card:not(.option-summary-card) .rowtop{
+  position:relative!important;
+  display:block!important;
+  padding-bottom:42px!important;
+}
+.final-trade-card.stock-saved-card:not(.option-summary-card) .trade-with-logo{
+  width:100%!important;
+  max-width:none!important;
+  min-width:0!important;
+  display:flex!important;
+}
+.final-trade-card.stock-saved-card:not(.option-summary-card) .trade-main{
+  flex:1 1 auto!important;
+  width:auto!important;
+  min-width:0!important;
+}
+.final-trade-card.stock-saved-card:not(.option-summary-card) .trade-main>b{
+  padding-right:112px!important;
+}
+.final-trade-card.stock-saved-card:not(.option-summary-card) .trade-ledger{
+  width:100%!important;
+  max-width:none!important;
+  min-width:0!important;
+  box-sizing:border-box!important;
+  grid-template-columns:repeat(3,minmax(0,1fr))!important;
+}
+.final-trade-card.stock-saved-card:not(.option-summary-card) .trade-ledger>div{
+  min-width:0!important;
+  overflow:visible!important;
+}
+.final-trade-card.stock-saved-card:not(.option-summary-card) .trade-ledger small{
+  white-space:nowrap!important;
+  overflow:visible!important;
+  text-overflow:clip!important;
+  letter-spacing:-.08px!important;
+}
+.final-trade-card.stock-saved-card:not(.option-summary-card) .trade-side{
+  position:absolute!important;
+  inset:0 0 0 auto!important;
+  width:108px!important;
+  pointer-events:none!important;
+}
+.final-trade-card.stock-saved-card:not(.option-summary-card) .trade-side .net{
+  pointer-events:auto!important;
+  align-self:flex-end!important;
+}
+.final-trade-card.stock-saved-card:not(.option-summary-card) .charges-box{
+  position:absolute!important;
+  right:0!important;
+  bottom:0!important;
+  pointer-events:auto!important;
+}
+.final-trade-card.stock-saved-card:not(.option-summary-card) .trade-actions{
+  position:absolute!important;
+  right:0!important;
+  bottom:0!important;
+  width:108px!important;
+  pointer-events:auto!important;
+}
+.final-trade-card.stock-saved-card:not(.option-summary-card).trade-actions-open .charges-box{display:none!important}
+.final-trade-card.stock-saved-card:not(.option-summary-card) .holding-remaining{
+  width:100%!important;
+  box-sizing:border-box!important;
+}
+@media(max-width:520px){
+  .final-trade-card.stock-saved-card:not(.option-summary-card){padding:10px!important}
+  .final-trade-card.stock-saved-card:not(.option-summary-card) .rowtop{padding-bottom:38px!important}
+  .final-trade-card.stock-saved-card:not(.option-summary-card) .trade-card-logo{
+    width:42px!important;height:42px!important;flex-basis:42px!important
+  }
+  .final-trade-card.stock-saved-card:not(.option-summary-card) .trade-main>b{
+    font-size:12.5px!important;padding-right:92px!important
+  }
+  .final-trade-card.stock-saved-card:not(.option-summary-card) .trade-ledger{
+    grid-template-columns:repeat(3,minmax(0,1fr))!important
+  }
+  .final-trade-card.stock-saved-card:not(.option-summary-card) .trade-ledger>div{padding:7px 2px!important}
+  .final-trade-card.stock-saved-card:not(.option-summary-card) .trade-ledger small{
+    font-size:6.8px!important;letter-spacing:-.12px!important
+  }
+  .final-trade-card.stock-saved-card:not(.option-summary-card) .trade-ledger b{font-size:9.5px!important}
+  .final-trade-card.stock-saved-card:not(.option-summary-card) .trade-side{width:88px!important}
+  .final-trade-card.stock-saved-card:not(.option-summary-card) .trade-actions{width:88px!important}
+}
+</style>
+
 </head>
 <body>
 <div class="app">
@@ -1652,7 +1741,7 @@ function renderModal(){
     const partial=Number(t.sellQty)>0&&remaining>0;
     const status=open?'OPEN / HOLDING':money(net);
     const selectedAction=selectedDayTradeActionIndex===idx;
-    const cardClass=`row final-trade-card ${isOptionTradeRecord(t)?'option-summary-card':''} ${open?'open-card':(net>=0?'profit-card':'loss-card')} ${selectedAction?'trade-actions-open':''}`;
+    const cardClass=`row final-trade-card ${activeMarket==='stock'?'stock-saved-card ':''}${isOptionTradeRecord(t)?'option-summary-card':''} ${open?'open-card':(net>=0?'profit-card':'loss-card')} ${selectedAction?'trade-actions-open':''}`;
 
     if(isOptionTradeRecord(t)){
       return `<div class="${cardClass}" onclick="showDayTradeActions(${idx})">
@@ -2029,7 +2118,7 @@ refreshTradeModeUI();
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', async () => {
     try {
-      const reg = await navigator.serviceWorker.register('./service-worker.js?v=52-stock-trade-card-large-final', {updateViaCache:'none'});
+      const reg = await navigator.serviceWorker.register('./service-worker.js?v=52-stock-trade-card-width-fix-final', {updateViaCache:'none'});
       await reg.update();
     } catch(e) {}
   });
