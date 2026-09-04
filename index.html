@@ -2118,7 +2118,7 @@ refreshTradeModeUI();
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', async () => {
     try {
-      const reg = await navigator.serviceWorker.register('./service-worker.js?v=52-stock-trade-card-width-fix-final', {updateViaCache:'none'});
+      const reg = await navigator.serviceWorker.register('./service-worker.js?v=52-main-page-calc-cache-fix-final-1', {updateViaCache:'none'});
       await reg.update();
     } catch(e) {}
   });
@@ -2163,24 +2163,46 @@ const marketTabs=document.querySelector('.market-tabs');
 const bottomNav=document.getElementById('bottomNav');
 
 function storedFor(k){try{const a=JSON.parse(localStorage.getItem(k)||'null');if(Array.isArray(a))return a}catch(e){}return []}
-function allStored(){let out=[];Object.values(KEYS).forEach(k=>{out=out.concat(storedFor(k))});return out}
 function tradeDate(t){try{return tradeCalendarDate(t)}catch(e){return (!isOpenTrade(t)&&t.sellDate)?t.sellDate:t.date}}
-function tradeNet(t){try{return calcGross(t)-realisedCharges(t)}catch(e){return 0}}
-function combinedDay(ds){return allStored().filter(t=>tradeDate(t)===ds).reduce((a,t)=>a+tradeNet(t),0)}
+function hasRealizedSell(t){const sq=Number(t&&t.sellQty),sp=t&&t.sellPrice;return !!t&&sp!==undefined&&sp!==null&&sp!==''&&Number.isFinite(Number(sp))&&Number.isFinite(sq)&&sq>0}
+function tradeNet(t,group){
+ try{
+   if(!hasRealizedSell(t))return 0;
+   if(group==='stock'&&!t.futureTrade&&!t.optionTrade&&!(typeof isOptionTradeRecord==='function'&&isOptionTradeRecord(t))){
+     const bp=Number(t.buyPrice),sp=Number(t.sellPrice),bq=Number(t.buyQty),sq=Number(t.sellQty);
+     if(Number.isFinite(bp)&&Number.isFinite(sp)&&Number.isFinite(sq)&&sq>0){
+       const rq=Number.isFinite(bq)&&bq>0?Math.min(bq,sq):sq;
+       return (sp-bp)*rq-realisedCharges(t);
+     }
+   }
+   return calcGross(t)-realisedCharges(t);
+ }catch(e){return 0}
+}
+function combinedDay(ds){
+ let total=0;
+ for(const [group,k] of Object.entries(KEYS)){
+   for(const t of storedFor(k)){if(tradeDate(t)===ds)total+=tradeNet(t,group)}
+ }
+ return total;
+}
 function fmt(v){const a=Math.abs(v);return (v<0?'-':v>0?'+':'')+'₹'+a.toLocaleString('en-IN',{minimumFractionDigits:2,maximumFractionDigits:2})}
-function short2(v){if(!v)return '—';const a=Math.abs(v);let x=a>=100000?(a/100000).toFixed(1)+'L':a>=1000?(a/1000).toFixed(1)+'K':Math.round(a).toLocaleString('en-IN');return (v<0?'-₹':'+₹')+x}
+function short2(v){
+ if(!v)return '—';
+ const sign=v<0?'-':'+';const a=Math.abs(v);
+ if(a>=100000){const z=Math.floor((a/100000)*100)/100;return sign+z.toFixed(2)+'L'}
+ if(a>=1000){const z=Math.floor((a/1000)*100)/100;return sign+z.toFixed(2)+'K'}
+ return sign+(Math.floor(a*100)/100).toFixed(2).replace(/\.00$/,'');
+}
 function paintFront(){
  app.classList.add('front-final');
  renderAppShell('calendar');
  const y=cursor.getFullYear(),m=cursor.getMonth(),label=cursor.toLocaleString('en-IN',{month:'long',year:'numeric'});
  if(netLabel)netLabel.textContent=label+' Net P&L';
- let total=0,last=new Date(y,m+1,0).getDate();
- for(let d=1;d<=last;d++)total+=combinedDay(key(y,m,d));
- if(netStat){netStat.textContent=fmt(total);netStat.style.color=total>0?'#20e58b':total<0?'#ff5a5f':'#f2f5f6'}
+ let last=new Date(y,m+1,0).getDate();
  if(month)month.textContent=label;
  let first=new Date(y,m,1),off=(first.getDay()+6)%7,slots=[];
  for(let i=0;i<off;i++)slots.push(0);for(let d=1;d<=last;d++)slots.push(d);while(slots.length%7)slots.push(0);
- let html='';
+ let html='',monthlyFromWeeks=0;
  for(let w=0;w<slots.length/7;w++){
    let days='',wt=0;
    for(let dow=0;dow<5;dow++){
@@ -2192,10 +2214,12 @@ function paintFront(){
      days+=`<div class="day ${cls}"><div class="num">${d}</div><div class="pnl">${net?short2(net):''}</div><div class="count"></div></div>`;
    }
    for(let dow=5;dow<7;dow++){let d=slots[w*7+dow];if(d)wt+=combinedDay(key(y,m,d))}
+   monthlyFromWeeks+=wt;
    let wc=wt>0?'profit':wt<0?'loss':'';
    html+=`<div class="week">${days}<div class="gain ${wc}">${short2(wt)}</div></div>`;
  }
  if(weeks)weeks.innerHTML=html;
+ if(netStat){netStat.textContent=fmt(monthlyFromWeeks);netStat.style.color=monthlyFromWeeks>0?'#20e58b':monthlyFromWeeks<0?'#ff5a5f':'#f2f5f6'}
  setBottomActive(null);
  const addBtn=document.querySelector('.add-today');if(addBtn)addBtn.style.display='none';
  const imp=document.querySelector('.import-btn'),exp=document.querySelector('.export-btn');
@@ -2352,9 +2376,9 @@ history.replaceState({pnlApp:true,view:'frontFinal',cursorYear:cursor.getFullYea
   function compactFinal(v){
     if(!Number.isFinite(v)||Math.abs(v)<0.005)return '—';
     const sign=v<0?'-':'+'; const a=Math.abs(v);
-    if(a>=100000)return sign+(a/100000).toFixed(2)+'L';
-    if(a>=1000)return sign+(a/1000).toFixed(2)+'K';
-    return sign+a.toFixed(2).replace(/\.00$/,'');
+    if(a>=100000){const z=Math.floor((a/100000)*100)/100;return sign+z.toFixed(2)+'L';}
+    if(a>=1000){const z=Math.floor((a/1000)*100)/100;return sign+z.toFixed(2)+'K';}
+    return sign+(Math.floor(a*100)/100).toFixed(2).replace(/\.00$/,'');
   }
   function fullFinal(v){
     const n=Number(v)||0, sign=n<0?'-':n>0?'+':'';
