@@ -825,6 +825,56 @@ iframe[src*="netlify" i], iframe[title*="netlify" i], [class*="netlify" i], [id*
 .app:not(.front-final) .top .actions{grid-template-columns:1fr!important}
 .app:not(.front-final) .top .actions .add-today{grid-column:1/-1!important}
 </style>
+
+<style id="v52-logo-search-final-css">
+/* Final company/commodity search logo layout — shared by Stock, F&O and Commodity. */
+.asset-results .asset-option{
+  display:grid!important;
+  grid-template-columns:44px minmax(0,1fr)!important;
+  gap:10px!important;
+  align-items:center!important;
+  min-height:58px!important;
+  padding:8px 10px!important;
+  overflow:hidden!important;
+}
+.asset-results .asset-option>.asset-logo,
+.asset-results .asset-option>.asset-logo.fallback,
+.asset-results .asset-option>.asset-logo.commodity-logo{
+  width:40px!important;height:40px!important;
+  min-width:40px!important;max-width:40px!important;
+  min-height:40px!important;max-height:40px!important;
+  flex:0 0 40px!important;
+  position:static!important;
+  inset:auto!important;
+  margin:0!important;
+  padding:2px!important;
+  overflow:hidden!important;
+  box-sizing:border-box!important;
+  border-radius:8px!important;
+  background:#fff!important;
+  line-height:0!important;
+  vertical-align:middle!important;
+}
+.asset-results .asset-option>.asset-logo img,
+.asset-results .asset-option>.asset-logo.fallback img{
+  position:static!important;
+  inset:auto!important;
+  display:block!important;
+  width:100%!important;height:100%!important;
+  min-width:0!important;min-height:0!important;
+  max-width:100%!important;max-height:100%!important;
+  object-fit:contain!important;
+  margin:0!important;padding:0!important;
+  transform:none!important;
+}
+.asset-results .asset-option>.asset-logo.commodity-logo{padding:0!important;background:transparent!important;border:0!important}
+.asset-results .asset-option>.asset-logo.commodity-logo svg{
+  display:block!important;width:100%!important;height:100%!important;
+  max-width:100%!important;max-height:100%!important;margin:0!important;
+}
+.asset-results .asset-option>div:last-child{min-width:0!important;overflow:hidden!important}
+.asset-results .asset-name{white-space:nowrap!important;overflow:hidden!important;text-overflow:ellipsis!important}
+</style>
 </head>
 <body>
 <div class="app">
@@ -1887,7 +1937,7 @@ refreshTradeModeUI();
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', async () => {
     try {
-      const reg = await navigator.serviceWorker.register('./service-worker.js?v=52-segment-layout-final', {updateViaCache:'none'});
+      const reg = await navigator.serviceWorker.register('./service-worker.js?v=52-logo-search-final', {updateViaCache:'none'});
       await reg.update();
     } catch(e) {}
   });
