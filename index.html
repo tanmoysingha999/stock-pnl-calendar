@@ -2295,5 +2295,115 @@ history.replaceState({pnlApp:true,view:'frontFinal',cursorYear:cursor.getFullYea
   };
 })();
 </script>
+
+<script id="v52-main-page-calc-display-fix-final">
+/* MAIN PAGE FINAL RULE:
+   1) Each date = Stock + F&O Future + F&O Option + Commodity Future + Commodity Option realized Net P&L.
+   2) Weekly Gains = sum of the visible dates in that calendar week.
+   3) Monthly Net P&L = sum of Weekly Gains.
+   4) Date/Gains compact display: +2.65K / -2.65K, +1.30L / -1.30L.
+   5) Open/Holding unrealized quantity is excluded. */
+(function(){
+  'use strict';
+  const FRONT_KEYS={
+    stock:'stockPnLCalendar_pwa_v21',
+    future:'stockPnLCalendar_future_v21',
+    option:'stockPnLCalendar_option_v21',
+    commodity:'stockPnLCalendar_commodity_v21',
+    commodityOption:'stockPnLCalendar_commodity_option_v48'
+  };
+  function frontStored(key){
+    try{const a=JSON.parse(localStorage.getItem(key)||'null');return Array.isArray(a)?a:[]}catch(e){return []}
+  }
+  function hasRealizedSell(t){
+    if(!t)return false;
+    const sp=t.sellPrice, sq=Number(t.sellQty);
+    return sp!==undefined&&sp!==null&&sp!==''&&Number.isFinite(Number(sp))&&Number.isFinite(sq)&&sq>0;
+  }
+  function frontTradeDate(t){
+    if(hasRealizedSell(t) && t.sellDate)return t.sellDate;
+    return t?.date||t?.buyDate||'';
+  }
+  function frontTradeNet(t,keyName){
+    if(!hasRealizedSell(t))return 0;
+    try{
+      /* Plain Stock partial sale: realized P&L only on sold quantity. */
+      if(keyName==='stock' && !t.futureTrade && !t.optionTrade && !(typeof isOptionTradeRecord==='function'&&isOptionTradeRecord(t))){
+        const bp=Number(t.buyPrice), sp=Number(t.sellPrice), bq=Number(t.buyQty), sq=Number(t.sellQty);
+        if(Number.isFinite(bp)&&Number.isFinite(sp)&&Number.isFinite(sq)&&sq>0){
+          const rq=Number.isFinite(bq)&&bq>0?Math.min(bq,sq):sq;
+          return (sp-bp)*rq-(Number(t.charges)||0);
+        }
+      }
+      /* Keep the app's finalized direction-aware Future/Option/Commodity gross logic. */
+      const gross=(typeof calcGross==='function')?Number(calcGross(t)||0):0;
+      return gross-(Number(t.charges)||0);
+    }catch(e){return 0}
+  }
+  function frontCombinedDay(ds){
+    let total=0;
+    for(const [name,keyName] of Object.entries(FRONT_KEYS)){
+      for(const t of frontStored(keyName)){
+        if(frontTradeDate(t)===ds)total+=frontTradeNet(t,name);
+      }
+    }
+    return total;
+  }
+  function compactFinal(v){
+    if(!Number.isFinite(v)||Math.abs(v)<0.005)return '—';
+    const sign=v<0?'-':'+'; const a=Math.abs(v);
+    if(a>=100000)return sign+(a/100000).toFixed(2)+'L';
+    if(a>=1000)return sign+(a/1000).toFixed(2)+'K';
+    return sign+a.toFixed(2).replace(/\.00$/,'');
+  }
+  function fullFinal(v){
+    const n=Number(v)||0, sign=n<0?'-':n>0?'+':'';
+    return sign+'₹'+Math.abs(n).toLocaleString('en-IN',{minimumFractionDigits:2,maximumFractionDigits:2});
+  }
+  window.paintFront=function(){
+    app.classList.add('front-final');
+    renderAppShell('calendar');
+    const y=cursor.getFullYear(),m=cursor.getMonth();
+    const label=cursor.toLocaleString('en-IN',{month:'long',year:'numeric'});
+    if(netLabel)netLabel.textContent=label+' Net P&L';
+    if(month)month.textContent=label;
+    const last=new Date(y,m+1,0).getDate();
+    const first=new Date(y,m,1),off=(first.getDay()+6)%7,slots=[];
+    for(let i=0;i<off;i++)slots.push(0);
+    for(let d=1;d<=last;d++)slots.push(d);
+    while(slots.length%7)slots.push(0);
+    let html='',monthlyFromWeeks=0;
+    for(let w=0;w<slots.length/7;w++){
+      let days='',weekly=0;
+      for(let dow=0;dow<5;dow++){
+        const d=slots[w*7+dow];
+        if(!d){days+='<div class="day empty"></div>';continue;}
+        const ds=key(y,m,d),net=frontCombinedDay(ds); weekly+=net;
+        const cls=net>0?'profit':net<0?'loss':'';
+        days+=`<div class="day ${cls}"><div class="num">${d}</div><div class="pnl">${net?compactFinal(net):''}</div><div class="count"></div></div>`;
+      }
+      /* Weekend trades are still part of that week's Gains even though the visual grid shows weekdays only. */
+      for(let dow=5;dow<7;dow++){
+        const d=slots[w*7+dow]; if(d)weekly+=frontCombinedDay(key(y,m,d));
+      }
+      monthlyFromWeeks+=weekly;
+      const wc=weekly>0?'profit':weekly<0?'loss':'';
+      html+=`<div class="week">${days}<div class="gain ${wc}">${compactFinal(weekly)}</div></div>`;
+    }
+    if(weeks)weeks.innerHTML=html;
+    if(netStat){
+      netStat.textContent=fullFinal(monthlyFromWeeks);
+      netStat.style.color=monthlyFromWeeks>0?'#20e58b':monthlyFromWeeks<0?'#ff5a5f':'#f2f5f6';
+    }
+    setBottomActive(null);
+    const addBtn=document.querySelector('.add-today');if(addBtn)addBtn.style.display='none';
+    const imp=document.querySelector('.import-btn'),exp=document.querySelector('.export-btn');
+    if(imp&&exp&&imp.parentElement===exp.parentElement){const p=imp.parentElement;p.insertBefore(imp,exp)}
+  };
+  /* Repaint after all P&L overrides are loaded, so initial app-open total is also correct. */
+  if(app.classList.contains('front-final'))window.paintFront();
+})();
+</script>
+
 </body>
 </html>
