@@ -1073,6 +1073,66 @@ iframe[src*="netlify" i], iframe[title*="netlify" i], [class*="netlify" i], [id*
   }
 }
 </style>
+
+<style id="v52-global-logo-overlap-fix-final-css">
+/* GLOBAL LOGO OVERLAP FIX ONLY. No layout/calculation/navigation/data changes. */
+.asset-logo,
+.trade-card-logo,
+.history-logo,
+.broker-logo,
+.fund-row-logo,
+.fund-table-logo,
+.broker-picker-logo {
+  box-sizing:border-box!important;
+  overflow:hidden!important;
+  position:relative!important;
+  isolation:isolate!important;
+  flex-shrink:0!important;
+}
+.asset-logo > img,
+.trade-card-logo > img,
+.history-logo > img,
+.broker-picker-logo > img,
+.asset-logo > svg,
+.trade-card-logo > svg,
+.history-logo > svg,
+.broker-picker-logo > svg {
+  display:block!important;
+  position:static!important;
+  inset:auto!important;
+  width:100%!important;
+  height:100%!important;
+  min-width:0!important;
+  min-height:0!important;
+  max-width:100%!important;
+  max-height:100%!important;
+  object-fit:contain!important;
+  object-position:center!important;
+  box-sizing:border-box!important;
+  margin:0!important;
+  padding:0!important;
+  border:0!important;
+  transform:none!important;
+}
+img.asset-logo,
+img.trade-card-logo,
+img.history-logo,
+img.broker-logo,
+img.fund-row-logo,
+img.fund-table-logo,
+img.broker-picker-logo {
+  object-fit:contain!important;
+  object-position:center!important;
+  box-sizing:border-box!important;
+}
+/* Keep commodity SVG artwork clipped inside its existing logo tile. */
+.asset-logo.commodity-logo > svg,
+.trade-card-logo.commodity-logo > svg,
+.history-logo.commodity-logo > svg {
+  overflow:hidden!important;
+}
+</style>
+
 </head>
 <body>
 <div class="app">
@@ -2136,7 +2196,7 @@ refreshTradeModeUI();
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', async () => {
     try {
-      const reg = await navigator.serviceWorker.register('./service-worker.js?v=52-final-trade-details-style-all-final', {updateViaCache:'none'});
+      const reg = await navigator.serviceWorker.register('./service-worker.js?v=52-global-logo-overlap-fix-final', {updateViaCache:'none'});
       await reg.update();
     } catch(e) {}
   });
