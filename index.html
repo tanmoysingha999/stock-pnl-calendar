@@ -2196,7 +2196,7 @@ refreshTradeModeUI();
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', async () => {
     try {
-      const reg = await navigator.serviceWorker.register('./service-worker.js?v=52-error1-error2-only-fix-final', {updateViaCache:'none'});
+      const reg = await navigator.serviceWorker.register('./service-worker.js?v=52-error3-error4-only-fix-final', {updateViaCache:'none'});
       await reg.update();
     } catch(e) {}
   });
@@ -2805,6 +2805,51 @@ history.replaceState({pnlApp:true,view:'frontFinal',cursorYear:cursor.getFullYea
     if(bd&&bd>today){showAppNotice('Future trade date is not allowed.','buyDate');return;}
     if(sd&&sd>today){showAppNotice('Future trade date is not allowed.','sellDate');return;}
     return previousAddTradeForDateGuard();
+  };
+})();
+</script>
+
+<style id="v52-error3-error4-only-css">
+/* Error 3 only: restore centered Trade Details date header without moving the close button. */
+.modal .sheettop{justify-content:center!important;position:sticky!important}
+.modal .sheettop #dateTitle{display:block!important;width:100%!important;text-align:center!important;padding:0 58px!important;box-sizing:border-box!important}
+.modal .sheettop .close{position:absolute!important;right:4px!important;top:50%!important;transform:translateY(-50%)!important;margin:0!important}
+</style>
+<script id="v52-error3-error4-only-js">
+(function(){
+  'use strict';
+  /* Error 4 only: actual Buy/Selling dates cannot be set after local today.
+     Future/Expiry Date remains unrestricted. */
+  function localTodayKey(){
+    const d=new Date();
+    return String(d.getFullYear())+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+  }
+  function enforceActualTradeDate(el){
+    if(!el)return true;
+    const today=localTodayKey();
+    el.max=today;
+    const v=(el.value||'').trim();
+    if(v&&v>today){
+      el.value='';
+      showAppNotice('Future trade date is not allowed.',el.id);
+      return false;
+    }
+    return true;
+  }
+  const buy=document.getElementById('buyDate');
+  const sell=document.getElementById('sellDate');
+  [buy,sell].forEach(el=>{
+    if(!el)return;
+    el.max=localTodayKey();
+    el.addEventListener('focus',()=>{el.max=localTodayKey()});
+    el.addEventListener('input',()=>enforceActualTradeDate(el));
+    el.addEventListener('change',()=>enforceActualTradeDate(el));
+  });
+  const guardedAddTrade=addTrade;
+  addTrade=function(){
+    if(!enforceActualTradeDate(document.getElementById('buyDate')))return;
+    if(!enforceActualTradeDate(document.getElementById('sellDate')))return;
+    return guardedAddTrade();
   };
 })();
 </script>
