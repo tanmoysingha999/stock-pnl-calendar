@@ -1056,6 +1056,23 @@ iframe[src*="netlify" i], iframe[title*="netlify" i], [class*="netlify" i], [id*
 }
 </style>
 
+
+<style id="v52-future-card-layout-fix-final">
+/* Future saved-card alignment only: center quantity and keep amount values on one line. */
+.final-trade-card.option-summary-card .option-summary-cols>div:nth-child(2){text-align:center!important;}
+.final-trade-card.option-summary-card .option-summary-cols>div:nth-child(3){text-align:right!important;}
+.final-trade-card.option-summary-card .option-summary-cols>div:nth-child(3) b{
+  white-space:nowrap!important;overflow-wrap:normal!important;word-break:normal!important;
+}
+@media(max-width:520px){
+  .final-trade-card.option-summary-card .option-summary-cols{
+    grid-template-columns:.98fr .58fr 1.44fr!important;gap:3px!important;
+  }
+  .final-trade-card.option-summary-card .option-summary-cols>div:nth-child(3) b{
+    font-size:clamp(6.6px,2vw,8.5px)!important;letter-spacing:-.08px!important;
+  }
+}
+</style>
 </head>
 <body>
 <div class="app">
@@ -1689,7 +1706,7 @@ function tradeDetail(t){
   const bd=effectiveBuyDate(t),sd=effectiveSellDate(t);
   const buyDateText=bd?formatDateShort(bd):'—';
   const sellDateText=sd?formatDateShort(sd):'—';
-  const optionTrade=!!(t.optionTrade||t.strike||t.optionSide||/\s(?:CE|PE)\s*$/i.test(t.stock||''));
+  const optionTrade=!!(t.optionTrade||t.futureTrade||t.futureDate||t.futureSide||t.strike||t.optionSide||/\s(?:CE|PE)\s*$/i.test(t.stock||'')||(((activeMarketGroup==='fno')||(activeMarketGroup==='commodity'))&&activeSubKey()==='future'));
   const buyTotal=optionTrade?(Number(t.totalBuyAmount)||((+t.buyPrice||0)*(+t.buyQty||0))):(+t.buyPrice||0);
   const buyAmount=(t.buyPrice!==undefined&&t.buyPrice!==null&&t.buyPrice!=='')?money(buyTotal):'—';
   const buyQuantity=(t.buyQty!==undefined&&t.buyQty!==null&&t.buyQty!=='')?Number(t.buyQty):'—';
@@ -1725,8 +1742,9 @@ function tradeDetail(t){
 }
 function isOptionTradeRecord(t){
   return !!(t&&(
-    t.optionTrade||t.strike||t.optionSide||
-    /\s(?:CE|PE)\s*$/i.test(t.stock||'')
+    t.optionTrade||t.futureTrade||t.futureDate||t.futureSide||t.strike||t.optionSide||
+    /\s(?:CE|PE)\s*$/i.test(t.stock||'')||
+    ((((activeMarketGroup==='fno')||(activeMarketGroup==='commodity'))&&activeSubKey()==='future'))
   ));
 }
 function renderModal(){
@@ -2118,7 +2136,7 @@ refreshTradeModeUI();
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', async () => {
     try {
-      const reg = await navigator.serviceWorker.register('./service-worker.js?v=52-fno-commodity-parent-calendar-final-1', {updateViaCache:'none'});
+      const reg = await navigator.serviceWorker.register('./service-worker.js?v=52-future-card-layout-fix-final', {updateViaCache:'none'});
       await reg.update();
     } catch(e) {}
   });
