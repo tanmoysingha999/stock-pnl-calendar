@@ -2054,7 +2054,7 @@ function summaryEntries(cat){
 function summaryCategoryLabel(cat){return cat==='fno'?'F&O':cat==='commodity'?'Commodity':'Stock'}
 function renderSummaryRoot(){
  const cats=['stock','fno','commodity'];
- historyView.innerHTML=`<div class="view-title">Stock P&amp;L Summary</div><div class="summary-shell"><div class="summary-market-tabs">${cats.map(c=>`<button onclick="selectSummaryCategory('${c}')">${summaryCategoryLabel(c)}</button>`).join('')}</div>${cats.map(c=>{const a=summaryEntries(c),net=a.reduce((z,e)=>z+calcGross(e.t)-realisedCharges(e.t),0);return `<div class="summary-category-card" onclick="selectSummaryCategory('${c}')"><div><b>${summaryCategoryLabel(c)}</b><small>${a.length} closed trade${a.length===1?'':'s'} · ${money(net)}</small></div><div class="history-chevron">›</div></div>`}).join('')}</div>`;
+ historyView.innerHTML=`<div class="view-title">Stock P&amp;L Summary</div><div class="summary-shell">${cats.map(c=>{const a=summaryEntries(c),net=a.reduce((z,e)=>z+calcGross(e.t)-realisedCharges(e.t),0);return `<div class="summary-category-card" onclick="selectSummaryCategory('${c}')"><div><b>${summaryCategoryLabel(c)}</b><small>${a.length} closed trade${a.length===1?'':'s'} · ${money(net)}</small></div><div class="history-chevron">›</div></div>`}).join('')}</div>`;
 }
 function renderSummaryCategory(cat,filter='all'){
  const all=summaryEntries(cat),profits=all.filter(e=>calcGross(e.t)-realisedCharges(e.t)>=0),losses=all.filter(e=>calcGross(e.t)-realisedCharges(e.t)<0),profitAmt=profits.reduce((z,e)=>z+calcGross(e.t)-realisedCharges(e.t),0),lossAmt=losses.reduce((z,e)=>z+Math.abs(calcGross(e.t)-realisedCharges(e.t)),0),net=profitAmt-lossAmt;
@@ -2136,7 +2136,7 @@ refreshTradeModeUI();
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', async () => {
     try {
-      const reg = await navigator.serviceWorker.register('./service-worker.js?v=52-future-card-layout-fix-final', {updateViaCache:'none'});
+      const reg = await navigator.serviceWorker.register('./service-worker.js?v=52-summary-top-tabs-remove-final', {updateViaCache:'none'});
       await reg.update();
     } catch(e) {}
   });
