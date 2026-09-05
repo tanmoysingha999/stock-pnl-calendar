@@ -2118,7 +2118,7 @@ refreshTradeModeUI();
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', async () => {
     try {
-      const reg = await navigator.serviceWorker.register('./service-worker.js?v=52-stable-calc-auto-update-final-1', {updateViaCache:'none'});
+      const reg = await navigator.serviceWorker.register('./service-worker.js?v=52-fno-commodity-menu-fix-final-1', {updateViaCache:'none'});
       await reg.update();
     } catch(e) {}
   });
@@ -2446,6 +2446,76 @@ history.replaceState({pnlApp:true,view:'frontFinal',cursorYear:cursor.getFullYea
     }catch(e){}
     return previousTradeGrossFinal(t);
   };
+})();
+</script>
+
+
+
+<style id="v52-fno-commodity-menu-fix-css">
+/* F&O / Commodity parent pages are overview pages only.
+   Add Today and the date helper stay available only on the individual Future / Option pages. */
+.app.market-folder-page .add-today{display:none!important}
+.app.market-folder-page .cal::after{display:none!important;content:none!important}
+</style>
+<script id="v52-fno-commodity-menu-fix-js">
+(function(){
+  'use strict';
+  const appEl=document.querySelector('.app');
+  const FOLDER_KEYS={
+    fnoMenu:['stockPnLCalendar_future_v21','stockPnLCalendar_option_v21'],
+    commodityMenu:['stockPnLCalendar_commodity_v21','stockPnLCalendar_commodity_option_v48']
+  };
+  function stored(key){
+    try{const a=JSON.parse(localStorage.getItem(key)||'null');return Array.isArray(a)?a:[]}catch(e){return []}
+  }
+  function realizedDate(t){
+    try{return tradeCalendarDate(t)}catch(e){return (!isOpenTrade(t)&&t.sellDate)?t.sellDate:(t.date||t.buyDate||'')}
+  }
+  function monthFolderNet(folder,y,m){
+    const keys=FOLDER_KEYS[folder]||[];
+    let total=0;
+    for(const storageKey of keys){
+      for(const t of stored(storageKey)){
+        const ds=realizedDate(t); if(!ds)continue;
+        const d=new Date(ds+'T12:00:00');
+        if(d.getFullYear()!==y||d.getMonth()!==m)continue;
+        try{total+=Number(calcGross(t)||0)-Number(realisedCharges(t)||0)}catch(e){}
+      }
+    }
+    return total;
+  }
+  function fullAmount(v){
+    const n=Number(v)||0,sign=n<0?'-':n>0?'+':'';
+    return sign+'₹'+Math.abs(n).toLocaleString('en-IN',{minimumFractionDigits:2,maximumFractionDigits:2});
+  }
+  function syncFolderClass(){
+    const folder=activeMarket==='fnoMenu'||activeMarket==='commodityMenu';
+    if(appEl)appEl.classList.toggle('market-folder-page',folder);
+  }
+  function paintFolderTotal(){
+    if(activeMarket!=='fnoMenu'&&activeMarket!=='commodityMenu')return;
+    const y=cursor.getFullYear(),m=cursor.getMonth();
+    const total=monthFolderNet(activeMarket,y,m);
+    if(netStat){
+      netStat.textContent=fullAmount(total);
+      netStat.style.color=total>0?'#20e58b':total<0?'#ff5a5f':'#f2f5f6';
+    }
+  }
+  const prevUpdateStats=updateStats;
+  updateStats=function(){
+    prevUpdateStats();
+    syncFolderClass();
+    paintFolderTotal();
+  };
+  const prevApplyMarketSelection=applyMarketSelection;
+  applyMarketSelection=function(group,sub=null,push=false){
+    if(appEl)appEl.classList.toggle('market-folder-page',(group==='fno'||group==='commodity')&&!sub);
+    prevApplyMarketSelection(group,sub,push);
+    syncFolderClass();
+    paintFolderTotal();
+  };
+  syncFolderClass();
+  paintFolderTotal();
 })();
 </script>
 

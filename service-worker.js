@@ -1,4 +1,4 @@
-const CACHE='stock-pnl-calendar-v52-stable-calc-auto-update-final-1';
+const CACHE='stock-pnl-calendar-v52-fno-commodity-menu-fix-final-1';
 const SHELL='./index.html';
 self.addEventListener('install',e=>{self.skipWaiting();});
 self.addEventListener('activate',e=>{e.waitUntil((async()=>{
