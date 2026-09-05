@@ -2196,7 +2196,7 @@ refreshTradeModeUI();
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', async () => {
     try {
-      const reg = await navigator.serviceWorker.register('./service-worker.js?v=52-global-logo-overlap-fix-final', {updateViaCache:'none'});
+      const reg = await navigator.serviceWorker.register('./service-worker.js?v=52-error1-error2-only-fix-final', {updateViaCache:'none'});
       await reg.update();
     } catch(e) {}
   });
@@ -2739,7 +2739,7 @@ history.replaceState({pnlApp:true,view:'frontFinal',cursorYear:cursor.getFullYea
       if(!bd||!sd)return '';
       const a=new Date(bd+'T12:00:00'),b=new Date(sd+'T12:00:00');
       const days=Math.max(0,Math.round((b-a)/86400000));
-      return days===0?'in same day ⚡':`in ${days} day${days===1?'':'s'}`;
+      return days===0?'in same day':`in ${days} day${days===1?'':'s'}`;
     }catch(e){return ''}
   }
   function finalCard(t){
@@ -2760,7 +2760,7 @@ history.replaceState({pnlApp:true,view:'frontFinal',cursorYear:cursor.getFullYea
         <div class="final-history-row"><div class="final-history-action buy">${buyLabel}</div><div class="final-history-date">${compactDate(effectiveBuyDate(t))}</div><div class="final-history-price">${money(Number(t.buyPrice)||0)}</div></div>
         <div class="final-history-row"><div class="final-history-action ${open?'sell':(pos?'sell':'loss')}">${exitLabel}</div><div class="final-history-date">${open?'—':compactDate(sellDate)}</div><div class="final-history-price">${open?'—':money(Number(t.sellPrice)||0)}</div></div>
       </div>
-      <div class="final-history-gain ${gainClass}">${open?gainText:`Net gain: ${pct.toFixed(2)}% (<span class="amt ${pos?'profit':'loss'}">${net>=0?'+':''}${money(net)}</span>) ${dur}`}</div>
+      <div class="final-history-gain ${gainClass}">${open?gainText:`Net gain: ${pct.toFixed(2)}% (<span class="amt ${pos?'profit':'loss'}">${net>=0?'+':''}${money(net)}</span>) ${dur}${dur?' ':''}${pos?'⚡':'<span class="trade-status-sign loss">▼</span>'}`}</div>
       <div class="final-history-actions"><button class="edit" onclick="event.stopPropagation();editTrade(${idx})">✎ Edit</button><button class="del" onclick="event.stopPropagation();deleteTrade(${idx})">🗑 Delete</button></div>
     </div>`;
   }
@@ -2781,6 +2781,30 @@ history.replaceState({pnlApp:true,view:'frontFinal',cursorYear:cursor.getFullYea
   closeModal=function(fromPop=false){
     try{const sheet=modal&&modal.querySelector('.sheet');if(sheet)sheet.classList.remove('final-history-mode')}catch(e){}
     return oldCloseModal(fromPop);
+  };
+})();
+</script>
+<style id="v52-error1-error2-only-css">
+/* Error 2 only: loss status sign must be red. */
+.trade-status-sign.loss{color:#ff525d!important}
+</style>
+<script id="v52-error1-error2-only-js">
+(function(){
+  'use strict';
+  /* Error 1 only: actual Buy/Selling dates cannot be after the device's local today.
+     Future/Expiry Date is intentionally not validated here. */
+  const previousAddTradeForDateGuard=addTrade;
+  function localTodayKey(){
+    const d=new Date();
+    return String(d.getFullYear())+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+  }
+  addTrade=function(){
+    const bd=(document.getElementById('buyDate')?.value||'').trim();
+    const sd=(document.getElementById('sellDate')?.value||'').trim();
+    const today=localTodayKey();
+    if(bd&&bd>today){showAppNotice('Future trade date is not allowed.','buyDate');return;}
+    if(sd&&sd>today){showAppNotice('Future trade date is not allowed.','sellDate');return;}
+    return previousAddTradeForDateGuard();
   };
 })();
 </script>
