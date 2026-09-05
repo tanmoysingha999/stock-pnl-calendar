@@ -1,4 +1,4 @@
-const CACHE='stock-pnl-calendar-v52-error3-error4-only-fix-final';
+const CACHE='stock-pnl-calendar-v52-error5-table-alignment-only-fix-final';
 const SHELL='./index.html';
 self.addEventListener('install',e=>{self.skipWaiting();});
 self.addEventListener('activate',e=>{e.waitUntil((async()=>{for(const k of await caches.keys())if(k!==CACHE)await caches.delete(k);await self.clients.claim();})());});

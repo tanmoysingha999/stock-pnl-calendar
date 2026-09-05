@@ -2196,7 +2196,7 @@ refreshTradeModeUI();
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', async () => {
     try {
-      const reg = await navigator.serviceWorker.register('./service-worker.js?v=52-error3-error4-only-fix-final', {updateViaCache:'none'});
+      const reg = await navigator.serviceWorker.register('./service-worker.js?v=52-error5-table-alignment-only-fix-final', {updateViaCache:'none'});
       await reg.update();
     } catch(e) {}
   });
@@ -2853,6 +2853,55 @@ history.replaceState({pnlApp:true,view:'frontFinal',cursorYear:cursor.getFullYea
   };
 })();
 </script>
+
+
+<style id="v52-error5-table-alignment-only-css">
+/* Error 5 only: true geometric centering of the Trade Details date title.
+   Close button is taken out of layout flow so it cannot shift the title. */
+.modal .sheettop{
+  position:sticky!important;
+  justify-content:initial!important;
+  min-height:44px!important;
+}
+.modal .sheettop #dateTitle{
+  position:absolute!important;
+  left:50%!important;
+  top:50%!important;
+  transform:translate(-50%,-50%)!important;
+  width:calc(100% - 116px)!important;
+  padding:0!important;
+  margin:0!important;
+  text-align:center!important;
+  white-space:nowrap!important;
+  overflow:hidden!important;
+  text-overflow:ellipsis!important;
+}
+.modal .sheettop .close{
+  position:absolute!important;
+  right:4px!important;
+  top:50%!important;
+  transform:translateY(-50%)!important;
+  margin:0!important;
+}
+
+/* Trade Details table alignment only: Action left, Date exact center, Price right.
+   Same three-column geometry is used for the header and every Buy/Exit row. */
+.final-history-row{
+  grid-template-columns:minmax(0,1fr) minmax(0,1fr) minmax(0,1fr)!important;
+  column-gap:10px!important;
+}
+.final-history-row > div:nth-child(1){text-align:left!important;justify-self:stretch!important}
+.final-history-row > div:nth-child(2){text-align:center!important;justify-self:stretch!important}
+.final-history-row > div:nth-child(3){text-align:right!important;justify-self:stretch!important}
+.final-history-row.head > div:nth-child(1){text-align:left!important}
+.final-history-row.head > div:nth-child(2){text-align:center!important}
+.final-history-row.head > div:nth-child(3){text-align:right!important}
+.final-history-date{text-align:center!important}
+.final-history-price{text-align:right!important}
+@media(max-width:520px){
+  .final-history-row{column-gap:8px!important}
+}
+</style>
 
 </body>
 </html>
