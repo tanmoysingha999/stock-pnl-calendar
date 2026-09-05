@@ -2136,7 +2136,7 @@ refreshTradeModeUI();
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', async () => {
     try {
-      const reg = await navigator.serviceWorker.register('./service-worker.js?v=52-summary-top-tabs-remove-final', {updateViaCache:'none'});
+      const reg = await navigator.serviceWorker.register('./service-worker.js?v=52-final-trade-details-style-all-final', {updateViaCache:'none'});
       await reg.update();
     } catch(e) {}
   });
@@ -2600,6 +2600,128 @@ history.replaceState({pnlApp:true,view:'frontFinal',cursorYear:cursor.getFullYea
     paintParentCalendar();
   };
   paintParentCalendar();
+})();
+</script>
+
+
+
+<style id="v52-final-trade-details-style-all-css">
+/* FINAL approved daily Trade Details view — presentation-only update for Stock/F&O/Commodity.
+   Existing calculations, storage, calendar/navigation and edit/delete behavior remain unchanged. */
+.sheet.final-history-mode #tradeForm{display:none!important}
+.sheet.final-history-mode #tradeList{display:grid;gap:10px;margin-top:10px}
+.sheet.final-history-mode{padding-bottom:14px}
+.final-history-card{
+  display:block!important;width:100%;box-sizing:border-box;overflow:hidden;
+  border:1px solid #2a4652!important;border-radius:16px!important;
+  background:linear-gradient(145deg,#071c27,#061722)!important;
+  padding:10px!important;margin:0!important;color:#eef4f6!important;
+}
+.final-history-card.profit-card{border-color:#1a5d49!important}
+.final-history-card.loss-card{border-color:#71343c!important}
+.final-history-card.open-card{border-color:#6c541d!important}
+.final-history-head{display:flex;align-items:center;gap:10px;margin-bottom:8px;min-width:0}
+.final-history-head .trade-card-logo{width:48px!important;height:48px!important;flex:0 0 48px!important;border-radius:10px!important}
+.final-history-company{font-size:14px;font-weight:850;color:#f4f7f8;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.final-history-status{margin-left:auto;font-size:11px;font-weight:850;white-space:nowrap}
+.final-history-status.profit{color:#25df82}.final-history-status.loss{color:#ff5d65}.final-history-status.open{color:#f2a31c}
+.final-history-table{margin-left:58px;border:1px solid #27414d;border-radius:10px;overflow:hidden;background:#071923}
+.final-history-row{display:grid;grid-template-columns:minmax(72px,.9fr) minmax(112px,1.55fr) minmax(70px,.8fr);align-items:center;min-height:29px;padding:0 9px;gap:8px;font-size:10.5px}
+.final-history-row.head{min-height:27px;background:#0b2531;color:#aebbc1;font-weight:750}
+.final-history-action.buy{color:#22e28a;font-weight:800}.final-history-action.sell{color:#39a7ff;font-weight:800}.final-history-action.loss{color:#ff646b;font-weight:800}
+.final-history-date{color:#eef4f6;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.final-history-price{text-align:right;color:#eef4f6;white-space:nowrap}
+.final-history-gain{margin:8px 0 0 0;border-radius:8px;padding:7px 9px;text-align:center;font-size:11px;font-weight:850;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.final-history-gain.profit{background:linear-gradient(90deg,#07542f,#08753f);color:#f4fff8}
+.final-history-gain.loss{background:linear-gradient(90deg,#642029,#852630);color:#fff5f6}
+.final-history-gain.open{background:linear-gradient(90deg,#5a3b0c,#7a5110);color:#fff5dc}
+.final-history-gain .amt.profit{color:#2ff09a}.final-history-gain .amt.loss{color:#ff8086}
+.final-history-actions{display:none;margin-top:8px;gap:7px;grid-template-columns:1fr 1fr}
+.final-history-card.trade-actions-open .final-history-actions{display:grid}
+.final-history-actions button{border-radius:9px;padding:7px 8px;font-size:10px;font-weight:750;background:#071a25}
+.final-history-actions .edit{color:#64aaff;border:1px solid #3579bf}.final-history-actions .del{color:#ff555d;border:1px solid #c83d45}
+@media(max-width:520px){
+  .final-history-card{padding:9px!important;border-radius:14px!important}
+  .final-history-head .trade-card-logo{width:42px!important;height:42px!important;flex-basis:42px!important}
+  .final-history-company{font-size:12px}.final-history-status{font-size:10px}
+  .final-history-table{margin-left:52px}
+  .final-history-row{grid-template-columns:minmax(62px,.82fr) minmax(102px,1.45fr) minmax(62px,.72fr);padding:0 7px;gap:6px;font-size:9.2px}
+  .final-history-gain{font-size:9.8px;padding:6px 7px}
+}
+</style>
+<script id="v52-final-trade-details-style-all-js">
+(function(){
+  'use strict';
+  const previousRenderModal=renderModal;
+  function compactDate(ds){
+    if(!ds)return '—';
+    try{const d=new Date(ds+'T12:00:00');if(Number.isNaN(d.getTime()))return ds;return String(d.getDate()).padStart(2,'0')+'/'+String(d.getMonth()+1).padStart(2,'0')+'/'+String(d.getFullYear()).slice(-2)}catch(e){return ds}
+  }
+  function realisedQty(t){
+    const b=Number(t&&t.buyQty)||0,s=Number(t&&t.sellQty)||0;
+    if(s>0&&b>0)return Math.min(b,s);
+    return s||b||0;
+  }
+  function tradePercent(t,net){
+    try{
+      let basis=Number(t&&t.totalBuyAmount)||0;
+      if(!(basis>0)){
+        const q=realisedQty(t),bp=Math.abs(Number(t&&t.buyPrice)||0);
+        basis=bp*q;
+      }
+      if(!(basis>0))return 0;
+      return (Number(net)||0)/basis*100;
+    }catch(e){return 0}
+  }
+  function durationLabel(t){
+    try{
+      const bd=effectiveBuyDate(t),sd=effectiveSellDate(t);
+      if(!bd||!sd)return '';
+      const a=new Date(bd+'T12:00:00'),b=new Date(sd+'T12:00:00');
+      const days=Math.max(0,Math.round((b-a)/86400000));
+      return days===0?'in same day ⚡':`in ${days} day${days===1?'':'s'}`;
+    }catch(e){return ''}
+  }
+  function finalCard(t){
+    const idx=trades.indexOf(t),net=Number(calcGross(t)||0)-Number(realisedCharges(t)||0),open=isOpenTrade(t),a=resolveTradeAsset(t);
+    const pos=net>=0, selectedAction=selectedDayTradeActionIndex===idx;
+    const bq=Number(t&&t.buyQty)||0,sq=Number(t&&t.sellQty)||0,partial=!open&&bq>0&&sq>0&&sq<bq;
+    const buyLabel=(t&&t.futureTrade&&String(t.futureSide||'').toUpperCase()==='SELL')?'Sell':'Buy';
+    const exitLabel=open?'Holding':(partial?'Exit partial':'Exit full');
+    const sellDate=effectiveSellDate(t),pct=tradePercent(t,net),dur=durationLabel(t);
+    const status=open?'Holding':(pos?'Profit booked':'Loss booked');
+    const statusClass=open?'open':(pos?'profit':'loss');
+    const gainClass=open?'open':(pos?'profit':'loss');
+    const gainText=open?'OPEN / HOLDING':`Net gain: ${pct.toFixed(2)}% (${net>=0?'+':''}${money(net)}) ${dur}`;
+    return `<div class="final-history-card ${statusClass==='profit'?'profit-card':statusClass==='loss'?'loss-card':'open-card'} ${selectedAction?'trade-actions-open':''}" onclick="showDayTradeActions(${idx})">
+      <div class="final-history-head">${assetLogoHTML(a,'trade-card-logo')}<div class="final-history-company">${escapeHtml(t.stock)}</div><div class="final-history-status ${statusClass}">${status}</div></div>
+      <div class="final-history-table">
+        <div class="final-history-row head"><div>Action</div><div>Date</div><div class="final-history-price">Price</div></div>
+        <div class="final-history-row"><div class="final-history-action buy">${buyLabel}</div><div class="final-history-date">${compactDate(effectiveBuyDate(t))}</div><div class="final-history-price">${money(Number(t.buyPrice)||0)}</div></div>
+        <div class="final-history-row"><div class="final-history-action ${open?'sell':(pos?'sell':'loss')}">${exitLabel}</div><div class="final-history-date">${open?'—':compactDate(sellDate)}</div><div class="final-history-price">${open?'—':money(Number(t.sellPrice)||0)}</div></div>
+      </div>
+      <div class="final-history-gain ${gainClass}">${open?gainText:`Net gain: ${pct.toFixed(2)}% (<span class="amt ${pos?'profit':'loss'}">${net>=0?'+':''}${money(net)}</span>) ${dur}`}</div>
+      <div class="final-history-actions"><button class="edit" onclick="event.stopPropagation();editTrade(${idx})">✎ Edit</button><button class="del" onclick="event.stopPropagation();deleteTrade(${idx})">🗑 Delete</button></div>
+    </div>`;
+  }
+  renderModal=function(){
+    const arr=byDate(selected),sheet=modal&&modal.querySelector('.sheet');
+    if(!arr.length){
+      if(sheet)sheet.classList.remove('final-history-mode');
+      return previousRenderModal();
+    }
+    if(sheet)sheet.classList.add('final-history-mode');
+    const d=new Date(selected+'T12:00:00');
+    dateTitle.textContent=d.toLocaleDateString('en-IN',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
+    const n=arr.reduce((sum,t)=>sum+Number(calcGross(t)||0)-Number(realisedCharges(t)||0),0);
+    daySummary.innerHTML=`<div class="day-total"><span>Total&nbsp; <b>${arr.length}</b>&nbsp; Trade${arr.length===1?'':'s'}</span><span class="day-net-label">Net P&amp;L</span><b class="day-net ${n>=0?'profitT':'lossT'}">${n>=0?'+':''}${money(n)}</b></div>`;
+    tradeList.innerHTML=arr.map(finalCard).join('');
+  };
+  const oldCloseModal=closeModal;
+  closeModal=function(fromPop=false){
+    try{const sheet=modal&&modal.querySelector('.sheet');if(sheet)sheet.classList.remove('final-history-mode')}catch(e){}
+    return oldCloseModal(fromPop);
+  };
 })();
 </script>
 
