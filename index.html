@@ -7,6 +7,19 @@
 <!-- v46 FINAL: v45 fixed base + 3 approved points -->
 <!-- v52 FINAL CANDIDATE: clean v50 base + 5 approved fixes; data-safe -->
 <title>Stock P&L Calendar</title>
+<script id="v52-auth-first-paint-gate">
+(function(){
+  try{
+    if(sessionStorage.getItem('stockPnLCalendar_sessionUnlocked_v52')==='1') document.documentElement.classList.add('v52-session-unlocked');
+    else document.documentElement.classList.add('v52-lock-pending');
+  }catch(e){ document.documentElement.classList.add('v52-lock-pending'); }
+})();
+</script>
+<style id="v52-auth-first-paint-css">
+html.v52-lock-pending body{background:#06131c!important}
+html.v52-lock-pending body>*:not(#appLockV52){visibility:hidden!important}
+html.v52-lock-pending #appLockV52{visibility:visible!important}
+</style>
 
 
 
@@ -2155,48 +2168,43 @@ refreshTradeModeUI();
 (function(){
   const needle=/powered\s+by\s+netlify|make\s+public|netlify\s+drawer/i;
   const app=document.querySelector('.app');
-  function hideNode(el){
-    try{ el.style.setProperty('display','none','important'); el.style.setProperty('visibility','hidden','important'); }catch(e){}
+  function hideNode(el){try{el.style.setProperty('display','none','important');el.style.setProperty('visibility','hidden','important')}catch(e){}}
+  function inspect(el){
+    if(!el||el.nodeType!==1)return;
+    try{
+      if(app&&(el===app||app.contains(el)))return;
+      const tag=(el.tagName||'').toLowerCase();
+      const attrs=((el.id||'')+' '+(typeof el.className==='string'?el.className:'')+' '+(el.getAttribute?.('title')||'')+' '+(el.getAttribute?.('src')||'')+' '+(el.getAttribute?.('data-testid')||'')).toString();
+      if(/netlify/i.test(attrs)||/netlify-(drawer|toolbar)/i.test(tag)){hideNode(el);return}
+      const txt=(el.textContent||'').trim();
+      if(needle.test(txt)){const cs=getComputedStyle(el);if(cs.position==='fixed'||cs.position==='absolute'||tag==='iframe'){hideNode(el);return}}
+      const cs=getComputedStyle(el);
+      if(cs.position==='fixed'){
+        const r=el.getBoundingClientRect(),z=parseInt(cs.zIndex)||0;
+        if(r.width>80&&r.width<380&&r.height>24&&r.height<130&&r.right>innerWidth-40&&r.bottom>innerHeight-40&&z>=1000){hideNode(el);return}
+      }
+      if(el.shadowRoot){const txt2=(el.shadowRoot.textContent||'');if(needle.test(txt2))hideNode(el)}
+    }catch(e){}
   }
-  function scan(root){
-    let all=[]; try{ all=[...root.querySelectorAll('*')]; }catch(e){}
-    for(const el of all){
-      try{
-        const tag=(el.tagName||'').toLowerCase();
-        const attrs=((el.id||'')+' '+(el.className||'')+' '+(el.getAttribute?.('title')||'')+' '+(el.getAttribute?.('src')||'')+' '+(el.getAttribute?.('data-testid')||'')).toString();
-        if(/netlify/i.test(attrs) || /netlify-(drawer|toolbar)/i.test(tag)) hideNode(el);
-        if(el.shadowRoot){
-          const txt=(el.shadowRoot.textContent||'');
-          if(needle.test(txt)) hideNode(el);
-          scan(el.shadowRoot);
-        }
-        const txt=(el.textContent||'').trim();
-        if(needle.test(txt)){
-          const cs=getComputedStyle(el);
-          if(cs.position==='fixed'||cs.position==='absolute'||tag==='iframe') hideNode(el);
-        }
-        /* Fallback: injected bottom-right fixed helper chip, never touch our app/modal */
-        if(app && !app.contains(el)){
-          const cs=getComputedStyle(el);
-          if(cs.position==='fixed'){
-            const r=el.getBoundingClientRect();
-            const z=parseInt(cs.zIndex)||0;
-            if(r.width>80 && r.width<380 && r.height>24 && r.height<130 && r.right>innerWidth-40 && r.bottom>innerHeight-40 && z>=1000) hideNode(el);
-          }
-        }
-      }catch(e){}
-    }
+  function scanAdded(root){
+    if(!root||root.nodeType!==1)return;
+    if(app&&(root===app||app.contains(root)))return;
+    inspect(root);
+    let nodes=[];try{nodes=root.querySelectorAll('[id*="netlify" i],[class*="netlify" i],[src*="netlify" i],[title*="netlify" i],[data-testid*="netlify" i],iframe')}catch(e){}
+    for(const el of nodes)inspect(el);
   }
-  const run=()=>scan(document);
-  new MutationObserver(run).observe(document.documentElement,{childList:true,subtree:true,attributes:true});
-  run(); setInterval(run,250);
+  try{document.querySelectorAll('[id*="netlify" i],[class*="netlify" i],[src*="netlify" i],[title*="netlify" i],[data-testid*="netlify" i],iframe').forEach(inspect)}catch(e){}
+  const mo=new MutationObserver(records=>{for(const r of records)for(const n of r.addedNodes)scanAdded(n)});
+  mo.observe(document.documentElement,{childList:true,subtree:true});
+  setTimeout(()=>{try{document.querySelectorAll('body>*').forEach(inspect)}catch(e){}},500);
+  setTimeout(()=>{try{document.querySelectorAll('body>*').forEach(inspect)}catch(e){}},2000);
 })();
 </script>
 <script>
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', async () => {
     try {
-      const reg = await navigator.serviceWorker.register('./service-worker.js?v=52-pin-biometric-lock-ui-only-final', {updateViaCache:'none'});
+      const reg = await navigator.serviceWorker.register('./service-worker.js?v=52-4-problems-fix-smooth-final', {updateViaCache:'none'});
       await reg.update();
     } catch(e) {}
   });
@@ -3156,8 +3164,8 @@ history.replaceState({pnlApp:true,view:'frontFinal',cursorYear:cursor.getFullYea
 #appLockV52 .pin-box:focus{border-color:#6fdfba;box-shadow:0 0 0 3px #6fdfba1f}
 #appLockV52 .pin-box.filled{-webkit-text-security:disc}
 #appLockV52 .forgot-pin{border:0;background:transparent;color:#62a9e8;font-size:16px;font-weight:800;padding:10px 16px;margin:0 0 48px}
-#appLockV52 .lock-biometric{display:none;align-items:center;justify-content:center;gap:10px;border:0;background:transparent;color:#6fdfba;font-size:18px;font-weight:850;padding:12px 16px;margin:0 auto}
-#appLockV52.biometric-ready .lock-biometric{display:flex}
+#appLockV52 .lock-biometric{display:flex;align-items:center;justify-content:center;gap:10px;border:0;background:transparent;color:#6fdfba;font-size:18px;font-weight:850;padding:12px 16px;margin:0 auto}
+#appLockV52 .lock-biometric:disabled{opacity:.55}
 #appLockV52 .bio-icon{width:30px;height:30px;display:block}
 #appLockV52 .lock-msg{min-height:20px;margin-top:18px;text-align:center;font-size:13px;color:#ff7382}
 #appLockV52 .setup-note{font-size:12px;color:#91a2aa;text-align:center;margin-top:-14px;margin-bottom:20px}
@@ -3191,8 +3199,9 @@ body.app-locked-v52{overflow:hidden!important;touch-action:none}
   const previousShowTransactionViewFinal3=showTransactionView;
   showTransactionView=function(push=true){if(push){try{if((history.state||{}).view!=='frontFinal')history.replaceState({pnlApp:true,view:'frontFinal',cursorYear:cursor.getFullYear(),cursorMonth:cursor.getMonth()},'')}catch(e){}}return previousShowTransactionViewFinal3(push)};
 
-  /* Problem 3: same lock security, approved four-PIN visual format + biometric. */
+  /* Problems 1-3 lock fixes: working biometric, no startup flash, no re-lock on refresh in the same app session. */
   const LOCK_KEY='stockPnLCalendar_appLock_v52';
+  const SESSION_KEY='stockPnLCalendar_sessionUnlocked_v52';
   let lockData=null,lockBusy=false,setupConfirmPin='';
   try{lockData=JSON.parse(localStorage.getItem(LOCK_KEY)||'null')}catch(e){lockData=null}
   const overlay=document.createElement('div');overlay.id='appLockV52';
@@ -3212,45 +3221,82 @@ body.app-locked-v52{overflow:hidden!important;touch-action:none}
     <div class="lock-msg" id="appLockMsgV52"></div>
   </div>`;
   document.body.appendChild(overlay);
-  const $=id=>document.getElementById(id),pins=[...overlay.querySelectorAll('.pin-box')],sub=$('appLockSubV52'),title=$('appLockTitleV52'),note=$('appLockSetupNoteV52'),msg=$('appLockMsgV52');
+  const $=id=>document.getElementById(id),pins=[...overlay.querySelectorAll('.pin-box')],sub=$('appLockSubV52'),title=$('appLockTitleV52'),note=$('appLockSetupNoteV52'),msg=$('appLockMsgV52'),bioBtn=$('appLockBioV52');
   function bytesToB64u(bytes){let s='';for(const b of bytes)s+=String.fromCharCode(b);return btoa(s).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'')}
   function b64uToBytes(s){s=s.replace(/-/g,'+').replace(/_/g,'/');while(s.length%4)s+='=';const x=atob(s),a=new Uint8Array(x.length);for(let i=0;i<x.length;i++)a[i]=x.charCodeAt(i);return a}
   async function passwordHash(pass,saltB64){const enc=new TextEncoder(),salt=b64uToBytes(saltB64),p=enc.encode(pass),buf=new Uint8Array(salt.length+p.length);buf.set(salt);buf.set(p,salt.length);const d=await crypto.subtle.digest('SHA-256',buf);return bytesToB64u(new Uint8Array(d))}
   function saveLock(){localStorage.setItem(LOCK_KEY,JSON.stringify(lockData))}
-  function unlockApp(){overlay.classList.remove('show');document.body.classList.remove('app-locked-v52');msg.textContent='';lockBusy=false;clearPins()}
-  function lockApp(){document.body.classList.add('app-locked-v52');overlay.classList.add('show')}
-  function biometricSupported(){return !!(window.PublicKeyCredential&&navigator.credentials&&location.protocol==='https:')}
-  function clearPins(){pins.forEach(p=>{p.value='';p.classList.remove('filled')});setTimeout(()=>pins[0]?.focus(),50)}
+  function sessionUnlocked(){try{return sessionStorage.getItem(SESSION_KEY)==='1'}catch(e){return false}}
+  function markSessionUnlocked(){try{sessionStorage.setItem(SESSION_KEY,'1')}catch(e){}document.documentElement.classList.remove('v52-lock-pending');document.documentElement.classList.add('v52-session-unlocked')}
+  function unlockApp(){markSessionUnlocked();overlay.classList.remove('show');document.body.classList.remove('app-locked-v52');msg.textContent='';lockBusy=false;clearPins(false)}
+  function lockApp(){document.documentElement.classList.add('v52-lock-pending');document.documentElement.classList.remove('v52-session-unlocked');document.body.classList.add('app-locked-v52');overlay.classList.add('show')}
+  function biometricSupported(){return !!(window.PublicKeyCredential&&navigator.credentials&&window.crypto&&crypto.getRandomValues&&location.protocol==='https:')}
+  async function platformBiometricAvailable(){if(!biometricSupported())return false;try{return typeof PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable!=='function'||await PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable()}catch(e){return true}}
+  function clearPins(focus=true){pins.forEach(p=>{p.value='';p.classList.remove('filled')});if(focus)setTimeout(()=>pins[0]?.focus(),50)}
   function pinValue(){return pins.map(p=>p.value).join('')}
   function isNewPinMode(){return !lockData?.hash||lockData?.pinMode!==true}
   function renderLockMode(){
     clearPins();msg.textContent='';setupConfirmPin='';
     if(isNewPinMode()){
-      title.textContent=lockData?.hash?'Create 4-Digit PIN':'Create 4-Digit PIN';sub.textContent='Choose your app PIN';note.style.display='block';note.textContent=lockData?.hash?'Your previous password will be replaced only after the new PIN is saved.':'Enter a new 4-digit PIN';$('appLockForgotV52').style.display='none';
+      title.textContent='Create 4-Digit PIN';sub.textContent='Choose your app PIN';note.style.display='block';note.textContent=lockData?.hash?'Your previous password will be replaced only after the new PIN is saved.':'Enter a new 4-digit PIN';$('appLockForgotV52').style.display='none';
     }else{title.textContent='Welcome Back!';sub.textContent='Enter your 4-digit PIN';note.style.display='none';$('appLockForgotV52').style.display='block'}
-    if(lockData?.credId&&biometricSupported())overlay.classList.add('biometric-ready');else overlay.classList.remove('biometric-ready');
+    bioBtn.disabled=false;
   }
-  async function enrollBiometric(){if(!biometricSupported())return false;try{const challenge=crypto.getRandomValues(new Uint8Array(32)),uid=crypto.getRandomValues(new Uint8Array(16));const cred=await navigator.credentials.create({publicKey:{challenge,rp:{name:'Stock P&L Calendar'},user:{id:uid,name:'stock-pnl-calendar-user',displayName:'Stock P&L Calendar User'},pubKeyCredParams:[{type:'public-key',alg:-7},{type:'public-key',alg:-257}],authenticatorSelection:{authenticatorAttachment:'platform',residentKey:'preferred',userVerification:'required'},timeout:60000,attestation:'none'}});if(cred&&cred.rawId){lockData.credId=bytesToB64u(new Uint8Array(cred.rawId));saveLock();overlay.classList.add('biometric-ready');return true}}catch(e){}return false}
-  async function tryBiometric(){if(lockBusy||!lockData?.credId||!biometricSupported())return false;lockBusy=true;msg.textContent='';try{const cred=await navigator.credentials.get({publicKey:{challenge:crypto.getRandomValues(new Uint8Array(32)),allowCredentials:[{type:'public-key',id:b64uToBytes(lockData.credId)}],userVerification:'required',timeout:60000}});if(cred){unlockApp();return true}}catch(e){}lockBusy=false;return false}
-  async function saveNewPin(pin){const salt=bytesToB64u(crypto.getRandomValues(new Uint8Array(16))),hash=await passwordHash(pin,salt),oldCred=lockData?.credId||null;lockData={salt,hash,credId:oldCred,pinMode:true};saveLock();msg.textContent='';if(!oldCred){sub.textContent='PIN saved. Set up biometric to continue.';const ok=await enrollBiometric();if(!ok)unlockApp();else unlockApp()}else unlockApp()}
-  async function submitPin(){
-    const pin=pinValue();if(pin.length!==4)return;
-    if(isNewPinMode()){
-      if(!setupConfirmPin){setupConfirmPin=pin;sub.textContent='Confirm your 4-digit PIN';note.textContent='Enter the same PIN again';clearPins();return}
-      if(pin!==setupConfirmPin){msg.textContent='PINs do not match.';setupConfirmPin='';sub.textContent='Choose your app PIN';note.textContent='Enter a new 4-digit PIN';clearPins();return}
-      await saveNewPin(pin);return;
+  async function enrollBiometric(){
+    if(lockBusy)return false;
+    if(isNewPinMode()){msg.textContent='Create your 4-digit PIN first.';return false}
+    if(!biometricSupported()){msg.textContent='Biometric authentication is not supported here.';return false}
+    if(!(await platformBiometricAvailable())){msg.textContent='Device biometric authentication is not available.';return false}
+    lockBusy=true;bioBtn.disabled=true;msg.textContent='';
+    try{
+      const challenge=crypto.getRandomValues(new Uint8Array(32)),uid=crypto.getRandomValues(new Uint8Array(16));
+      const cred=await navigator.credentials.create({publicKey:{challenge,rp:{name:'Stock P&L Calendar'},user:{id:uid,name:'stock-pnl-calendar-user',displayName:'Stock P&L Calendar User'},pubKeyCredParams:[{type:'public-key',alg:-7},{type:'public-key',alg:-257}],authenticatorSelection:{authenticatorAttachment:'platform',residentKey:'discouraged',requireResidentKey:false,userVerification:'required'},timeout:60000,attestation:'none'}});
+      if(cred&&cred.rawId){lockData.credId=bytesToB64u(new Uint8Array(cred.rawId));saveLock();unlockApp();return true}
+    }catch(e){if(e?.name!=='NotAllowedError')msg.textContent='Biometric setup failed. Please try again.'}
+    lockBusy=false;bioBtn.disabled=false;return false;
+  }
+  async function authenticateBiometric(){
+    if(lockBusy)return false;
+    if(!lockData?.credId)return enrollBiometric();
+    if(!biometricSupported()){msg.textContent='Biometric authentication is not supported here.';return false}
+    if(!(await platformBiometricAvailable())){msg.textContent='Device biometric authentication is not available.';return false}
+    lockBusy=true;bioBtn.disabled=true;msg.textContent='';
+    try{
+      const assertion=await navigator.credentials.get({publicKey:{challenge:crypto.getRandomValues(new Uint8Array(32)),allowCredentials:[{type:'public-key',id:b64uToBytes(lockData.credId),transports:['internal']}],userVerification:'required',timeout:60000}});
+      if(assertion){unlockApp();return true}
+    }catch(e){
+      if(e?.name==='NotFoundError'||e?.name==='InvalidStateError'){
+        delete lockData.credId;saveLock();msg.textContent='Biometric needs setup. Tap Use Biometric again.';
+      }else if(e?.name!=='NotAllowedError')msg.textContent='Biometric authentication failed. Please try again.';
     }
-    const h=await passwordHash(pin,lockData.salt);if(h===lockData.hash)unlockApp();else{msg.textContent='Incorrect PIN.';clearPins()}
+    lockBusy=false;bioBtn.disabled=false;return false;
+  }
+  async function saveNewPin(pin){const salt=bytesToB64u(crypto.getRandomValues(new Uint8Array(16))),hash=await passwordHash(pin,salt),oldCred=lockData?.credId||null;lockData={salt,hash,credId:oldCred,pinMode:true};saveLock();msg.textContent='';unlockApp()}
+  async function submitPin(){
+    const pin=pinValue();if(pin.length!==4||lockBusy)return;
+    lockBusy=true;
+    try{
+      if(isNewPinMode()){
+        if(!setupConfirmPin){setupConfirmPin=pin;sub.textContent='Confirm your 4-digit PIN';note.textContent='Enter the same PIN again';lockBusy=false;clearPins();return}
+        if(pin!==setupConfirmPin){msg.textContent='PINs do not match.';setupConfirmPin='';sub.textContent='Choose your app PIN';note.textContent='Enter a new 4-digit PIN';lockBusy=false;clearPins();return}
+        await saveNewPin(pin);return;
+      }
+      const h=await passwordHash(pin,lockData.salt);if(h===lockData.hash)unlockApp();else{msg.textContent='Incorrect PIN.';lockBusy=false;clearPins()}
+    }catch(e){lockBusy=false;msg.textContent='Unable to verify PIN. Please try again.';clearPins()}
   }
   pins.forEach((p,i)=>{
-    p.addEventListener('input',()=>{p.value=p.value.replace(/\D/g,'').slice(-1);p.classList.toggle('filled',!!p.value);if(p.value&&i<3)pins[i+1].focus();if(pinValue().length===4)setTimeout(submitPin,70)});
+    p.addEventListener('input',()=>{p.value=p.value.replace(/\D/g,'').slice(-1);p.classList.toggle('filled',!!p.value);if(p.value&&i<3)pins[i+1].focus();if(pinValue().length===4)setTimeout(submitPin,40)});
     p.addEventListener('keydown',e=>{if(e.key==='Backspace'&&!p.value&&i>0){pins[i-1].value='';pins[i-1].classList.remove('filled');pins[i-1].focus()}if(e.key==='Enter')submitPin()});
-    p.addEventListener('paste',e=>{const d=(e.clipboardData?.getData('text')||'').replace(/\D/g,'').slice(0,4);if(d){e.preventDefault();pins.forEach((x,j)=>{x.value=d[j]||'';x.classList.toggle('filled',!!x.value)});if(d.length===4)setTimeout(submitPin,70)}});
+    p.addEventListener('paste',e=>{const d=(e.clipboardData?.getData('text')||'').replace(/\D/g,'').slice(0,4);if(d){e.preventDefault();pins.forEach((x,j)=>{x.value=d[j]||'';x.classList.toggle('filled',!!x.value)});if(d.length===4)setTimeout(submitPin,40)}});
   });
-  $('appLockBioV52').addEventListener('click',tryBiometric);
-  $('appLockForgotV52').addEventListener('click',()=>{if(confirm('Reset only the App Lock PIN? Your trading data will not be deleted.')){const oldCred=lockData?.credId||null;lockData={credId:oldCred,pinMode:false};renderLockMode()}});
+  bioBtn.addEventListener('click',authenticateBiometric);
+  $('appLockForgotV52').addEventListener('click',()=>{if(confirm('Reset only the App Lock PIN? Your trading data will not be deleted.')){const oldCred=lockData?.credId||null;lockData={credId:oldCred,pinMode:false};saveLock();renderLockMode()}});
+
+  if(sessionUnlocked()){
+    document.documentElement.classList.remove('v52-lock-pending');document.documentElement.classList.add('v52-session-unlocked');overlay.remove();return;
+  }
   lockApp();renderLockMode();
-  if(lockData?.pinMode===true&&lockData?.credId&&biometricSupported())setTimeout(()=>tryBiometric(),350);
+
 })();
 </script>
 
