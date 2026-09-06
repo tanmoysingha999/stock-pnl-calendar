@@ -1363,7 +1363,7 @@ function renderFundChart(list){
 let selectedRecentFundId=null;
 function renderFundRecent(list){
  let x=list.slice().sort((a,b)=>(b.date||'').localeCompare(a.date||'')).slice(0,10);
- return `<div class="fund-recent"><div class="fund-recent-title"><b>Recent Fund Transactions</b><button class="fund-add-btn" onclick="openFundModal()">＋ Add Transaction</button></div>`+
+ return `<div class="fund-recent"><div class="fund-recent-title"><b>Recent Fund Transactions</b></div>`+
  (x.length?x.map(t=>`<div class="fund-row-wrap"><div class="fund-row ${Number(selectedRecentFundId)===Number(t.id)?'selected':''}" onclick="toggleRecentFundDelete(${t.id})">${brokerLogo(t.broker,'fund-row-logo')}<div><div class="fund-row-main">${escapeHtml(t.broker)}</div><div class="fund-row-meta">${formatDateShort(t.date)} · ${t.type==='deposit'?'Deposit':'Withdraw'}${t.note?' · '+escapeHtml(t.note):''}</div></div><div class="fund-amount ${t.type==='deposit'?'fund-dep':'fund-wd'}">${t.type==='deposit'?'+':'-'}${fmtFund(t.amount)}</div></div>${Number(selectedRecentFundId)===Number(t.id)?`<div class="fund-row-delete-reveal"><button class="recent-edit" type="button" onclick="event.stopPropagation();editRecentFundEntry(${t.id})">✎ Edit Transaction</button><button type="button" onclick="event.stopPropagation();deleteRecentFundEntry(${t.id})">🗑 Delete Transaction</button></div>`:''}</div>`).join(''):`<div class="fund-empty">No fund transactions yet.</div>`)+`</div>`;
 }
 function toggleRecentFundDelete(id){
@@ -1566,8 +1566,8 @@ function showAppNotice(message,fieldId){
   history.pushState({pnlApp:true,view:'calendar',appNotice:true},'');
 }
 
-const money=v=>new Intl.NumberFormat('en-IN',{style:'currency',currency:'INR',maximumFractionDigits:2}).format(v);
-const short=v=>{let a=Math.abs(v),s=v>=0?'+':'-';if(a>=100000)return s+(a/100000).toFixed(1)+'L';if(a>=1000)return s+(a/1000).toFixed(1)+'K';return s+a.toFixed(0)};
+const money=v=>new Intl.NumberFormat('en-IN',{style:'currency',currency:'INR',minimumFractionDigits:2,maximumFractionDigits:2}).format(v);
+const short=v=>{const n=Number(v)||0,a=Math.abs(n),sg=n<0?'-':n>0?'+':'';if(a>=100000){const z=Math.floor((a/100000)*100)/100;return sg+z.toFixed(2)+'L'}if(a>=1000){const z=Math.floor((a/1000)*100)/100;return sg+z.toFixed(2)+'K'}return sg+(Math.floor(a*100)/100).toFixed(2)};
 const key=(y,m,d)=>`${y}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
 function save(){localStorage.setItem(MARKET_KEYS[activeMarket],JSON.stringify(trades));render();updateStats()}
 	function isOptionMarket(){return activeMarket==='option'||activeMarket==='commodityOption'}
@@ -2196,7 +2196,7 @@ refreshTradeModeUI();
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', async () => {
     try {
-      const reg = await navigator.serviceWorker.register('./service-worker.js?v=52-final-two-changes-only-final', {updateViaCache:'none'});
+      const reg = await navigator.serviceWorker.register('./service-worker.js?v=52-amount-fy-recent-only-fix-final', {updateViaCache:'none'});
       await reg.update();
     } catch(e) {}
   });
@@ -3092,17 +3092,7 @@ history.replaceState({pnlApp:true,view:'frontFinal',cursorYear:cursor.getFullYea
 (function(){
   'use strict';
 
-  /* Display-only formatters. Calculations/storage are untouched. */
-  money=function(v){
-    const n=Number(v)||0;
-    return new Intl.NumberFormat('en-IN',{style:'currency',currency:'INR',minimumFractionDigits:2,maximumFractionDigits:2}).format(n);
-  };
-  short=function(v){
-    const n=Number(v)||0, a=Math.abs(n), sign=n<0?'-':n>0?'+':'';
-    if(a>=100000)return sign+(Math.floor((a/100000)*100)/100).toFixed(2)+'L';
-    if(a>=1000)return sign+(Math.floor((a/1000)*100)/100).toFixed(2)+'K';
-    return sign+(Math.floor(a*100)/100).toFixed(2);
-  };
+  /* Display-only formatters are defined once above; calculations/storage remain untouched. */
 
   const FY_KEYS=[
     MARKET_KEYS.stock, MARKET_KEYS.future, MARKET_KEYS.option,
@@ -3141,7 +3131,7 @@ history.replaceState({pnlApp:true,view:'frontFinal',cursorYear:cursor.getFullYea
       total+=val;
       const cls=val>0?'fy-pos':val<0?'fy-neg':'fy-zero';
       const label=dt.toLocaleString('en-IN',{month:'short',year:'numeric'});
-      rows+=`<div class="fy-row"><span>${label}</span><span class="${cls}">${val?short(val):'₹0.00'}</span></div>`;
+      rows+=`<div class="fy-row"><span>${label}</span><span class="${cls}">${val>0?'+':''}${money(val)}</span></div>`;
     }
     fyView.innerHTML=`<div class="view-title">Financial Year Summary</div><div class="fy-top"><div><div class="fy-range">${sy} – ${ey}</div><div class="fy-sub">Apr ${sy} – Mar ${ey}</div></div><div><div class="fy-sub">FY Total P&amp;L</div><div class="fy-total">${money(total)}</div></div></div>${rows}`;
   };
