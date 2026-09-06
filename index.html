@@ -2196,7 +2196,7 @@ refreshTradeModeUI();
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', async () => {
     try {
-      const reg = await navigator.serviceWorker.register('./service-worker.js?v=52-amount-fy-recent-only-fix-final', {updateViaCache:'none'});
+      const reg = await navigator.serviceWorker.register('./service-worker.js?v=52-final-3-problems-only-fix-final', {updateViaCache:'none'});
       await reg.update();
     } catch(e) {}
   });
@@ -3136,6 +3136,192 @@ history.replaceState({pnlApp:true,view:'frontFinal',cursorYear:cursor.getFullYea
     fyView.innerHTML=`<div class="view-title">Financial Year Summary</div><div class="fy-top"><div><div class="fy-range">${sy} – ${ey}</div><div class="fy-sub">Apr ${sy} – Mar ${ey}</div></div><div><div class="fy-sub">FY Total P&amp;L</div><div class="fy-total">${money(total)}</div></div></div>${rows}`;
   };
   showFySummary=function(push=true){renderFySummary();appView='fy';renderAppShell('fy');setBottomActive('bnFy');if(push)pushSection('fy')};
+})();
+</script>
+
+
+
+<style id="v52-final-3-problems-only-fix-css">
+/* FINAL 3 PROBLEMS ONLY on locked base v52 AMOUNT FY RECENT ONLY FIX FINAL. */
+#appLockV52{position:fixed;inset:0;z-index:2147483000;background:#061620;display:none;align-items:center;justify-content:center;padding:22px;box-sizing:border-box;color:#eef4f6}
+#appLockV52.show{display:flex}
+#appLockV52 .lock-card{width:min(420px,100%);border:1px solid #30444e;border-radius:22px;background:linear-gradient(145deg,#091c27,#071722);padding:22px;box-shadow:0 22px 70px #000a}
+#appLockV52 .lock-title{font-size:25px;font-weight:850;text-align:center;margin-bottom:6px}
+#appLockV52 .lock-sub{font-size:12px;color:#91a2aa;text-align:center;margin-bottom:18px;line-height:1.45}
+#appLockV52 .lock-field{display:grid;gap:7px;margin-top:12px}
+#appLockV52 .lock-field label{font-size:12px;color:#b9c4c9;font-weight:750}
+#appLockV52 .lock-field input{width:100%;box-sizing:border-box;border:1px solid #30444e;border-radius:12px;background:#06151e;color:#fff;padding:13px 14px;font-size:16px;outline:none}
+#appLockV52 .lock-field input:focus{border-color:#48df8a;box-shadow:0 0 0 2px #48df8a22}
+#appLockV52 .lock-btn{width:100%;margin-top:14px;border:1px solid #2f8054;border-radius:12px;background:#103b27;color:#68ee99;padding:12px 14px;font-size:14px;font-weight:850}
+#appLockV52 .lock-btn.secondary{background:#0b1d27;border-color:#30444e;color:#d9e2e6}
+#appLockV52 .lock-msg{min-height:18px;margin-top:10px;text-align:center;font-size:12px;color:#ff7382}
+#appLockV52 .lock-biometric{display:none}
+#appLockV52.biometric-ready .lock-biometric{display:block}
+body.app-locked-v52{overflow:hidden!important;touch-action:none}
+</style>
+<script id="v52-final-3-problems-only-fix-js">
+(function(){
+  'use strict';
+
+  /* Problem 1: restore the full approved broker choices without deleting existing saved broker/data. */
+  const APPROVED_BROKERS=['Groww','Angel One','Sahi','Zerodha Kite','Upstox','Dhan','Lemonn','Riise'];
+  try{
+    if(typeof BROKER_LOGOS==='object'&&BROKER_LOGOS){
+      if(!BROKER_LOGOS['Sahi']&&BROKER_LOGOS['SAHI'])BROKER_LOGOS['Sahi']=BROKER_LOGOS['SAHI'];
+    }
+    if(Array.isArray(BROKER_CATALOG)){
+      BROKER_CATALOG.splice(0,BROKER_CATALOG.length,...APPROVED_BROKERS.map(name=>({name,logo:(BROKER_LOGOS&&BROKER_LOGOS[name])||''})));
+    }
+  }catch(e){}
+
+  function fullBrokerChoices(selected){
+    const byKey=new Map();
+    for(const name of APPROVED_BROKERS)byKey.set(name.toLowerCase(),{name,logo:(typeof BROKER_LOGOS==='object'&&BROKER_LOGOS[name])||''});
+    try{for(const b of getBrokers()){if(b&&b.name&&!byKey.has(String(b.name).toLowerCase()))byKey.set(String(b.name).toLowerCase(),b)}}catch(e){}
+    return Array.from(byKey.values()).map(b=>`<option ${b.name===selected?'selected':''}>${escapeHtml(b.name)}</option>`).join('');
+  }
+
+  const previousOpenFundModalFinal3=openFundModal;
+  openFundModal=function(encoded=''){
+    previousOpenFundModalFinal3(encoded);
+    try{
+      const sel=document.getElementById('fundBroker');
+      const requested=encoded?decodeURIComponent(encoded):(sel?.value||currentBroker||'Groww');
+      if(sel)sel.innerHTML=fullBrokerChoices(requested);
+    }catch(e){}
+  };
+
+  const previousEditFundEntryFinal3=editFundEntry;
+  editFundEntry=function(id){
+    previousEditFundEntryFinal3(id);
+    try{
+      const t=getFundTransactions().find(x=>Number(x.id)===Number(id));
+      const sel=document.getElementById('fundBroker');
+      if(sel)sel.innerHTML=fullBrokerChoices(t?.broker||sel.value||'Groww');
+    }catch(e){}
+  };
+
+  const previousSaveFundEntryFinal3=saveFundEntry;
+  saveFundEntry=function(){
+    try{
+      const name=(document.getElementById('fundBroker')?.value||'').trim();
+      if(name){
+        const arr=getBrokers().slice();
+        if(!arr.some(b=>String(b.name).toLowerCase()===name.toLowerCase())){
+          arr.push({name,logo:(typeof BROKER_LOGOS==='object'&&BROKER_LOGOS[name])||''});
+          saveBrokers(arr);
+        }
+      }
+    }catch(e){}
+    return previousSaveFundEntryFinal3();
+  };
+
+  /* Problem 2: entering the Transaction root makes one Android Back press return directly to Main/Home. */
+  const previousShowTransactionViewFinal3=showTransactionView;
+  showTransactionView=function(push=true){
+    if(push){
+      try{
+        if((history.state||{}).view!=='frontFinal'){
+          history.replaceState({pnlApp:true,view:'frontFinal',cursorYear:cursor.getFullYear(),cursorMonth:cursor.getMonth()},'');
+        }
+      }catch(e){}
+    }
+    return previousShowTransactionViewFinal3(push);
+  };
+
+  /* Problem 3: app-open lock. Password is chosen by the user in-app; biometric uses platform WebAuthn when available. */
+  const LOCK_KEY='stockPnLCalendar_appLock_v52';
+  let lockData=null, lockBusy=false;
+  try{lockData=JSON.parse(localStorage.getItem(LOCK_KEY)||'null')}catch(e){lockData=null}
+
+  const overlay=document.createElement('div');
+  overlay.id='appLockV52';
+  overlay.innerHTML=`<div class="lock-card">
+    <div class="lock-title">Stock P&amp;L Calendar</div>
+    <div class="lock-sub" id="appLockSubV52"></div>
+    <div id="appLockSetupV52" style="display:none">
+      <div class="lock-field"><label>Create App Password</label><input id="appLockNewV52" type="password" inputmode="text" autocomplete="new-password"></div>
+      <div class="lock-field"><label>Confirm Password</label><input id="appLockConfirmV52" type="password" inputmode="text" autocomplete="new-password"></div>
+      <button class="lock-btn" id="appLockSaveV52" type="button">Save Password &amp; Continue</button>
+    </div>
+    <div id="appLockUnlockV52" style="display:none">
+      <button class="lock-btn lock-biometric" id="appLockBioV52" type="button">Unlock with Biometric</button>
+      <div class="lock-field"><label>App Password</label><input id="appLockPassV52" type="password" inputmode="text" autocomplete="current-password"></div>
+      <button class="lock-btn secondary" id="appLockUnlockBtnV52" type="button">Unlock with Password</button>
+    </div>
+    <div class="lock-msg" id="appLockMsgV52"></div>
+  </div>`;
+  document.body.appendChild(overlay);
+
+  const $=id=>document.getElementById(id);
+  const sub=$('appLockSubV52'),setup=$('appLockSetupV52'),unlock=$('appLockUnlockV52'),msg=$('appLockMsgV52');
+
+  function bytesToB64u(bytes){let s='';for(const b of bytes)s+=String.fromCharCode(b);return btoa(s).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'')}
+  function b64uToBytes(s){s=s.replace(/-/g,'+').replace(/_/g,'/');while(s.length%4)s+='=';const x=atob(s),a=new Uint8Array(x.length);for(let i=0;i<x.length;i++)a[i]=x.charCodeAt(i);return a}
+  async function passwordHash(pass,saltB64){
+    const enc=new TextEncoder(),salt=b64uToBytes(saltB64),p=enc.encode(pass),buf=new Uint8Array(salt.length+p.length);buf.set(salt);buf.set(p,salt.length);
+    const d=await crypto.subtle.digest('SHA-256',buf);return bytesToB64u(new Uint8Array(d));
+  }
+  function saveLock(){localStorage.setItem(LOCK_KEY,JSON.stringify(lockData))}
+  function unlockApp(){overlay.classList.remove('show');document.body.classList.remove('app-locked-v52');msg.textContent='';lockBusy=false}
+  function lockApp(){document.body.classList.add('app-locked-v52');overlay.classList.add('show')}
+  function biometricSupported(){return !!(window.PublicKeyCredential&&navigator.credentials&&location.protocol==='https:')}
+
+  async function enrollBiometric(){
+    if(!biometricSupported())return false;
+    try{
+      const challenge=crypto.getRandomValues(new Uint8Array(32));
+      const uid=crypto.getRandomValues(new Uint8Array(16));
+      const cred=await navigator.credentials.create({publicKey:{challenge,rp:{name:'Stock P&L Calendar'},user:{id:uid,name:'stock-pnl-calendar-user',displayName:'Stock P&L Calendar User'},pubKeyCredParams:[{type:'public-key',alg:-7},{type:'public-key',alg:-257}],authenticatorSelection:{authenticatorAttachment:'platform',residentKey:'preferred',userVerification:'required'},timeout:60000,attestation:'none'}});
+      if(cred&&cred.rawId){lockData.credId=bytesToB64u(new Uint8Array(cred.rawId));saveLock();return true}
+    }catch(e){}
+    return false;
+  }
+
+  async function tryBiometric(){
+    if(lockBusy||!lockData?.credId||!biometricSupported())return false;
+    lockBusy=true;msg.textContent='';
+    try{
+      const cred=await navigator.credentials.get({publicKey:{challenge:crypto.getRandomValues(new Uint8Array(32)),allowCredentials:[{type:'public-key',id:b64uToBytes(lockData.credId)}],userVerification:'required',timeout:60000}});
+      if(cred){unlockApp();return true}
+    }catch(e){}
+    lockBusy=false;return false;
+  }
+
+  async function setupPassword(){
+    const p=$('appLockNewV52').value,c=$('appLockConfirmV52').value;
+    if(p.length<4){msg.textContent='Password must be at least 4 characters.';return}
+    if(p!==c){msg.textContent='Passwords do not match.';return}
+    const salt=bytesToB64u(crypto.getRandomValues(new Uint8Array(16)));
+    const hash=await passwordHash(p,salt);lockData={salt,hash,credId:null};saveLock();
+    sub.textContent='Password saved. If your phone supports it, biometric setup will open now.';msg.textContent='';
+    await enrollBiometric();unlockApp();
+  }
+
+  async function unlockWithPassword(){
+    if(!lockData?.salt||!lockData?.hash)return;
+    const p=$('appLockPassV52').value;
+    const h=await passwordHash(p,lockData.salt);
+    if(h===lockData.hash){$('appLockPassV52').value='';unlockApp()}else msg.textContent='Incorrect password.';
+  }
+
+  $('appLockSaveV52').addEventListener('click',setupPassword);
+  $('appLockUnlockBtnV52').addEventListener('click',unlockWithPassword);
+  $('appLockPassV52').addEventListener('keydown',e=>{if(e.key==='Enter')unlockWithPassword()});
+  $('appLockBioV52').addEventListener('click',tryBiometric);
+
+  lockApp();
+  if(!lockData?.hash){
+    sub.textContent='First time setup: choose the app password you want to use.';
+    setup.style.display='block';unlock.style.display='none';
+  }else{
+    sub.textContent='Unlock with biometric or your app password.';
+    setup.style.display='none';unlock.style.display='block';
+    if(lockData.credId&&biometricSupported()){
+      overlay.classList.add('biometric-ready');
+      setTimeout(()=>{tryBiometric()},300);
+    }
+  }
 })();
 </script>
 
