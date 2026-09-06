@@ -2196,7 +2196,7 @@ refreshTradeModeUI();
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', async () => {
     try {
-      const reg = await navigator.serviceWorker.register('./service-worker.js?v=52-summary-readonly-only-fix-final', {updateViaCache:'none'});
+      const reg = await navigator.serviceWorker.register('./service-worker.js?v=52-final-two-changes-only-final', {updateViaCache:'none'});
       await reg.update();
     } catch(e) {}
   });
@@ -3081,6 +3081,71 @@ history.replaceState({pnlApp:true,view:'frontFinal',cursorYear:cursor.getFullYea
     if(s.modal==='day'&&s.fromSummary){setSummaryReadonly(true)}
     else if(!s.modal){setSummaryReadonly(false)}
   });
+})();
+</script>
+
+
+<script id="v52-final-two-changes-only-js">
+/* FINAL TWO CHANGES ONLY on v52 SUMMARY READONLY ONLY FIX FINAL:
+   1) Monetary display: 2 decimals everywhere; compact K/L always 2 decimals.
+   2) FY Summary: one page only; each month equals Main Calendar combined monthly Net P&L. */
+(function(){
+  'use strict';
+
+  /* Display-only formatters. Calculations/storage are untouched. */
+  money=function(v){
+    const n=Number(v)||0;
+    return new Intl.NumberFormat('en-IN',{style:'currency',currency:'INR',minimumFractionDigits:2,maximumFractionDigits:2}).format(n);
+  };
+  short=function(v){
+    const n=Number(v)||0, a=Math.abs(n), sign=n<0?'-':n>0?'+':'';
+    if(a>=100000)return sign+(Math.floor((a/100000)*100)/100).toFixed(2)+'L';
+    if(a>=1000)return sign+(Math.floor((a/1000)*100)/100).toFixed(2)+'K';
+    return sign+(Math.floor(a*100)/100).toFixed(2);
+  };
+
+  const FY_KEYS=[
+    MARKET_KEYS.stock, MARKET_KEYS.future, MARKET_KEYS.option,
+    MARKET_KEYS.commodity, MARKET_KEYS.commodityOption
+  ];
+  function fyStored(k){try{const a=JSON.parse(localStorage.getItem(k)||'null');return Array.isArray(a)?a:[]}catch(e){return []}}
+  function fyTradeNet(t){
+    try{
+      if(isOpenTrade(t))return 0;
+      /* Same realized net rule used by the finalized combined Main Calendar. */
+      if(!t.futureTrade&&!t.optionTrade&&!(typeof isOptionTradeRecord==='function'&&isOptionTradeRecord(t))){
+        const bp=Number(t.buyPrice),sp=Number(t.sellPrice),bq=Number(t.buyQty),sq=Number(t.sellQty);
+        if(Number.isFinite(bp)&&Number.isFinite(sp)&&Number.isFinite(sq)&&sq>0){
+          const rq=Number.isFinite(bq)&&bq>0?Math.min(bq,sq):sq;
+          return (sp-bp)*rq-Number(realisedCharges(t)||0);
+        }
+      }
+      return Number(calcGross(t)||0)-Number(realisedCharges(t)||0);
+    }catch(e){return 0}
+  }
+  function fyCombinedMonth(y,m){
+    let total=0;
+    for(const k of FY_KEYS){
+      for(const t of fyStored(k)){
+        const ds=tradeCalendarDate(t); if(!ds)continue;
+        const d=new Date(ds+'T12:00:00');
+        if(!Number.isNaN(d.getTime())&&d.getFullYear()===y&&d.getMonth()===m)total+=fyTradeNet(t);
+      }
+    }
+    return total;
+  }
+  renderFySummary=function(){
+    const sy=fyStartYearForDate(cursor),ey=sy+1; let rows='',total=0;
+    for(let i=0;i<12;i++){
+      const dt=new Date(sy,3+i,1),y=dt.getFullYear(),m=dt.getMonth(),val=fyCombinedMonth(y,m);
+      total+=val;
+      const cls=val>0?'fy-pos':val<0?'fy-neg':'fy-zero';
+      const label=dt.toLocaleString('en-IN',{month:'short',year:'numeric'});
+      rows+=`<div class="fy-row"><span>${label}</span><span class="${cls}">${val?short(val):'₹0.00'}</span></div>`;
+    }
+    fyView.innerHTML=`<div class="view-title">Financial Year Summary</div><div class="fy-top"><div><div class="fy-range">${sy} – ${ey}</div><div class="fy-sub">Apr ${sy} – Mar ${ey}</div></div><div><div class="fy-sub">FY Total P&amp;L</div><div class="fy-total">${money(total)}</div></div></div>${rows}`;
+  };
+  showFySummary=function(push=true){renderFySummary();appView='fy';renderAppShell('fy');setBottomActive('bnFy');if(push)pushSection('fy')};
 })();
 </script>
 
