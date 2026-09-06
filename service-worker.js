@@ -1,4 +1,4 @@
-const CACHE='stock-pnl-calendar-v52-problem1-2-3-only-fix-final';
+const CACHE='stock-pnl-calendar-v52-summary-readonly-only-fix-final';
 const SHELL='./index.html';
 self.addEventListener('install',e=>{self.skipWaiting();});
 self.addEventListener('activate',e=>{e.waitUntil((async()=>{for(const k of await caches.keys())if(k!==CACHE)await caches.delete(k);await self.clients.claim();})());});

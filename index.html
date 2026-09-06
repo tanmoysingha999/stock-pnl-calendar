@@ -2196,7 +2196,7 @@ refreshTradeModeUI();
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', async () => {
     try {
-      const reg = await navigator.serviceWorker.register('./service-worker.js?v=52-problem1-2-3-only-fix-final', {updateViaCache:'none'});
+      const reg = await navigator.serviceWorker.register('./service-worker.js?v=52-summary-readonly-only-fix-final', {updateViaCache:'none'});
       await reg.update();
     } catch(e) {}
   });
@@ -3022,6 +3022,65 @@ history.replaceState({pnlApp:true,view:'frontFinal',cursorYear:cursor.getFullYea
     paintParentProfitLossCount();
   };
   paintParentProfitLossCount();
+})();
+</script>
+
+
+<style id="v52-summary-readonly-only-fix-css">
+/* Stock P&L Summary flow only: Trade Details is read-only. Calendar/F&O/Commodity entry flows stay unchanged. */
+#modal.summary-readonly-trade .final-history-actions{display:none!important}
+#modal.summary-readonly-trade .final-history-card{cursor:default!important}
+</style>
+<script id="v52-summary-readonly-only-fix-js">
+(function(){
+  'use strict';
+  const READONLY_CLASS='summary-readonly-trade';
+  function setSummaryReadonly(on){
+    try{if(modal)modal.classList.toggle(READONLY_CLASS,!!on)}catch(e){}
+  }
+  function isSummaryReadonly(){
+    try{return !!(modal&&modal.classList.contains(READONLY_CLASS))}catch(e){return false}
+  }
+
+  /* Entering any Trade Details from the Stock P&L Summary section is read-only. */
+  const previousOpenSummaryTradeReadonly=openSummaryTrade;
+  openSummaryTrade=function(storageName,index,cat){
+    setSummaryReadonly(true);
+    return previousOpenSummaryTradeReadonly(storageName,index,cat);
+  };
+
+  /* In summary-origin Trade Details, tapping a card must not reveal Edit/Delete. */
+  const previousShowDayTradeActionsReadonly=showDayTradeActions;
+  showDayTradeActions=function(i){
+    if(isSummaryReadonly())return;
+    return previousShowDayTradeActionsReadonly(i);
+  };
+
+  /* Extra guard: edit/delete cannot be triggered from the read-only summary view. */
+  const previousEditTradeReadonly=editTrade;
+  editTrade=function(i){
+    if(isSummaryReadonly())return;
+    return previousEditTradeReadonly(i);
+  };
+  const previousDeleteTradeReadonly=deleteTrade;
+  deleteTrade=function(i){
+    if(isSummaryReadonly())return;
+    return previousDeleteTradeReadonly(i);
+  };
+
+  /* Leaving the modal restores the normal editable Calendar trade flow. */
+  const previousCloseModalReadonly=closeModal;
+  closeModal=function(fromPop=false){
+    setSummaryReadonly(false);
+    return previousCloseModalReadonly(fromPop);
+  };
+
+  /* Back/forward restoration of a Summary-origin day modal must stay read-only. */
+  window.addEventListener('popstate',function(e){
+    const s=e.state||{};
+    if(s.modal==='day'&&s.fromSummary){setSummaryReadonly(true)}
+    else if(!s.modal){setSummaryReadonly(false)}
+  });
 })();
 </script>
 
