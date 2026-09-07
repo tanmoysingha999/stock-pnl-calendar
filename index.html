@@ -2204,7 +2204,7 @@ refreshTradeModeUI();
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', async () => {
     try {
-      const reg = await navigator.serviceWorker.register('./service-worker.js?v=52-fy-breakdown-overlap-only-fix-final', {updateViaCache:'none'});
+      const reg = await navigator.serviceWorker.register('./service-worker.js?v=52-calendar-state-reset-only-fix-final', {updateViaCache:'none'});
       await reg.update();
     } catch(e) {}
   });
@@ -3731,7 +3731,22 @@ body.app-locked-v52{overflow:hidden!important;touch-action:none}
     try{if(fundModal&&fundModal.classList.contains('show'))closeFundModal()}catch(e){}
     const now=new Date();
     cursor=new Date(now.getFullYear(),now.getMonth(),1);
-    if(mainApp)mainApp.classList.add('front-final');
+
+    /* Main Calendar must always return to the neutral front-page state.
+       Reset any previously selected Stock/F&O/Commodity sub-market so
+       Future/Option cannot stay visible or highlighted after Calendar tap. */
+    activeMarketGroup='stock';
+    activeFno=null;
+    activeCommodity=null;
+    activeMarket='stock';
+    try{loadActiveMarketTrades()}catch(e){}
+    try{paintMarketTabs()}catch(e){}
+    try{refreshTradeModeUI()}catch(e){}
+
+    if(mainApp){
+      mainApp.classList.remove('market-folder-page');
+      mainApp.classList.add('front-final');
+    }
     appView='calendar';
     renderAppShell('calendar');
     render();
