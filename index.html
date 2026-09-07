@@ -2204,7 +2204,7 @@ refreshTradeModeUI();
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', async () => {
     try {
-      const reg = await navigator.serviceWorker.register('./service-worker.js?v=52-two-problems-only-fix-final', {updateViaCache:'none'});
+      const reg = await navigator.serviceWorker.register('./service-worker.js?v=52-calendar-current-month-only-fix-final', {updateViaCache:'none'});
       await reg.update();
     } catch(e) {}
   });
@@ -3645,6 +3645,8 @@ body.app-locked-v52{overflow:hidden!important;touch-action:none}
     hideBreakdown();
     try{if(modal&&modal.classList.contains('show'))closeModal(true)}catch(e){}
     try{if(fundModal&&fundModal.classList.contains('show'))closeFundModal()}catch(e){}
+    const now=new Date();
+    cursor=new Date(now.getFullYear(),now.getMonth(),1);
     if(mainApp)mainApp.classList.add('front-final');
     appView='calendar';
     renderAppShell('calendar');
@@ -3659,16 +3661,14 @@ body.app-locked-v52{overflow:hidden!important;touch-action:none}
     },'');
   }
 
-  if(bottomNavEl){
-    bottomNavEl.addEventListener('click',function(e){
-      const b=e.target.closest('button');
-      if(!b||b.id!=='bnCalendar')return;
-      if(mainApp&&mainApp.classList.contains('front-final'))return;
-      e.preventDefault();
-      e.stopImmediatePropagation();
-      goMainCalendar();
-    },true);
-  }
+  /* Capture on document so Calendar wins from every normal app state, including Front Page. */
+  document.addEventListener('click',function(e){
+    const b=e.target.closest&&e.target.closest('#bnCalendar');
+    if(!b)return;
+    e.preventDefault();
+    e.stopImmediatePropagation();
+    goMainCalendar();
+  },true);
 })();
 </script>
 
