@@ -2204,7 +2204,7 @@ refreshTradeModeUI();
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', async () => {
     try {
-      const reg = await navigator.serviceWorker.register('./service-worker.js?v=52-fy-breakdown-attractive-only-final', {updateViaCache:'none'});
+      const reg = await navigator.serviceWorker.register('./service-worker.js?v=52-fy-breakdown-overlap-only-fix-final', {updateViaCache:'none'});
       await reg.update();
     } catch(e) {}
   });
@@ -3499,20 +3499,21 @@ body.app-locked-v52{overflow:hidden!important;touch-action:none}
 #fyMonthBreakdownView .fyb-total-card .fyb-name{font-size:15px}
 #fyMonthBreakdownView .fyb-total-card .fyb-caption{font-size:10.8px}
 .fy-row.v52-fy-month-open{cursor:pointer}
-@media(max-width:380px){
+@media(max-width:420px){
+  /* Responsive-only correction: keep the approved layout and prevent text/amount overlap. */
   #fyMonthBreakdownView{padding-left:4px;padding-right:4px}
-  #fyMonthBreakdownView .fyb-mainrow{grid-template-columns:46px minmax(0,1fr) auto;gap:8px}
+  #fyMonthBreakdownView .fyb-mainrow{grid-template-columns:46px minmax(0,1fr) max-content;gap:8px}
   #fyMonthBreakdownView .fyb-icon{width:46px;height:46px;border-radius:13px}
   #fyMonthBreakdownView .fyb-icon svg{width:27px;height:27px}
-  #fyMonthBreakdownView .fyb-inline{gap:5px}
-  #fyMonthBreakdownView .fyb-name{font-size:14.2px}
-  #fyMonthBreakdownView .fyb-sep{font-size:10.5px}
-  #fyMonthBreakdownView .fyb-caption{font-size:9.3px}
-  #fyMonthBreakdownView .fyb-amount{font-size:13.2px}
-  #fyMonthBreakdownView .fyb-subamount{font-size:12.6px}
-  #fyMonthBreakdownView .fyb-total-card .fyb-mainrow{grid-template-columns:46px minmax(0,1fr) auto}
-  #fyMonthBreakdownView .fyb-total-card .fyb-name{font-size:13.4px}
-  #fyMonthBreakdownView .fyb-total-card .fyb-caption{font-size:9.4px}
+  #fyMonthBreakdownView .fyb-inline{gap:4px;min-width:0}
+  #fyMonthBreakdownView .fyb-name{font-size:12px}
+  #fyMonthBreakdownView .fyb-sep{font-size:8px}
+  #fyMonthBreakdownView .fyb-caption{font-size:7.1px;letter-spacing:-.05px}
+  #fyMonthBreakdownView .fyb-amount{font-size:11.5px;letter-spacing:-.08px}
+  #fyMonthBreakdownView .fyb-subamount{font-size:12px}
+  #fyMonthBreakdownView .fyb-total-card .fyb-mainrow{grid-template-columns:46px minmax(0,1fr) max-content}
+  #fyMonthBreakdownView .fyb-total-card .fyb-name{font-size:11.5px}
+  #fyMonthBreakdownView .fyb-total-card .fyb-caption{font-size:7.1px}
 }
 </style>
 <script id="v52-two-problems-only-fix-js">
