@@ -1198,6 +1198,20 @@ img.broker-picker-logo {
   <button class="nav-arrow" onclick="move(1)">›</button>
 </div>
  <div class="cal"><div class="head"><div>M</div><div>T</div><div>W</div><div>T</div><div>F</div><div>Gains</div></div><div id="weeks"></div></div>
+ <div class="main-calendar-day-summary" id="mainCalendarDaySummary" aria-label="Main Calendar monthly day summary">
+   <div class="main-day-card profitable">
+     <div class="main-day-icon" aria-hidden="true">
+       <svg viewBox="0 0 48 48" focusable="false"><rect x="7" y="10" width="34" height="31" rx="5"></rect><path d="M14 6v9M34 6v9M7 18h34M14 33l7-7 5 5 9-11M30 20h5v5"></path></svg>
+     </div>
+     <div class="main-day-copy"><span>Profitable Days</span><strong id="mainProfitableDays">0</strong></div>
+   </div>
+   <div class="main-day-card loss-making">
+     <div class="main-day-icon" aria-hidden="true">
+       <svg viewBox="0 0 48 48" focusable="false"><rect x="7" y="10" width="34" height="31" rx="5"></rect><path d="M14 6v9M34 6v9M7 18h34M14 24l7 7 5-5 9 11M30 32h5v-5"></path></svg>
+     </div>
+     <div class="main-day-copy"><span>Loss Making Days</span><strong id="mainLossMakingDays">0</strong></div>
+   </div>
+ </div>
  <div class="fy-view" id="fyView"></div>
  <div class="history-view" id="historyView"></div>
  <div class="trade-details-view" id="tradeDetailsView"></div>
@@ -2204,7 +2218,7 @@ refreshTradeModeUI();
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', async () => {
     try {
-      const reg = await navigator.serviceWorker.register('./service-worker.js?v=52-calendar-state-reset-only-fix-final', {updateViaCache:'none'});
+      const reg = await navigator.serviceWorker.register('./service-worker.js?v=52-main-calendar-day-count-only-final', {updateViaCache:'none'});
       await reg.update();
     } catch(e) {}
   });
@@ -2239,6 +2253,45 @@ if ('serviceWorker' in navigator) {
 .front-final .market-tab.active{background:#071821!important;border-color:#30444e!important;color:#eef2f4!important;box-shadow:none!important}
 /* Front overview dates are display-only; trade entry opens only inside a selected market calendar. */
 .front-final #weeks .day{cursor:default!important}
+
+/* Main Calendar only: monthly profitable/loss-making day cards. */
+.main-calendar-day-summary{display:none!important}
+.app.front-final .main-calendar-day-summary{
+  display:grid!important;grid-template-columns:1fr 1fr;gap:9px;margin-top:9px
+}
+.app.front-final .main-day-card{
+  min-width:0;min-height:82px;box-sizing:border-box;display:flex;align-items:center;gap:10px;
+  padding:11px 12px;border:1.5px solid #30444e;border-radius:17px;
+  background:linear-gradient(150deg,#071822,#06151e)
+}
+.app.front-final .main-day-card.profitable{border-color:#275247}
+.app.front-final .main-day-card.loss-making{border-color:#54353b}
+.app.front-final .main-day-icon{
+  width:48px;height:48px;flex:0 0 48px;display:grid;place-items:center;border-radius:12px
+}
+.app.front-final .main-day-card.profitable .main-day-icon{background:#0d3b32;color:#29e29a}
+.app.front-final .main-day-card.loss-making .main-day-icon{background:#3b2429;color:#ff5a63}
+.app.front-final .main-day-icon svg{width:34px;height:34px;fill:none;stroke:currentColor;stroke-width:3;stroke-linecap:round;stroke-linejoin:round}
+.app.front-final .main-day-copy{min-width:0;display:flex;flex-direction:column;justify-content:center;gap:4px}
+.app.front-final .main-day-copy span{font-size:12.5px;line-height:1.15;color:#c7d0d4;white-space:nowrap}
+.app.front-final .main-day-copy strong{font-size:24px;line-height:1;font-weight:850}
+.app.front-final .main-day-card.profitable strong{color:#20e58b}
+.app.front-final .main-day-card.loss-making strong{color:#ff5a5f}
+@media(max-width:420px){
+  .app.front-final .main-day-card{min-height:76px;padding:9px 10px;gap:8px}
+  .app.front-final .main-day-icon{width:43px;height:43px;flex-basis:43px;border-radius:11px}
+  .app.front-final .main-day-icon svg{width:30px;height:30px}
+  .app.front-final .main-day-copy span{font-size:11.2px}
+  .app.front-final .main-day-copy strong{font-size:21px}
+}
+@media(max-width:360px){
+  .app.front-final .main-calendar-day-summary{gap:6px}
+  .app.front-final .main-day-card{padding:8px 8px;gap:6px}
+  .app.front-final .main-day-icon{width:38px;height:38px;flex-basis:38px}
+  .app.front-final .main-day-icon svg{width:27px;height:27px}
+  .app.front-final .main-day-copy span{font-size:10.2px;letter-spacing:-.1px}
+  .app.front-final .main-day-copy strong{font-size:19px}
+}
 </style>
 <script id="v52-final-front-patch-js">
 (function(){
@@ -2279,6 +2332,18 @@ function short2(v){
  if(a>=1000){const z=Math.floor((a/1000)*100)/100;return sign+z.toFixed(2)+'K'}
  return sign+(Math.floor(a*100)/100).toFixed(2).replace(/\.00$/,'');
 }
+function paintMainCalendarDaySummary(y,m,last){
+ let profitable=0,lossMaking=0;
+ for(let d=1;d<=last;d++){
+   const net=combinedDay(key(y,m,d));
+   if(net>0)profitable++;
+   else if(net<0)lossMaking++;
+ }
+ const p=document.getElementById('mainProfitableDays');
+ const l=document.getElementById('mainLossMakingDays');
+ if(p)p.textContent=String(profitable);
+ if(l)l.textContent=String(lossMaking);
+}
 function paintFront(){
  app.classList.add('front-final');
  renderAppShell('calendar');
@@ -2306,6 +2371,7 @@ function paintFront(){
  }
  if(weeks)weeks.innerHTML=html;
  if(netStat){netStat.textContent=fmt(monthlyFromWeeks);netStat.style.color=monthlyFromWeeks>0?'#20e58b':monthlyFromWeeks<0?'#ff5a5f':'#f2f5f6'}
+ paintMainCalendarDaySummary(y,m,last);
  setBottomActive(null);
  const addBtn=document.querySelector('.add-today');if(addBtn)addBtn.style.display='none';
  const imp=document.querySelector('.import-btn'),exp=document.querySelector('.export-btn');
