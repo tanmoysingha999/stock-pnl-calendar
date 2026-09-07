@@ -2204,7 +2204,7 @@ refreshTradeModeUI();
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', async () => {
     try {
-      const reg = await navigator.serviceWorker.register('./service-worker.js?v=52-calendar-current-month-only-fix-final', {updateViaCache:'none'});
+      const reg = await navigator.serviceWorker.register('./service-worker.js?v=52-fy-breakdown-attractive-only-final', {updateViaCache:'none'});
       await reg.update();
     } catch(e) {}
   });
@@ -3302,15 +3302,19 @@ body.app-locked-v52{overflow:hidden!important;touch-action:none}
 
 
 <style id="v52-two-problems-only-fix-css">
-/* ONLY FIXES:
-   1) FY Summary month -> finalized display-only month breakdown.
-   2) Bottom Calendar -> direct Main Calendar from normal app pages.
-   Everything else remains on v52 4 PROBLEMS FIX SMOOTH FINAL. */
+/* FINAL FY MONTH BREAKDOWN VISUAL ONLY.
+   Base: v52 CALENDAR CURRENT MONTH ONLY FIX FINAL.
+   No calculation/data/navigation behavior changed. */
 #fyMonthBreakdownView{
   display:none;
   margin:0;
-  padding:8px 8px 20px;
+  min-height:100vh;
+  padding:8px 8px 24px;
+  box-sizing:border-box;
   color:#f3f6f7;
+  background:
+    radial-gradient(90% 38% at 50% -5%,rgba(18,73,124,.22),transparent 72%),
+    linear-gradient(180deg,#061722 0%,#05141e 100%);
 }
 #fyMonthBreakdownView .fyb-head{
   position:relative;
@@ -3327,7 +3331,7 @@ body.app-locked-v52{overflow:hidden!important;touch-action:none}
   gap:8px;
   color:#f3f6f7;
   font-size:16px;
-  font-weight:700;
+  font-weight:750;
   pointer-events:none;
   user-select:none;
 }
@@ -3340,111 +3344,175 @@ body.app-locked-v52{overflow:hidden!important;touch-action:none}
 #fyMonthBreakdownView .fyb-title{
   font-size:21px;
   line-height:1.15;
-  font-weight:800;
+  font-weight:850;
   letter-spacing:-.2px;
   margin-top:1px;
+  white-space:nowrap;
 }
 #fyMonthBreakdownView .fyb-subtitle{
   margin-top:7px;
   color:#94add2;
   font-size:14px;
   line-height:1.2;
+  white-space:nowrap;
 }
 #fyMonthBreakdownView .fyb-card{
+  position:relative;
+  overflow:hidden;
   border:1.5px solid #173b50;
   border-radius:18px;
-  background:linear-gradient(145deg,#081a25,#061722);
+  background:linear-gradient(145deg,rgba(8,26,37,.98),rgba(6,23,34,.98));
   margin:10px 0 0;
-  padding:14px 14px;
+  padding:14px;
+  box-shadow:0 10px 28px rgba(0,0,0,.18);
+}
+#fyMonthBreakdownView .fyb-card::after{
+  content:"";
+  position:absolute;
+  inset:0;
+  pointer-events:none;
+  opacity:.36;
+  background:radial-gradient(75% 110% at 100% 100%,rgba(46,138,203,.12),transparent 62%);
+}
+#fyMonthBreakdownView .fyb-card.stock-card{
+  border-color:#138d68;
+  box-shadow:0 0 0 1px rgba(16,226,127,.08),0 10px 26px rgba(0,0,0,.18),0 0 18px rgba(16,226,127,.07);
+}
+#fyMonthBreakdownView .fyb-card.fno-card{
+  border-color:#6748c8;
+  box-shadow:0 0 0 1px rgba(138,76,255,.08),0 10px 26px rgba(0,0,0,.18),0 0 18px rgba(138,76,255,.07);
+}
+#fyMonthBreakdownView .fyb-card.commodity-card{
+  border-color:#a66f25;
+  box-shadow:0 0 0 1px rgba(255,159,23,.08),0 10px 26px rgba(0,0,0,.18),0 0 18px rgba(255,159,23,.06);
 }
 #fyMonthBreakdownView .fyb-mainrow{
+  position:relative;
+  z-index:1;
   display:grid;
-  grid-template-columns:54px minmax(0,1fr) auto;
-  gap:12px;
+  grid-template-columns:52px minmax(0,1fr) auto;
+  gap:11px;
   align-items:center;
 }
 #fyMonthBreakdownView .fyb-icon{
-  width:54px;height:54px;border-radius:14px;
+  width:52px;height:52px;border-radius:14px;
   display:flex;align-items:center;justify-content:center;
   flex:none;
+  border:1px solid currentColor;
+  box-shadow:inset 0 0 18px rgba(255,255,255,.025),0 8px 18px rgba(0,0,0,.16);
 }
-#fyMonthBreakdownView .fyb-icon svg{width:32px;height:32px;display:block}
+#fyMonthBreakdownView .fyb-icon svg{width:30px;height:30px;display:block}
 #fyMonthBreakdownView .fyb-icon.stock{background:#073b2b;color:#10e27f}
 #fyMonthBreakdownView .fyb-icon.fno{background:#24164e;color:#8a4cff}
 #fyMonthBreakdownView .fyb-icon.commodity{background:#4a321b;color:#ff9f17}
 #fyMonthBreakdownView .fyb-icon.total{background:#0a4775;color:#35bfff}
+#fyMonthBreakdownView .fyb-inline{
+  min-width:0;
+  display:flex;
+  align-items:baseline;
+  gap:7px;
+  white-space:nowrap;
+  overflow:visible;
+}
 #fyMonthBreakdownView .fyb-name{
-  font-size:19px;
+  flex:none;
+  font-size:16px;
   line-height:1.15;
-  font-weight:800;
+  font-weight:850;
+  white-space:nowrap;
+}
+#fyMonthBreakdownView .fyb-sep{
+  flex:none;
+  color:#53748a;
+  font-size:12px;
+  line-height:1;
 }
 #fyMonthBreakdownView .fyb-caption{
-  margin-top:5px;
+  margin:0;
+  min-width:0;
   color:#9bb0c9;
-  font-size:13px;
-  line-height:1.25;
+  font-size:10.8px;
+  line-height:1.1;
+  white-space:nowrap;
 }
 #fyMonthBreakdownView .fyb-amount{
+  position:relative;
+  z-index:1;
   white-space:nowrap;
   text-align:right;
-  font-size:19px;
+  font-size:15px;
   line-height:1;
-  font-weight:800;
+  font-weight:850;
 }
 #fyMonthBreakdownView .fyb-pos{color:#16e887}
 #fyMonthBreakdownView .fyb-neg{color:#ff514d}
 #fyMonthBreakdownView .fyb-zero{color:#d7dde0}
 #fyMonthBreakdownView .fyb-nested{
+  position:relative;
+  z-index:1;
   margin-top:12px;
   border:1px solid #14384d;
   border-radius:13px;
   padding:0 12px;
+  background:rgba(2,15,24,.2);
 }
 #fyMonthBreakdownView .fyb-subrow{
   display:grid;
-  grid-template-columns:36px minmax(0,1fr) auto;
+  grid-template-columns:34px minmax(0,1fr) auto;
   align-items:center;
-  gap:10px;
-  min-height:58px;
+  gap:9px;
+  min-height:56px;
 }
 #fyMonthBreakdownView .fyb-subrow + .fyb-subrow{border-top:1px solid #17394a}
 #fyMonthBreakdownView .fyb-subicon{
   display:flex;align-items:center;justify-content:center;
-  width:30px;height:30px;
+  width:29px;height:29px;
 }
-#fyMonthBreakdownView .fyb-subicon svg{width:24px;height:24px;display:block}
+#fyMonthBreakdownView .fyb-subicon svg{width:23px;height:23px;display:block}
 #fyMonthBreakdownView .fyb-subrow.fno .fyb-subicon{color:#8a4cff}
 #fyMonthBreakdownView .fyb-subrow.commodity .fyb-subicon{color:#ff9f17}
 #fyMonthBreakdownView .fyb-subname{
   font-size:14px;
-  font-weight:750;
+  font-weight:800;
+  white-space:nowrap;
 }
 #fyMonthBreakdownView .fyb-subamount{
-  font-size:15px;
+  font-size:13.5px;
   line-height:1;
-  font-weight:800;
+  font-weight:850;
   white-space:nowrap;
   text-align:right;
 }
 #fyMonthBreakdownView .fyb-total-card{
-  border-color:#0787d7;
-  margin-top:12px;
+  margin-top:10px;
+  border-color:#0f98ea;
+  background:linear-gradient(145deg,rgba(7,34,55,.99),rgba(5,26,43,.99));
+  box-shadow:0 0 0 1px rgba(53,191,255,.12),0 10px 28px rgba(0,0,0,.2),0 0 22px rgba(53,191,255,.08);
+}
+#fyMonthBreakdownView .fyb-total-card::after{
+  opacity:.58;
+  background:radial-gradient(80% 140% at 100% 50%,rgba(53,191,255,.16),transparent 68%);
 }
 #fyMonthBreakdownView .fyb-total-card .fyb-mainrow{
-  grid-template-columns:54px minmax(0,1fr) auto;
+  grid-template-columns:52px minmax(0,1fr) auto;
 }
-#fyMonthBreakdownView .fyb-total-card .fyb-name{font-size:18px}
-#fyMonthBreakdownView .fyb-total-card .fyb-caption{font-size:13px}
+#fyMonthBreakdownView .fyb-total-card .fyb-name{font-size:15px}
+#fyMonthBreakdownView .fyb-total-card .fyb-caption{font-size:10.8px}
 .fy-row.v52-fy-month-open{cursor:pointer}
-@media(max-width:360px){
+@media(max-width:380px){
   #fyMonthBreakdownView{padding-left:4px;padding-right:4px}
-  #fyMonthBreakdownView .fyb-mainrow{grid-template-columns:48px minmax(0,1fr) auto;gap:9px}
-  #fyMonthBreakdownView .fyb-icon{width:48px;height:48px;border-radius:13px}
-  #fyMonthBreakdownView .fyb-name{font-size:17px}
-  #fyMonthBreakdownView .fyb-caption{font-size:11.5px}
-  #fyMonthBreakdownView .fyb-amount{font-size:16px}
-  #fyMonthBreakdownView .fyb-subamount{font-size:13.5px}
-  #fyMonthBreakdownView .fyb-total-card .fyb-name{font-size:16px}
+  #fyMonthBreakdownView .fyb-mainrow{grid-template-columns:46px minmax(0,1fr) auto;gap:8px}
+  #fyMonthBreakdownView .fyb-icon{width:46px;height:46px;border-radius:13px}
+  #fyMonthBreakdownView .fyb-icon svg{width:27px;height:27px}
+  #fyMonthBreakdownView .fyb-inline{gap:5px}
+  #fyMonthBreakdownView .fyb-name{font-size:14.2px}
+  #fyMonthBreakdownView .fyb-sep{font-size:10.5px}
+  #fyMonthBreakdownView .fyb-caption{font-size:9.3px}
+  #fyMonthBreakdownView .fyb-amount{font-size:13.2px}
+  #fyMonthBreakdownView .fyb-subamount{font-size:12.6px}
+  #fyMonthBreakdownView .fyb-total-card .fyb-mainrow{grid-template-columns:46px minmax(0,1fr) auto}
+  #fyMonthBreakdownView .fyb-total-card .fyb-name{font-size:13.4px}
+  #fyMonthBreakdownView .fyb-total-card .fyb-caption{font-size:9.4px}
 }
 </style>
 <script id="v52-two-problems-only-fix-js">
@@ -3551,18 +3619,37 @@ body.app-locked-v52{overflow:hidden!important;touch-action:none}
         <div class="fyb-subtitle">Segment-wise P&amp;L for ${label}</div>
       </div>
 
-      <div class="fyb-card">
+      <div class="fyb-card fyb-total-card">
+        <div class="fyb-mainrow">
+          <div class="fyb-icon total">${pieIcon()}</div>
+          <div class="fyb-inline">
+            <span class="fyb-name">${label} Total P&amp;L</span>
+            <span class="fyb-caption">(All Segments)</span>
+          </div>
+          <div class="fyb-amount ${amtClass(v.total)}">${fmt(v.total)}</div>
+        </div>
+      </div>
+
+      <div class="fyb-card stock-card">
         <div class="fyb-mainrow">
           <div class="fyb-icon stock">${barsIcon()}</div>
-          <div><div class="fyb-name">Stock</div><div class="fyb-caption">Realised P&amp;L (After Charges)</div></div>
+          <div class="fyb-inline">
+            <span class="fyb-name">Stock</span>
+            <span class="fyb-sep">|</span>
+            <span class="fyb-caption">Realised P&amp;L (After Charges)</span>
+          </div>
           <div class="fyb-amount ${amtClass(v.stock)}">${fmt(v.stock)}</div>
         </div>
       </div>
 
-      <div class="fyb-card">
+      <div class="fyb-card fno-card">
         <div class="fyb-mainrow">
           <div class="fyb-icon fno">${trendIcon()}</div>
-          <div><div class="fyb-name">F&amp;O</div><div class="fyb-caption">Realised P&amp;L (After Charges)</div></div>
+          <div class="fyb-inline">
+            <span class="fyb-name">F&amp;O</span>
+            <span class="fyb-sep">|</span>
+            <span class="fyb-caption">Realised P&amp;L (After Charges)</span>
+          </div>
           <div class="fyb-amount ${amtClass(v.fno)}">${fmt(v.fno)}</div>
         </div>
         <div class="fyb-nested">
@@ -3579,10 +3666,14 @@ body.app-locked-v52{overflow:hidden!important;touch-action:none}
         </div>
       </div>
 
-      <div class="fyb-card">
+      <div class="fyb-card commodity-card">
         <div class="fyb-mainrow">
           <div class="fyb-icon commodity">${commodityIcon()}</div>
-          <div><div class="fyb-name">Commodity</div><div class="fyb-caption">Realised P&amp;L (After Charges)</div></div>
+          <div class="fyb-inline">
+            <span class="fyb-name">Commodity</span>
+            <span class="fyb-sep">|</span>
+            <span class="fyb-caption">Realised P&amp;L (After Charges)</span>
+          </div>
           <div class="fyb-amount ${amtClass(v.commodity)}">${fmt(v.commodity)}</div>
         </div>
         <div class="fyb-nested">
@@ -3596,14 +3687,6 @@ body.app-locked-v52{overflow:hidden!important;touch-action:none}
             <div class="fyb-subname">Option</div>
             <div class="fyb-subamount ${amtClass(v.commodityOption)}">${fmt(v.commodityOption)}</div>
           </div>
-        </div>
-      </div>
-
-      <div class="fyb-card fyb-total-card">
-        <div class="fyb-mainrow">
-          <div class="fyb-icon total">${pieIcon()}</div>
-          <div><div class="fyb-name">${label} Total P&amp;L</div><div class="fyb-caption">(All Segments)</div></div>
-          <div class="fyb-amount ${amtClass(v.total)}">${fmt(v.total)}</div>
         </div>
       </div>`;
     breakdownView.style.display='block';
