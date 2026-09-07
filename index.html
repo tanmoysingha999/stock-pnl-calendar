@@ -2204,7 +2204,7 @@ refreshTradeModeUI();
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', async () => {
     try {
-      const reg = await navigator.serviceWorker.register('./service-worker.js?v=52-4-problems-fix-smooth-final', {updateViaCache:'none'});
+      const reg = await navigator.serviceWorker.register('./service-worker.js?v=52-two-problems-only-fix-final', {updateViaCache:'none'});
       await reg.update();
     } catch(e) {}
   });
@@ -3297,6 +3297,378 @@ body.app-locked-v52{overflow:hidden!important;touch-action:none}
   }
   lockApp();renderLockMode();
 
+})();
+</script>
+
+
+<style id="v52-two-problems-only-fix-css">
+/* ONLY FIXES:
+   1) FY Summary month -> finalized display-only month breakdown.
+   2) Bottom Calendar -> direct Main Calendar from normal app pages.
+   Everything else remains on v52 4 PROBLEMS FIX SMOOTH FINAL. */
+#fyMonthBreakdownView{
+  display:none;
+  margin:0;
+  padding:8px 8px 20px;
+  color:#f3f6f7;
+}
+#fyMonthBreakdownView .fyb-head{
+  position:relative;
+  min-height:78px;
+  padding:4px 0 8px;
+  text-align:center;
+}
+#fyMonthBreakdownView .fyb-back-visual{
+  position:absolute;
+  left:4px;
+  top:5px;
+  display:flex;
+  align-items:center;
+  gap:8px;
+  color:#f3f6f7;
+  font-size:16px;
+  font-weight:700;
+  pointer-events:none;
+  user-select:none;
+}
+#fyMonthBreakdownView .fyb-back-arrow{
+  width:14px;height:14px;
+  border-left:3px solid #f3f6f7;
+  border-bottom:3px solid #f3f6f7;
+  transform:rotate(45deg);
+}
+#fyMonthBreakdownView .fyb-title{
+  font-size:21px;
+  line-height:1.15;
+  font-weight:800;
+  letter-spacing:-.2px;
+  margin-top:1px;
+}
+#fyMonthBreakdownView .fyb-subtitle{
+  margin-top:7px;
+  color:#94add2;
+  font-size:14px;
+  line-height:1.2;
+}
+#fyMonthBreakdownView .fyb-card{
+  border:1.5px solid #173b50;
+  border-radius:18px;
+  background:linear-gradient(145deg,#081a25,#061722);
+  margin:10px 0 0;
+  padding:14px 14px;
+}
+#fyMonthBreakdownView .fyb-mainrow{
+  display:grid;
+  grid-template-columns:54px minmax(0,1fr) auto;
+  gap:12px;
+  align-items:center;
+}
+#fyMonthBreakdownView .fyb-icon{
+  width:54px;height:54px;border-radius:14px;
+  display:flex;align-items:center;justify-content:center;
+  flex:none;
+}
+#fyMonthBreakdownView .fyb-icon svg{width:32px;height:32px;display:block}
+#fyMonthBreakdownView .fyb-icon.stock{background:#073b2b;color:#10e27f}
+#fyMonthBreakdownView .fyb-icon.fno{background:#24164e;color:#8a4cff}
+#fyMonthBreakdownView .fyb-icon.commodity{background:#4a321b;color:#ff9f17}
+#fyMonthBreakdownView .fyb-icon.total{background:#0a4775;color:#35bfff}
+#fyMonthBreakdownView .fyb-name{
+  font-size:19px;
+  line-height:1.15;
+  font-weight:800;
+}
+#fyMonthBreakdownView .fyb-caption{
+  margin-top:5px;
+  color:#9bb0c9;
+  font-size:13px;
+  line-height:1.25;
+}
+#fyMonthBreakdownView .fyb-amount{
+  white-space:nowrap;
+  text-align:right;
+  font-size:19px;
+  line-height:1;
+  font-weight:800;
+}
+#fyMonthBreakdownView .fyb-pos{color:#16e887}
+#fyMonthBreakdownView .fyb-neg{color:#ff514d}
+#fyMonthBreakdownView .fyb-zero{color:#d7dde0}
+#fyMonthBreakdownView .fyb-nested{
+  margin-top:12px;
+  border:1px solid #14384d;
+  border-radius:13px;
+  padding:0 12px;
+}
+#fyMonthBreakdownView .fyb-subrow{
+  display:grid;
+  grid-template-columns:36px minmax(0,1fr) auto;
+  align-items:center;
+  gap:10px;
+  min-height:58px;
+}
+#fyMonthBreakdownView .fyb-subrow + .fyb-subrow{border-top:1px solid #17394a}
+#fyMonthBreakdownView .fyb-subicon{
+  display:flex;align-items:center;justify-content:center;
+  width:30px;height:30px;
+}
+#fyMonthBreakdownView .fyb-subicon svg{width:24px;height:24px;display:block}
+#fyMonthBreakdownView .fyb-subrow.fno .fyb-subicon{color:#8a4cff}
+#fyMonthBreakdownView .fyb-subrow.commodity .fyb-subicon{color:#ff9f17}
+#fyMonthBreakdownView .fyb-subname{
+  font-size:14px;
+  font-weight:750;
+}
+#fyMonthBreakdownView .fyb-subamount{
+  font-size:15px;
+  line-height:1;
+  font-weight:800;
+  white-space:nowrap;
+  text-align:right;
+}
+#fyMonthBreakdownView .fyb-total-card{
+  border-color:#0787d7;
+  margin-top:12px;
+}
+#fyMonthBreakdownView .fyb-total-card .fyb-mainrow{
+  grid-template-columns:54px minmax(0,1fr) auto;
+}
+#fyMonthBreakdownView .fyb-total-card .fyb-name{font-size:18px}
+#fyMonthBreakdownView .fyb-total-card .fyb-caption{font-size:13px}
+.fy-row.v52-fy-month-open{cursor:pointer}
+@media(max-width:360px){
+  #fyMonthBreakdownView{padding-left:4px;padding-right:4px}
+  #fyMonthBreakdownView .fyb-mainrow{grid-template-columns:48px minmax(0,1fr) auto;gap:9px}
+  #fyMonthBreakdownView .fyb-icon{width:48px;height:48px;border-radius:13px}
+  #fyMonthBreakdownView .fyb-name{font-size:17px}
+  #fyMonthBreakdownView .fyb-caption{font-size:11.5px}
+  #fyMonthBreakdownView .fyb-amount{font-size:16px}
+  #fyMonthBreakdownView .fyb-subamount{font-size:13.5px}
+  #fyMonthBreakdownView .fyb-total-card .fyb-name{font-size:16px}
+}
+</style>
+<script id="v52-two-problems-only-fix-js">
+(function(){
+  'use strict';
+
+  /* ---------- Problem 1: FY month breakdown, finalized display-only page ---------- */
+  const mainApp=document.querySelector('.app');
+  const breakdownView=document.createElement('div');
+  breakdownView.id='fyMonthBreakdownView';
+  breakdownView.setAttribute('aria-live','polite');
+  const bottomNavEl=document.getElementById('bottomNav');
+  if(bottomNavEl&&bottomNavEl.parentNode){
+    bottomNavEl.parentNode.insertBefore(breakdownView,bottomNavEl);
+  }else if(mainApp){
+    mainApp.appendChild(breakdownView);
+  }
+
+  const SEG_KEYS={
+    stock:MARKET_KEYS.stock,
+    fnoFuture:MARKET_KEYS.future,
+    fnoOption:MARKET_KEYS.option,
+    commodityFuture:MARKET_KEYS.commodity,
+    commodityOption:MARKET_KEYS.commodityOption
+  };
+  function fybStored(k){
+    try{const a=JSON.parse(localStorage.getItem(k)||'null');return Array.isArray(a)?a:[]}
+    catch(e){return []}
+  }
+  function fybTradeNet(t){
+    try{
+      if(isOpenTrade(t))return 0;
+      if(!t.futureTrade&&!t.optionTrade&&!(typeof isOptionTradeRecord==='function'&&isOptionTradeRecord(t))){
+        const bp=Number(t.buyPrice),sp=Number(t.sellPrice),bq=Number(t.buyQty),sq=Number(t.sellQty);
+        if(Number.isFinite(bp)&&Number.isFinite(sp)&&Number.isFinite(sq)&&sq>0){
+          const rq=Number.isFinite(bq)&&bq>0?Math.min(bq,sq):sq;
+          return (sp-bp)*rq-Number(realisedCharges(t)||0);
+        }
+      }
+      return Number(calcGross(t)||0)-Number(realisedCharges(t)||0);
+    }catch(e){return 0}
+  }
+  function fybMonthForKey(k,y,m){
+    let total=0;
+    for(const t of fybStored(k)){
+      const ds=tradeCalendarDate(t);if(!ds)continue;
+      const d=new Date(ds+'T12:00:00');
+      if(!Number.isNaN(d.getTime())&&d.getFullYear()===y&&d.getMonth()===m)total+=fybTradeNet(t);
+    }
+    return total;
+  }
+  function fybValues(y,m){
+    const stock=fybMonthForKey(SEG_KEYS.stock,y,m);
+    const fnoFuture=fybMonthForKey(SEG_KEYS.fnoFuture,y,m);
+    const fnoOption=fybMonthForKey(SEG_KEYS.fnoOption,y,m);
+    const commodityFuture=fybMonthForKey(SEG_KEYS.commodityFuture,y,m);
+    const commodityOption=fybMonthForKey(SEG_KEYS.commodityOption,y,m);
+    const fno=fnoFuture+fnoOption;
+    const commodity=commodityFuture+commodityOption;
+    return {stock,fnoFuture,fnoOption,fno,commodityFuture,commodityOption,commodity,total:stock+fno+commodity};
+  }
+  function amtClass(v){return v>0?'fyb-pos':v<0?'fyb-neg':'fyb-zero'}
+  function fmt(v){return v>0?'+'+money(v):money(v)}
+  function monthFull(y,m){return new Date(y,m,1).toLocaleString('en-IN',{month:'long',year:'numeric'})}
+
+  function barsIcon(){
+    return '<svg viewBox="0 0 32 32" aria-hidden="true"><rect x="4" y="18" width="5" height="10" rx="1" fill="currentColor"/><rect x="13" y="12" width="5" height="16" rx="1" fill="currentColor"/><rect x="22" y="5" width="5" height="23" rx="1" fill="currentColor"/></svg>';
+  }
+  function trendIcon(){
+    return '<svg viewBox="0 0 32 32" aria-hidden="true"><path d="M4 23l7-7 5 4 10-12" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/><path d="M21 8h6v6" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"/><rect x="5" y="25" width="5" height="3" rx="1" fill="currentColor"/><rect x="13" y="21" width="5" height="7" rx="1" fill="currentColor"/><rect x="21" y="17" width="5" height="11" rx="1" fill="currentColor"/></svg>';
+  }
+  function commodityIcon(){
+    return '<svg viewBox="0 0 32 32" aria-hidden="true"><path d="M8 8h8l2 7H6zM19 8h7l2 7h-11zM10 17h10l2 8H8z" fill="currentColor"/></svg>';
+  }
+  function listIcon(){
+    return '<svg viewBox="0 0 32 32" aria-hidden="true"><rect x="8" y="5" width="16" height="22" rx="3" fill="none" stroke="currentColor" stroke-width="2.5"/><path d="M12 11h8M12 16h8M12 21h8" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg>';
+  }
+  function optionIcon(){
+    return '<svg viewBox="0 0 32 32" aria-hidden="true"><path d="M5 22l7-7 5 4 9-10" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/><circle cx="5" cy="22" r="2.2" fill="#06131c" stroke="currentColor" stroke-width="2"/><circle cx="12" cy="15" r="2.2" fill="#06131c" stroke="currentColor" stroke-width="2"/><circle cx="17" cy="19" r="2.2" fill="#06131c" stroke="currentColor" stroke-width="2"/><circle cx="26" cy="9" r="2.2" fill="#06131c" stroke="currentColor" stroke-width="2"/></svg>';
+  }
+  function pieIcon(){
+    return '<svg viewBox="0 0 32 32" aria-hidden="true"><path d="M15 4a12 12 0 1012 12H15z" fill="currentColor" opacity=".9"/><path d="M18 4v9h9A12 12 0 0018 4z" fill="currentColor"/></svg>';
+  }
+
+  function hideBreakdown(){
+    breakdownView.style.display='none';
+  }
+  function showBreakdown(y,m){
+    y=Number(y);m=Number(m);
+    if(!Number.isInteger(y)||!Number.isInteger(m))return;
+    const v=fybValues(y,m),label=monthFull(y,m);
+    document.querySelector('.top').style.display='none';
+    document.querySelector('.nav').style.display='none';
+    document.querySelector('.cal').style.display='none';
+    fyView.style.display='none';
+    historyView.style.display='none';
+    tradeDetailsView.style.display='none';
+    transactionView.style.display='none';
+    if(bottomNavEl)bottomNavEl.style.display='none';
+    breakdownView.innerHTML=`
+      <div class="fyb-head">
+        <div class="fyb-back-visual"><span class="fyb-back-arrow"></span><span>Back</span></div>
+        <div class="fyb-title">${label} Breakdown</div>
+        <div class="fyb-subtitle">Segment-wise P&amp;L for ${label}</div>
+      </div>
+
+      <div class="fyb-card">
+        <div class="fyb-mainrow">
+          <div class="fyb-icon stock">${barsIcon()}</div>
+          <div><div class="fyb-name">Stock</div><div class="fyb-caption">Realised P&amp;L (After Charges)</div></div>
+          <div class="fyb-amount ${amtClass(v.stock)}">${fmt(v.stock)}</div>
+        </div>
+      </div>
+
+      <div class="fyb-card">
+        <div class="fyb-mainrow">
+          <div class="fyb-icon fno">${trendIcon()}</div>
+          <div><div class="fyb-name">F&amp;O</div><div class="fyb-caption">Realised P&amp;L (After Charges)</div></div>
+          <div class="fyb-amount ${amtClass(v.fno)}">${fmt(v.fno)}</div>
+        </div>
+        <div class="fyb-nested">
+          <div class="fyb-subrow fno">
+            <div class="fyb-subicon">${listIcon()}</div>
+            <div class="fyb-subname">Future</div>
+            <div class="fyb-subamount ${amtClass(v.fnoFuture)}">${fmt(v.fnoFuture)}</div>
+          </div>
+          <div class="fyb-subrow fno">
+            <div class="fyb-subicon">${optionIcon()}</div>
+            <div class="fyb-subname">Option</div>
+            <div class="fyb-subamount ${amtClass(v.fnoOption)}">${fmt(v.fnoOption)}</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="fyb-card">
+        <div class="fyb-mainrow">
+          <div class="fyb-icon commodity">${commodityIcon()}</div>
+          <div><div class="fyb-name">Commodity</div><div class="fyb-caption">Realised P&amp;L (After Charges)</div></div>
+          <div class="fyb-amount ${amtClass(v.commodity)}">${fmt(v.commodity)}</div>
+        </div>
+        <div class="fyb-nested">
+          <div class="fyb-subrow commodity">
+            <div class="fyb-subicon">${listIcon()}</div>
+            <div class="fyb-subname">Future</div>
+            <div class="fyb-subamount ${amtClass(v.commodityFuture)}">${fmt(v.commodityFuture)}</div>
+          </div>
+          <div class="fyb-subrow commodity">
+            <div class="fyb-subicon">${optionIcon()}</div>
+            <div class="fyb-subname">Option</div>
+            <div class="fyb-subamount ${amtClass(v.commodityOption)}">${fmt(v.commodityOption)}</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="fyb-card fyb-total-card">
+        <div class="fyb-mainrow">
+          <div class="fyb-icon total">${pieIcon()}</div>
+          <div><div class="fyb-name">${label} Total P&amp;L</div><div class="fyb-caption">(All Segments)</div></div>
+          <div class="fyb-amount ${amtClass(v.total)}">${fmt(v.total)}</div>
+        </div>
+      </div>`;
+    breakdownView.style.display='block';
+    appView='fyMonthBreakdown';
+  }
+
+  window.openFyMonthBreakdown=function(y,m){
+    showBreakdown(y,m);
+    history.pushState({pnlApp:true,view:'fyMonthBreakdown',fyYear:Number(y),fyMonth:Number(m)},'');
+  };
+
+  /* Keep the accepted FY Summary page exactly as before, only making month rows open this one supporting page. */
+  renderFySummary=function(){
+    const sy=fyStartYearForDate(cursor),ey=sy+1;let rows='',total=0;
+    for(let i=0;i<12;i++){
+      const dt=new Date(sy,3+i,1),y=dt.getFullYear(),m=dt.getMonth(),v=fybValues(y,m),val=v.total;
+      total+=val;
+      const cls=val>0?'fy-pos':val<0?'fy-neg':'fy-zero';
+      const label=dt.toLocaleString('en-IN',{month:'short',year:'numeric'});
+      rows+=`<div class="fy-row v52-fy-month-open" onclick="openFyMonthBreakdown(${y},${m})"><span>${label}</span><span class="${cls}">${val>0?'+':''}${money(val)}</span></div>`;
+    }
+    fyView.innerHTML=`<div class="view-title">Financial Year Summary</div><div class="fy-top"><div><div class="fy-range">${sy} – ${ey}</div><div class="fy-sub">Apr ${sy} – Mar ${ey}</div></div><div><div class="fy-sub">FY Total P&amp;L</div><div class="fy-total">${money(total)}</div></div></div>${rows}`;
+  };
+
+  /* Capture popstate only for the supporting page so phone Back returns to FY Summary.
+     No in-page card/row or chevron navigates anywhere. */
+  window.addEventListener('popstate',function(e){
+    const s=e.state||{};
+    if(s.view==='fyMonthBreakdown'){
+      e.stopImmediatePropagation();
+      showBreakdown(Number(s.fyYear),Number(s.fyMonth));
+      return;
+    }
+    hideBreakdown();
+  },true);
+
+  /* ---------- Problem 2: one-tap bottom Calendar -> Main Calendar ---------- */
+  function goMainCalendar(){
+    hideBreakdown();
+    try{if(modal&&modal.classList.contains('show'))closeModal(true)}catch(e){}
+    try{if(fundModal&&fundModal.classList.contains('show'))closeFundModal()}catch(e){}
+    if(mainApp)mainApp.classList.add('front-final');
+    appView='calendar';
+    renderAppShell('calendar');
+    render();
+    updateStats();
+    setBottomActive(null);
+    history.replaceState({
+      pnlApp:true,
+      view:'frontFinal',
+      cursorYear:cursor.getFullYear(),
+      cursorMonth:cursor.getMonth()
+    },'');
+  }
+
+  if(bottomNavEl){
+    bottomNavEl.addEventListener('click',function(e){
+      const b=e.target.closest('button');
+      if(!b||b.id!=='bnCalendar')return;
+      if(mainApp&&mainApp.classList.contains('front-final'))return;
+      e.preventDefault();
+      e.stopImmediatePropagation();
+      goMainCalendar();
+    },true);
+  }
 })();
 </script>
 
