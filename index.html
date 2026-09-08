@@ -2218,7 +2218,7 @@ refreshTradeModeUI();
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', async () => {
     try {
-      const reg = await navigator.serviceWorker.register('./service-worker.js?v=52-parent-day-count-only-fix-final', {updateViaCache:'none'});
+      const reg = await navigator.serviceWorker.register('./service-worker.js?v=52-trade-wise-profit-loss-count-only-fix-final', {updateViaCache:'none'});
       await reg.update();
     } catch(e) {}
   });
@@ -4210,6 +4210,146 @@ body:not(.future-mode) #optionChainRow.show .option-side-btn:not(.active){
   /* Main Calendar keeps its existing combined all-segment cards and styling. */
   if(appEl&&appEl.classList.contains('front-final'))appEl.classList.remove('segment-day-summary-on');
   else paintSegmentDaySummary();
+})();
+</script>
+
+
+
+<style id="v52-trade-wise-profit-loss-count-only-fix-css">
+/* Requested count-only fix: Main/Mother Calendar now shows the monthly trade-wise
+   Profit/Loss counter in the same month row. Profitable/Loss Making cards stay day-wise. */
+.front-final .month-divider{display:block!important}
+.front-final .pl-box{display:block!important}
+.front-final #month{width:auto!important;margin:0!important;text-align:center!important}
+.front-final .month-wrap{display:flex!important;align-items:center!important;justify-content:center!important;gap:8px!important;width:100%!important;min-width:0!important}
+/* Keep the new Main counter inside the existing mobile viewport. */
+@media(max-width:520px){
+  .front-final .nav{grid-template-columns:47px minmax(0,1fr) 47px!important}
+  .front-final .month-wrap{gap:7px!important}
+  .front-final .pl-box{min-width:82px!important}
+  .front-final .pl-title{font-size:12px!important}
+  .front-final .pl-count{font-size:19px!important}
+}
+@media(max-width:360px){
+  .front-final .month{font-size:18px!important}
+  .front-final .month-wrap{gap:6px!important}
+  .front-final .pl-box{min-width:76px!important}
+  .front-final .pl-title{font-size:11px!important}
+  .front-final .pl-count{font-size:18px!important}
+}
+</style>
+<script id="v52-trade-wise-profit-loss-count-only-fix-js">
+(function(){
+  'use strict';
+  /* Top-right monthly Profit/Loss is TRADE-wise everywhere.
+     The separate Profitable Days / Loss Making Days cards remain DAY-wise. */
+  const TRADE_COUNT_KEYS={
+    stock:'stockPnLCalendar_pwa_v21',
+    future:'stockPnLCalendar_future_v21',
+    option:'stockPnLCalendar_option_v21',
+    commodity:'stockPnLCalendar_commodity_v21',
+    commodityOption:'stockPnLCalendar_commodity_option_v48'
+  };
+  const appEl=document.querySelector('.app');
+
+  function storedCountTrades(name){
+    const storageKey=TRADE_COUNT_KEYS[name];
+    try{
+      const a=JSON.parse(localStorage.getItem(storageKey)||'null');
+      if(Array.isArray(a))return a;
+    }catch(e){}
+    if(name==='stock'&&typeof SEED!=='undefined'&&Array.isArray(SEED))return SEED;
+    return [];
+  }
+
+  function countNamesForCurrentView(){
+    if(appEl&&appEl.classList.contains('front-final')){
+      return ['stock','future','option','commodity','commodityOption'];
+    }
+    if(activeMarket==='stock')return ['stock'];
+    if(activeMarket==='fnoMenu')return ['future','option'];
+    if(activeMarket==='future')return ['future'];
+    if(activeMarket==='option')return ['option'];
+    if(activeMarket==='commodityMenu')return ['commodity','commodityOption'];
+    if(activeMarket==='commodity')return ['commodity'];
+    if(activeMarket==='commodityOption')return ['commodityOption'];
+    return [];
+  }
+
+  function closedTradeDateForCount(t){
+    try{return tradeCalendarDate(t)||''}catch(e){
+      try{return (!isOpenTrade(t)&&t&&t.sellDate)?t.sellDate:(t&&t.date)||''}catch(_){return ''}
+    }
+  }
+
+  function closedTradeNetForCount(t){
+    try{
+      if(!t||isOpenTrade(t))return null;
+      return Number(calcGross(t)||0)-Number(realisedCharges(t)||0);
+    }catch(e){return null}
+  }
+
+  function paintTradeWiseProfitLossCount(){
+    if((appView||'calendar')!=='calendar')return;
+    const names=countNamesForCurrentView();
+    if(!names.length)return;
+    const y=cursor.getFullYear(),m=cursor.getMonth();
+    let profits=0,losses=0;
+    for(const name of names){
+      for(const t of storedCountTrades(name)){
+        const net=closedTradeNetForCount(t);
+        if(net===null)continue; // Open/Holding excluded.
+        const ds=closedTradeDateForCount(t);
+        if(!ds)continue;
+        const d=new Date(ds+'T12:00:00');
+        if(Number.isNaN(d.getTime())||d.getFullYear()!==y||d.getMonth()!==m)continue;
+        if(net>0)profits++;
+        else if(net<0)losses++;
+      }
+    }
+    const pc=document.getElementById('profitCount');
+    const lc=document.getElementById('lossCount');
+    if(pc)pc.textContent=String(profits);
+    if(lc)lc.textContent=String(losses);
+  }
+
+  const previousUpdateStatsTradeCount=updateStats;
+  updateStats=function(){
+    const result=previousUpdateStatsTradeCount();
+    paintTradeWiseProfitLossCount();
+    return result;
+  };
+
+  const previousRenderTradeCount=render;
+  render=function(){
+    const result=previousRenderTradeCount();
+    paintTradeWiseProfitLossCount();
+    return result;
+  };
+
+  const previousMoveTradeCount=move;
+  move=function(n){
+    const result=previousMoveTradeCount(n);
+    paintTradeWiseProfitLossCount();
+    return result;
+  };
+
+  const previousApplyMarketSelectionTradeCount=applyMarketSelection;
+  applyMarketSelection=function(group,sub=null,push=false){
+    const result=previousApplyMarketSelectionTradeCount(group,sub,push);
+    paintTradeWiseProfitLossCount();
+    return result;
+  };
+
+  const previousRenderAppShellTradeCount=renderAppShell;
+  renderAppShell=function(view){
+    const result=previousRenderAppShellTradeCount(view);
+    if(view==='calendar')paintTradeWiseProfitLossCount();
+    return result;
+  };
+
+  window.addEventListener('popstate',function(){setTimeout(paintTradeWiseProfitLossCount,0)});
+  paintTradeWiseProfitLossCount();
 })();
 </script>
 
