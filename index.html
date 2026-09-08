@@ -2218,7 +2218,7 @@ refreshTradeModeUI();
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', async () => {
     try {
-      const reg = await navigator.serviceWorker.register('./service-worker.js?v=52-main-calendar-day-count-only-final', {updateViaCache:'none'});
+      const reg = await navigator.serviceWorker.register('./service-worker.js?v=52-derivative-holding-future-side-only-fix-final', {updateViaCache:'none'});
       await reg.update();
     } catch(e) {}
   });
@@ -3834,6 +3834,157 @@ body.app-locked-v52{overflow:hidden!important;touch-action:none}
     e.stopImmediatePropagation();
     goMainCalendar();
   },true);
+})();
+</script>
+
+
+<style id="v52-derivative-holding-future-side-only-fix-css">
+/* Requested Problem 1 only: Future Buy/Sell starts neutral mint.
+   Selected Buy = green, selected Sell = red. Option Call/Put styling is untouched. */
+.future-mode .option-side-btn:not(.active){
+  background:linear-gradient(135deg,var(--mint1),var(--mint2))!important;
+  border-color:#84e6c5!important;
+  color:#071913!important;
+}
+</style>
+<script id="v52-derivative-holding-future-side-only-fix-js">
+(function(){
+  'use strict';
+
+  /* ---------- Problem 1: Future Buy/Sell must have no default selection ---------- */
+  setFutureSide=function(side){
+    const buy=document.getElementById('optionCallBtn');
+    const sell=document.getElementById('optionPutBtn');
+    if(side!=='BUY'&&side!=='SELL'){
+      futureSide=null;
+      if(buy)buy.classList.remove('active');
+      if(sell)sell.classList.remove('active');
+      return;
+    }
+    futureSide=side;
+    if(buy)buy.classList.toggle('active',side==='BUY');
+    if(sell)sell.classList.toggle('active',side==='SELL');
+  };
+
+  const previousClearOptionFieldsV52Requested=clearOptionFields;
+  clearOptionFields=function(){
+    previousClearOptionFieldsV52Requested();
+    if(isFutureMarket())setFutureSide(null);
+  };
+
+  const previousAddTradeV52Requested=addTrade;
+  addTrade=function(){
+    if(isFutureMarket()&&futureSide!=='BUY'&&futureSide!=='SELL'){
+      showAppNotice('Select Buy or Sell.');
+      return;
+    }
+    return previousAddTradeV52Requested();
+  };
+
+  /* Keep a newly opened Future add form neutral even if a prior Future trade
+     used Buy or Sell. Editing an existing Future trade still restores its saved side. */
+  if(isFutureMarket())setFutureSide(null);
+
+  /* ---------- Problem 2(a): propagate derivative Open/Holding date indicators ---------- */
+  const OPEN_KEYS={
+    future:'stockPnLCalendar_future_v21',
+    option:'stockPnLCalendar_option_v21',
+    commodity:'stockPnLCalendar_commodity_v21',
+    commodityOption:'stockPnLCalendar_commodity_option_v48'
+  };
+
+  function storedOpenList(storageKey){
+    try{
+      const a=JSON.parse(localStorage.getItem(storageKey)||'null');
+      return Array.isArray(a)?a:[];
+    }catch(e){return []}
+  }
+  function openHoldingDate(t){
+    if(!t)return '';
+    if(typeof isOpenTrade==='function'&&!isOpenTrade(t))return '';
+    return t.buyDate||t.date||'';
+  }
+  function openHoldingCount(keys,ds){
+    let count=0;
+    for(const name of keys){
+      const storageKey=OPEN_KEYS[name];
+      if(!storageKey)continue;
+      for(const t of storedOpenList(storageKey)){
+        if(openHoldingDate(t)===ds)count++;
+      }
+    }
+    return count;
+  }
+  function targetOpenKeys(){
+    const appEl=document.querySelector('.app');
+    if(appEl&&appEl.classList.contains('front-final')){
+      return ['future','option','commodity','commodityOption'];
+    }
+    if(activeMarket==='fnoMenu')return ['future','option'];
+    if(activeMarket==='commodityMenu')return ['commodity','commodityOption'];
+    return null;
+  }
+  function paintDerivativeOpenHoldingIndicators(){
+    const names=targetOpenKeys();
+    if(!names)return;
+    const y=cursor.getFullYear(),m=cursor.getMonth();
+    document.querySelectorAll('#weeks .day:not(.empty)').forEach(cell=>{
+      const num=Number(cell.querySelector('.num')?.textContent||0);
+      const countEl=cell.querySelector('.count');
+      if(!num||!countEl)return;
+      const ds=key(y,m,num);
+      const count=openHoldingCount(names,ds);
+      countEl.textContent=count?('OPEN · '+count+' Trade'+(count===1?'':'s')):'';
+    });
+  }
+
+  const previousRenderV52Requested=render;
+  render=function(){
+    const result=previousRenderV52Requested();
+    paintDerivativeOpenHoldingIndicators();
+    return result;
+  };
+
+  const previousUpdateStatsV52Requested=updateStats;
+  updateStats=function(){
+    const result=previousUpdateStatsV52Requested();
+    paintDerivativeOpenHoldingIndicators();
+    return result;
+  };
+
+  const previousApplyMarketSelectionV52Requested=applyMarketSelection;
+  applyMarketSelection=function(group,sub=null,push=false){
+    const result=previousApplyMarketSelectionV52Requested(group,sub,push);
+    paintDerivativeOpenHoldingIndicators();
+    return result;
+  };
+
+  window.addEventListener('popstate',function(){
+    setTimeout(paintDerivativeOpenHoldingIndicators,0);
+  });
+
+  /* ---------- Problem 2(b): + Add Today must stay an add flow even if that date
+     already contains an Open/Holding/closed derivative trade. Date-card taps keep
+     the existing read/detail behavior unchanged. ---------- */
+  const previousQuickTodayV52Requested=quickToday;
+  quickToday=function(){
+    const derivativeSubpage=
+      activeMarket==='future'||activeMarket==='option'||
+      activeMarket==='commodity'||activeMarket==='commodityOption';
+    const result=previousQuickTodayV52Requested();
+    if(derivativeSubpage){
+      try{
+        const sheet=modal&&modal.querySelector('.sheet');
+        if(sheet){
+          sheet.classList.remove('final-history-mode');
+          sheet.scrollTop=0;
+        }
+      }catch(e){}
+    }
+    return result;
+  };
+
+  paintDerivativeOpenHoldingIndicators();
 })();
 </script>
 
