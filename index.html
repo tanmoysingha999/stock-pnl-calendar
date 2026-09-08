@@ -2218,7 +2218,7 @@ refreshTradeModeUI();
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', async () => {
     try {
-      const reg = await navigator.serviceWorker.register('./service-worker.js?v=52-derivative-holding-future-side-only-fix-final', {updateViaCache:'none'});
+      const reg = await navigator.serviceWorker.register('./service-worker.js?v=52-option-neutral-segment-day-count-only-fix-final', {updateViaCache:'none'});
       await reg.update();
     } catch(e) {}
   });
@@ -3985,6 +3985,227 @@ body.app-locked-v52{overflow:hidden!important;touch-action:none}
   };
 
   paintDerivativeOpenHoldingIndicators();
+})();
+</script>
+
+
+<style id="v52-option-neutral-segment-day-count-only-fix-css">
+/* Requested fix A: Option Call/Put uses the same neutral mint idle state as Future Buy/Sell. */
+body:not(.future-mode) #optionChainRow.show .option-side-btn:not(.active){
+  background:linear-gradient(135deg,var(--mint1),var(--mint2))!important;
+  border-color:#84e6c5!important;
+  color:#071913!important;
+}
+
+/* Requested fix B: compact Profitable/Loss Making day cards on every segment calendar only. */
+.app.segment-day-summary-on:not(.front-final) .main-calendar-day-summary{
+  display:grid!important;
+  grid-template-columns:1fr 1fr!important;
+  gap:7px!important;
+  margin-top:6px!important;
+}
+.app.segment-day-summary-on:not(.front-final) .main-day-card{
+  min-width:0!important;
+  min-height:46px!important;
+  box-sizing:border-box!important;
+  display:flex!important;
+  align-items:center!important;
+  gap:7px!important;
+  padding:5px 8px!important;
+  border:1.25px solid #30444e!important;
+  border-radius:13px!important;
+  background:linear-gradient(150deg,#071822,#06151e)!important;
+}
+.app.segment-day-summary-on:not(.front-final) .main-day-card.profitable{border-color:#275247!important}
+.app.segment-day-summary-on:not(.front-final) .main-day-card.loss-making{border-color:#54353b!important}
+.app.segment-day-summary-on:not(.front-final) .main-day-icon{
+  width:31px!important;height:31px!important;flex:0 0 31px!important;
+  display:grid!important;place-items:center!important;border-radius:9px!important
+}
+.app.segment-day-summary-on:not(.front-final) .main-day-card.profitable .main-day-icon{background:#0d3b32!important;color:#29e29a!important}
+.app.segment-day-summary-on:not(.front-final) .main-day-card.loss-making .main-day-icon{background:#3b2429!important;color:#ff5a63!important}
+.app.segment-day-summary-on:not(.front-final) .main-day-icon svg{
+  width:22px!important;height:22px!important;fill:none!important;stroke:currentColor!important;
+  stroke-width:3!important;stroke-linecap:round!important;stroke-linejoin:round!important
+}
+.app.segment-day-summary-on:not(.front-final) .main-day-copy{
+  min-width:0!important;display:flex!important;flex-direction:column!important;
+  justify-content:center!important;gap:1px!important
+}
+.app.segment-day-summary-on:not(.front-final) .main-day-copy span{
+  font-size:10.4px!important;line-height:1.05!important;color:#c7d0d4!important;white-space:nowrap!important
+}
+.app.segment-day-summary-on:not(.front-final) .main-day-copy strong{
+  font-size:17px!important;line-height:1!important;font-weight:850!important
+}
+.app.segment-day-summary-on:not(.front-final) .main-day-card.profitable strong{color:#20e58b!important}
+.app.segment-day-summary-on:not(.front-final) .main-day-card.loss-making strong{color:#ff5a5f!important}
+@media(max-width:360px){
+  .app.segment-day-summary-on:not(.front-final) .main-calendar-day-summary{gap:5px!important;margin-top:5px!important}
+  .app.segment-day-summary-on:not(.front-final) .main-day-card{min-height:42px!important;padding:4px 6px!important;gap:5px!important}
+  .app.segment-day-summary-on:not(.front-final) .main-day-icon{width:27px!important;height:27px!important;flex-basis:27px!important;border-radius:8px!important}
+  .app.segment-day-summary-on:not(.front-final) .main-day-icon svg{width:19px!important;height:19px!important}
+  .app.segment-day-summary-on:not(.front-final) .main-day-copy span{font-size:9.2px!important;letter-spacing:-.08px!important}
+  .app.segment-day-summary-on:not(.front-final) .main-day-copy strong{font-size:15px!important}
+}
+@media(max-height:760px){
+  .app.segment-day-summary-on:not(.front-final) .main-calendar-day-summary{margin-top:4px!important;gap:5px!important}
+  .app.segment-day-summary-on:not(.front-final) .main-day-card{min-height:39px!important;padding:3px 6px!important;gap:5px!important;border-radius:11px!important}
+  .app.segment-day-summary-on:not(.front-final) .main-day-icon{width:25px!important;height:25px!important;flex-basis:25px!important;border-radius:7px!important}
+  .app.segment-day-summary-on:not(.front-final) .main-day-icon svg{width:18px!important;height:18px!important}
+  .app.segment-day-summary-on:not(.front-final) .main-day-copy span{font-size:9px!important}
+  .app.segment-day-summary-on:not(.front-final) .main-day-copy strong{font-size:14px!important}
+  .app.segment-day-summary-on:not(.front-final) .bottom-nav{margin-top:4px!important}
+}
+</style>
+<script id="v52-option-neutral-segment-day-count-only-fix-js">
+(function(){
+  'use strict';
+
+  /* ---------- Fix A: no default Call/Put selection for a NEW Option trade ---------- */
+  setOptionSide=function(side){
+    const call=document.getElementById('optionCallBtn');
+    const put=document.getElementById('optionPutBtn');
+    if(side!=='CE'&&side!=='PE'){
+      optionSide=null;
+      if(call)call.classList.remove('active');
+      if(put)put.classList.remove('active');
+      return;
+    }
+    optionSide=side;
+    if(call)call.classList.toggle('active',side==='CE');
+    if(put)put.classList.toggle('active',side==='PE');
+  };
+
+  const previousClearOptionFieldsV52OptionNeutral=clearOptionFields;
+  clearOptionFields=function(){
+    const result=previousClearOptionFieldsV52OptionNeutral();
+    if(isOptionMarket())setOptionSide(null);
+    else if(isFutureMarket())setFutureSide(null);
+    return result;
+  };
+
+  const previousAddTradeV52OptionNeutral=addTrade;
+  addTrade=function(){
+    if(isOptionMarket()&&optionSide!=='CE'&&optionSide!=='PE'){
+      showAppNotice('Select Call or Put.');
+      return;
+    }
+    return previousAddTradeV52OptionNeutral();
+  };
+
+  /* ---------- Fix B: view-specific monthly Profitable/Loss Making day cards ---------- */
+  const SUMMARY_KEYS={
+    stock:'stockPnLCalendar_pwa_v21',
+    future:'stockPnLCalendar_future_v21',
+    option:'stockPnLCalendar_option_v21',
+    commodity:'stockPnLCalendar_commodity_v21',
+    commodityOption:'stockPnLCalendar_commodity_option_v48'
+  };
+  const appEl=document.querySelector('.app');
+  const summaryEl=document.getElementById('mainCalendarDaySummary');
+
+  function storedTrades(keyName){
+    const storageKey=SUMMARY_KEYS[keyName];
+    try{
+      const parsed=JSON.parse(localStorage.getItem(storageKey)||'null');
+      if(Array.isArray(parsed))return parsed;
+    }catch(e){}
+    if(keyName==='stock'&&typeof SEED!=='undefined'&&Array.isArray(SEED))return SEED;
+    return [];
+  }
+
+  function keysForCurrentSegment(){
+    if(activeMarket==='stock')return ['stock'];
+    if(activeMarket==='fnoMenu')return ['future','option'];
+    if(activeMarket==='future')return ['future'];
+    if(activeMarket==='option')return ['option'];
+    if(activeMarket==='commodityMenu')return ['commodity','commodityOption'];
+    if(activeMarket==='commodity')return ['commodity'];
+    if(activeMarket==='commodityOption')return ['commodityOption'];
+    return [];
+  }
+
+  function realisedTradeDate(t){
+    try{return tradeCalendarDate(t)||''}catch(e){return (!isOpenTrade(t)&&t&&t.sellDate)?t.sellDate:(t&&t.date)||''}
+  }
+
+  function realisedNet(t){
+    try{
+      if(!t||isOpenTrade(t))return 0;
+      return calcGross(t)-realisedCharges(t);
+    }catch(e){return 0}
+  }
+
+  function segmentDayNet(ds,names){
+    let total=0;
+    for(const name of names){
+      for(const t of storedTrades(name)){
+        if(realisedTradeDate(t)===ds)total+=realisedNet(t);
+      }
+    }
+    return total;
+  }
+
+  function syncSegmentSummaryVisibility(view){
+    const calendarView=(view||appView)==='calendar';
+    const on=!!(appEl&&calendarView&&!appEl.classList.contains('front-final')&&keysForCurrentSegment().length);
+    if(appEl)appEl.classList.toggle('segment-day-summary-on',on);
+    return on;
+  }
+
+  function paintSegmentDaySummary(){
+    if(!syncSegmentSummaryVisibility('calendar'))return;
+    const names=keysForCurrentSegment();
+    const y=cursor.getFullYear(),m=cursor.getMonth(),last=new Date(y,m+1,0).getDate();
+    let profitable=0,lossMaking=0;
+    for(let d=1;d<=last;d++){
+      const net=segmentDayNet(key(y,m,d),names);
+      if(net>0)profitable++;
+      else if(net<0)lossMaking++;
+    }
+    const p=document.getElementById('mainProfitableDays');
+    const l=document.getElementById('mainLossMakingDays');
+    if(p)p.textContent=String(profitable);
+    if(l)l.textContent=String(lossMaking);
+  }
+
+  const previousRenderAppShellV52SegmentSummary=renderAppShell;
+  renderAppShell=function(view){
+    const result=previousRenderAppShellV52SegmentSummary(view);
+    if(view==='calendar'){
+      if(appEl&&!appEl.classList.contains('front-final'))paintSegmentDaySummary();
+      else if(appEl)appEl.classList.remove('segment-day-summary-on');
+    }else if(appEl){
+      appEl.classList.remove('segment-day-summary-on');
+    }
+    return result;
+  };
+
+  const previousRenderV52SegmentSummary=render;
+  render=function(){
+    const result=previousRenderV52SegmentSummary();
+    if(appEl&&!appEl.classList.contains('front-final'))paintSegmentDaySummary();
+    return result;
+  };
+
+  const previousUpdateStatsV52SegmentSummary=updateStats;
+  updateStats=function(){
+    const result=previousUpdateStatsV52SegmentSummary();
+    if(appEl&&!appEl.classList.contains('front-final'))paintSegmentDaySummary();
+    return result;
+  };
+
+  const previousApplyMarketSelectionV52SegmentSummary=applyMarketSelection;
+  applyMarketSelection=function(group,sub=null,push=false){
+    const result=previousApplyMarketSelectionV52SegmentSummary(group,sub,push);
+    if(appEl&&!appEl.classList.contains('front-final'))paintSegmentDaySummary();
+    return result;
+  };
+
+  /* Main Calendar keeps its existing combined all-segment cards and styling. */
+  if(appEl&&appEl.classList.contains('front-final'))appEl.classList.remove('segment-day-summary-on');
+  else paintSegmentDaySummary();
 })();
 </script>
 
