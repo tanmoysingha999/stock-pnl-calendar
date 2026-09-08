@@ -2218,7 +2218,7 @@ refreshTradeModeUI();
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', async () => {
     try {
-      const reg = await navigator.serviceWorker.register('./service-worker.js?v=52-option-neutral-segment-day-count-only-fix-final', {updateViaCache:'none'});
+      const reg = await navigator.serviceWorker.register('./service-worker.js?v=52-parent-day-count-only-fix-final', {updateViaCache:'none'});
       await reg.update();
     } catch(e) {}
   });
@@ -3073,7 +3073,7 @@ history.replaceState({pnlApp:true,view:'frontFinal',cursorYear:cursor.getFullYea
     const keys=parentCountKeys[activeMarket];
     if(!keys)return;
     const y=cursor.getFullYear(),m=cursor.getMonth();
-    let profits=0,losses=0;
+    const dayNet=new Map();
     for(const k of keys){
       for(const t of storedTradesForCount(k)){
         const ds=tradeCalendarDate(t);
@@ -3082,9 +3082,13 @@ history.replaceState({pnlApp:true,view:'frontFinal',cursorYear:cursor.getFullYea
         if(Number.isNaN(d.getTime())||d.getFullYear()!==y||d.getMonth()!==m)continue;
         const n=realizedTradeNetForCount(t);
         if(n===null)continue;
-        if(n>0)profits++;
-        else if(n<0)losses++;
+        dayNet.set(ds,(dayNet.get(ds)||0)+n);
       }
+    }
+    let profits=0,losses=0;
+    for(const n of dayNet.values()){
+      if(n>0)profits++;
+      else if(n<0)losses++;
     }
     const pc=document.getElementById('profitCount'),lc=document.getElementById('lossCount');
     if(pc)pc.textContent=profits;
