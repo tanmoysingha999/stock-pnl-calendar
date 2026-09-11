@@ -20,9 +20,10 @@ html.v52-lock-pending body{background:#06131c!important}
 html.v52-lock-pending body>*:not(#appLockV52){visibility:hidden!important}
 html.v52-lock-pending #appLockV52{visibility:visible!important}
 
-/* v52 TRADE VIA BROKER ONLY UPDATE FINAL */
-.trade-broker-field select{width:100%;background:#071923;color:#eef4f6;border:1px solid #30444e;border-radius:12px;padding:12px 13px;font-size:14px;outline:none;box-sizing:border-box}
-.trade-broker-field select:focus{border-color:#42d982;box-shadow:0 0 0 2px #42d98222}
+/* v52 TRADE VIA BROKER FULL WIDTH ONLY FIX FINAL */
+.trade-broker-field{grid-column:1/-1;min-width:0}
+.trade-broker-field select{width:100%;background:#081a25;color:#f2f6f7;border:1px solid #304653;border-radius:10px;padding:10px 8px;font-size:14px;outline:none;box-sizing:border-box}
+.trade-broker-field select:focus{border-color:#304653;box-shadow:none}
 </style>
 
 
@@ -2233,7 +2234,7 @@ refreshTradeModeUI();
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', async () => {
     try {
-      const reg = await navigator.serviceWorker.register('./service-worker.js?v=52-trade-via-broker-only-update-final', {updateViaCache:'none'});
+      const reg = await navigator.serviceWorker.register('./service-worker.js?v=52-trade-via-broker-full-width-only-fix-final', {updateViaCache:'none'});
       await reg.update();
     } catch(e) {}
   });
