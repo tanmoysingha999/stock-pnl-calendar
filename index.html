@@ -2234,7 +2234,7 @@ refreshTradeModeUI();
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', async () => {
     try {
-      const reg = await navigator.serviceWorker.register('./service-worker.js?v=52-trade-via-broker-full-width-only-fix-final', {updateViaCache:'none'});
+      const reg = await navigator.serviceWorker.register('./service-worker.js?v=52-broker-status-text-only-update-final', {updateViaCache:'none'});
       await reg.update();
     } catch(e) {}
   });
@@ -2839,7 +2839,11 @@ history.replaceState({pnlApp:true,view:'frontFinal',cursorYear:cursor.getFullYea
     const buyLabel=(t&&t.futureTrade&&String(t.futureSide||'').toUpperCase()==='SELL')?'Sell':'Buy';
     const exitLabel=open?'Holding':(partial?'Exit partial':'Exit full');
     const sellDate=effectiveSellDate(t),pct=tradePercent(t,net),dur=durationLabel(t);
-    const status=open?'Holding':(pos?'Profit booked':'Loss booked');
+    const brokerName=String((t&&t.broker)||'').trim();
+    const safeBrokerName=brokerName?escapeHtml(brokerName):'';
+    const status=brokerName
+      ?(open?`Trade Book From ${safeBrokerName}`:(pos?`Profit Booked From ${safeBrokerName}`:`Loss Booked From ${safeBrokerName}`))
+      :(open?'Holding':(pos?'Profit booked':'Loss booked'));
     const statusClass=open?'open':(pos?'profit':'loss');
     const gainClass=open?'open':(pos?'profit':'loss');
     const gainText=open?'OPEN / HOLDING':`Net gain: ${pct.toFixed(2)}% (${net>=0?'+':''}${money(net)}) ${dur}`;
