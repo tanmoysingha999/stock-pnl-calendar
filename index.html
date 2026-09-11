@@ -822,6 +822,7 @@ iframe[src*="netlify" i], iframe[title*="netlify" i], [class*="netlify" i], [id*
 .summary-market-tabs button.active{background:linear-gradient(135deg,var(--mint1),var(--mint2));border-color:#84e6c5;color:#071913}
 .summary-category-card{display:grid;grid-template-columns:1fr auto;align-items:center;border:1px solid #29404b;border-radius:13px;background:#081a24;padding:12px 11px;cursor:pointer}
 .summary-category-card b{font-size:14px}.summary-category-card small{display:block;color:#8fa0a8;font-size:10px;margin-top:3px}.summary-category-card .history-chevron{font-size:26px}
+.summary-root-positive{color:#25df82!important;font-weight:750}.summary-root-negative{color:#ff5d65!important;font-weight:750}.summary-root-zero{color:#8fa0a8!important}
 .summary-detail-head{display:flex;align-items:center;gap:8px;margin-bottom:8px}.summary-back{border:0;background:transparent;color:#fff;font-size:29px;line-height:1;padding:0 3px}.summary-detail-title{font-size:17px;font-weight:800}
 .summary-metrics{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin:6px 0 8px}.summary-metric{border:1px solid #29404b;border-radius:11px;background:#081923;text-align:center;padding:8px 4px}.summary-metric small{display:block;color:#8fa0a8;font-size:8.5px}.summary-metric b{display:block;margin-top:4px;font-size:11px}.summary-profit{color:var(--green)}.summary-loss{color:#ff625e}.summary-net{color:#5fa9ff}
 .summary-filter-tabs{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin:7px 0 8px}.summary-filter-tabs button{min-height:34px;font-size:10px}.summary-filter-tabs button.active{background:#123628;border-color:#39d97b;color:#57e98e}
@@ -2171,10 +2172,21 @@ function setSummaryBroker(value){
  if(history.state?.view==='history')history.replaceState({...history.state,pnlApp:true,view:'history',summaryCategory:null,summaryFilter:'all',summaryBroker:selectedSummaryBroker},'');
 }
 function summaryCategoryLabel(cat){return cat==='fno'?'F&O':cat==='commodity'?'Commodity':'Stock'}
+function summaryCurrentFyBounds(){
+ const now=new Date(),y=now.getFullYear(),m=now.getMonth(),startYear=m>=3?y:y-1;
+ return {start:new Date(startYear,3,1),end:new Date(startYear+1,3,1)};
+}
+function summaryRootEntries(cat){
+ const {start,end}=summaryCurrentFyBounds();
+ return summaryEntries(cat).filter(e=>{
+   const ds=tradeCalendarDate(e.t);if(!ds)return false;
+   const d=new Date(ds+'T12:00:00');return !Number.isNaN(d.getTime())&&d>=start&&d<end;
+ });
+}
 function renderSummaryRoot(){
  const cats=['stock','fno','commodity'],brokers=summaryBrokerNames();
  const brokerOptions='<option value="">Select Broker</option>'+brokers.map(n=>`<option value="${escapeHtml(n)}" ${n===selectedSummaryBroker?'selected':''}>${escapeHtml(n)}</option>`).join('');
- historyView.innerHTML=`<div class="view-title">Stock P&amp;L Summary</div><div class="summary-broker-field"><label for="summaryBroker">Summary From Broker</label><select id="summaryBroker" onchange="setSummaryBroker(this.value)">${brokerOptions}</select></div><div class="summary-shell">${cats.map(c=>{const a=summaryEntries(c),net=a.reduce((z,e)=>z+calcGross(e.t)-realisedCharges(e.t),0);return `<div class="summary-category-card" onclick="selectSummaryCategory('${c}')"><div><b>${summaryCategoryLabel(c)}</b><small>${a.length} closed trade${a.length===1?'':'s'} · ${money(net)}</small></div><div class="history-chevron">›</div></div>`}).join('')}</div>`;
+ historyView.innerHTML=`<div class="view-title">Stock P&amp;L Summary</div><div class="summary-broker-field"><label for="summaryBroker">Summary From Broker</label><select id="summaryBroker" onchange="setSummaryBroker(this.value)">${brokerOptions}</select></div><div class="summary-shell">${cats.map(c=>{const a=summaryRootEntries(c),net=a.reduce((z,e)=>z+calcGross(e.t)-realisedCharges(e.t),0),amountClass=net>0?'summary-root-positive':net<0?'summary-root-negative':'summary-root-zero';return `<div class="summary-category-card" onclick="selectSummaryCategory('${c}')"><div><b>${summaryCategoryLabel(c)}</b><small>${a.length} closed trade${a.length===1?'':'s'} · <span class="${amountClass}">${money(net)}</span></small></div><div class="history-chevron">›</div></div>`}).join('')}</div>`;
 }
 function renderSummaryCategory(cat,filter='all'){
  const all=summaryEntries(cat),profits=all.filter(e=>calcGross(e.t)-realisedCharges(e.t)>=0),losses=all.filter(e=>calcGross(e.t)-realisedCharges(e.t)<0),profitAmt=profits.reduce((z,e)=>z+calcGross(e.t)-realisedCharges(e.t),0),lossAmt=losses.reduce((z,e)=>z+Math.abs(calcGross(e.t)-realisedCharges(e.t)),0),net=profitAmt-lossAmt;
@@ -2255,7 +2267,7 @@ refreshTradeModeUI();
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', async () => {
     try {
-      const reg = await navigator.serviceWorker.register('./service-worker.js?v=52-summary-from-broker-only-update-final', {updateViaCache:'none'});
+      const reg = await navigator.serviceWorker.register('./service-worker.js?v=52-summary-fy-selected-trade-only-fix-final', {updateViaCache:'none'});
       await reg.update();
     } catch(e) {}
   });
@@ -4438,5 +4450,45 @@ body:not(.future-mode) #optionChainRow.show .option-side-btn:not(.active){
   };
 })();
 </script>
+
+<script id="v52-summary-fy-selected-trade-only-fix-final-js">
+/* TWO REQUESTED SUMMARY FIXES ONLY:
+   1) Root Stock/F&O/Commodity count + amount are current Indian FY only (Apr 1-Mar 31).
+      Broker filter remains respected; open/holding remains excluded by summaryEntries().
+   2) A trade opened from Stock P&L Summary shows ONLY that selected trade in the read-only day details modal.
+      Calendar-origin date modals remain unchanged. */
+(function(){
+  'use strict';
+  let summarySelectedTradeRef=null;
+
+  const previousByDateSummarySingle=byDate;
+  byDate=function(ds){
+    if(summarySelectedTradeRef){
+      const i=Number(summarySelectedTradeRef.index),t=trades[i];
+      if(t&&tradeCalendarDate(t)===ds)return [t];
+      return [];
+    }
+    return previousByDateSummarySingle(ds);
+  };
+
+  const previousOpenSummaryTradeSingle=openSummaryTrade;
+  openSummaryTrade=function(storageName,index,cat){
+    summarySelectedTradeRef={storageName:String(storageName||''),index:Number(index)};
+    return previousOpenSummaryTradeSingle(storageName,index,cat);
+  };
+
+  const previousCloseModalSummarySingle=closeModal;
+  closeModal=function(fromPop=false){
+    summarySelectedTradeRef=null;
+    return previousCloseModalSummarySingle(fromPop);
+  };
+
+  window.addEventListener('popstate',function(e){
+    const s=e.state||{};
+    if(!(s.modal==='day'&&s.fromSummary))summarySelectedTradeRef=null;
+  });
+})();
+</script>
+
 </body>
 </html>
