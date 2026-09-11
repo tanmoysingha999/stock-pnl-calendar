@@ -19,6 +19,10 @@
 html.v52-lock-pending body{background:#06131c!important}
 html.v52-lock-pending body>*:not(#appLockV52){visibility:hidden!important}
 html.v52-lock-pending #appLockV52{visibility:visible!important}
+
+/* v52 TRADE VIA BROKER ONLY UPDATE FINAL */
+.trade-broker-field select{width:100%;background:#071923;color:#eef4f6;border:1px solid #30444e;border-radius:12px;padding:12px 13px;font-size:14px;outline:none;box-sizing:border-box}
+.trade-broker-field select:focus{border-color:#42d982;box-shadow:0 0 0 2px #42d98222}
 </style>
 
 
@@ -1234,6 +1238,7 @@ img.broker-picker-logo {
      <div class="asset-selected" id="assetSelected"></div>
      <div class="asset-results" id="assetResults"></div>
    </div>
+   <div class="field trade-broker-field"><label for="tradeBroker">Trade via Broker</label><select id="tradeBroker"><option value="">Select Broker</option></select></div>
    <div class="option-chain-row" id="optionChainRow">
      <label>Option Chain</label>
      <div class="option-chain-grid">
@@ -1740,7 +1745,16 @@ function clearOptionFields(){
   const bc=document.getElementById('optBuyCalc'),sc=document.getElementById('optSellCalc');if(bc)bc.textContent='';if(sc)sc.textContent='';
   setOptionSide('CE');
 }
+function refreshTradeBrokerSelect(selectedValue=''){
+  const el=document.getElementById('tradeBroker');if(!el)return;
+  const names=[];try{for(const b of getBrokers()){const n=String(b?.name||'').trim();if(n&&!names.includes(n))names.push(n)}}catch(e){}
+  if(selectedValue&&!names.includes(selectedValue))names.push(selectedValue);
+  el.innerHTML='<option value="">Select Broker</option>'+names.map(n=>`<option value="${escapeHtml(n)}">${escapeHtml(n)}</option>`).join('');
+  el.value=selectedValue||'';
+}
+function selectedTradeBroker(){return (document.getElementById('tradeBroker')?.value||'').trim()}
 function clearTradeForm(){
+  refreshTradeBrokerSelect('');
   stock.value='';document.getElementById('buyDate').value='';buyPrice.value='';buyQty.value='';sellPrice.value='';sellQty.value='';sellDate.value='';charges.value='';
   clearOptionFields();
   selectedAsset=null;
@@ -1926,7 +1940,7 @@ function addTrade(){
     const a=selectedAsset||findAssetByName(st,assetType)||{name:st,type:assetType};
     const item={
       date:sellBlank?bd:sd,buyDate:bd,stock:displayStock,baseStock:st,optionTrade:true,optionMarket:activeMarket,
-      strike,optionSide,assetType:assetType,symbol:a.symbol||'',logo:a.logo||'',domain:a.domain||'',icon:a.icon||'',
+      strike,optionSide,broker:selectedTradeBroker(),assetType:assetType,symbol:a.symbol||'',logo:a.logo||'',domain:a.domain||'',icon:a.icon||'',
       buyPrice:bp,buyQty:buyUnits,buyLotSize:bl,buyQtyPerLot:bpl,totalBuyAmount:totalBuy,
       sellPrice:sellBlank?'':sp,sellQty:sellBlank?'':sellUnits,sellLotSize:sellBlank?'':sl,sellQtyPerLot:sellBlank?'':spl,totalSellAmount:sellBlank?'':totalSell,
       sellDate:sellBlank?'':sd,gross:sellBlank?0:(totalSell-totalBuy),charges:c
@@ -1959,7 +1973,7 @@ function addTrade(){
   if(sd&&sd<bd){alert('Selling Date cannot be before the Buy Date.');return}
   const g=sellBlank?0:(sp*sq)-(bp*bq);
   const a=selectedAsset||findAssetByName(st,assetType)||{name:st,type:assetType};
-  const item={date:sellBlank?bd:sd,buyDate:bd,stock:st,assetType:assetType,symbol:a.symbol||'',logo:a.logo||'',domain:a.domain||'',icon:a.icon||'',buyPrice:bp,buyQty:bq,sellPrice:sellBlank?'':sp,sellQty:sellBlank?'':sq,sellDate:sellBlank?'':sd,gross:g,charges:c};
+  const item={date:sellBlank?bd:sd,buyDate:bd,stock:st,broker:selectedTradeBroker(),assetType:assetType,symbol:a.symbol||'',logo:a.logo||'',domain:a.domain||'',icon:a.icon||'',buyPrice:bp,buyQty:bq,sellPrice:sellBlank?'':sp,sellQty:sellBlank?'':sq,sellDate:sellBlank?'':sd,gross:g,charges:c};
   if(editingIndex===null) trades.push(item); else trades[editingIndex]=item;
   const destination=sellBlank?bd:sd;
   clearTradeForm();
@@ -1979,6 +1993,7 @@ function editTrade(i){
   document.getElementById('buyDate').value=effectiveBuyDate(t);
   sellDate.value=effectiveSellDate(t);
   charges.value=t.charges??'';
+  refreshTradeBrokerSelect(t.broker||'');
 
   if(t.optionTrade){
     const strike=document.getElementById('optionStrike');if(strike)strike.value=t.strike??'';
@@ -2109,7 +2124,7 @@ addTrade=function(){
  const displayStock=`${st} ${futureDateLabel(futureDate)} Future ${futureSide==='SELL'?'Sell':'Buy'}`;
  const a=selectedAsset||findAssetByName(st,assetType)||{name:st,type:assetType};
  const gross=sellBlank?0:(futureSide==='SELL'?(totalBuy-totalSell):(totalSell-totalBuy));
- const item={date:sellBlank?bd:sd,buyDate:bd,stock:displayStock,baseStock:st,optionTrade:true,futureTrade:true,futureDate,futureSide,optionMarket:activeMarket,strike:futureDate,optionSide:futureSide,assetType:assetType,symbol:a.symbol||'',logo:a.logo||'',domain:a.domain||'',icon:a.icon||'',buyPrice:bp,buyQty:buyUnits,buyLotSize:bl,buyQtyPerLot:bpl,totalBuyAmount:totalBuy,sellPrice:sellBlank?'':sp,sellQty:sellBlank?'':sellUnits,sellLotSize:sellBlank?'':sl,sellQtyPerLot:sellBlank?'':spl,totalSellAmount:sellBlank?'':totalSell,sellDate:sellBlank?'':sd,gross,charges:c};
+ const item={date:sellBlank?bd:sd,buyDate:bd,stock:displayStock,baseStock:st,optionTrade:true,futureTrade:true,futureDate,futureSide,optionMarket:activeMarket,strike:futureDate,optionSide:futureSide,broker:selectedTradeBroker(),assetType:assetType,symbol:a.symbol||'',logo:a.logo||'',domain:a.domain||'',icon:a.icon||'',buyPrice:bp,buyQty:buyUnits,buyLotSize:bl,buyQtyPerLot:bpl,totalBuyAmount:totalBuy,sellPrice:sellBlank?'':sp,sellQty:sellBlank?'':sellUnits,sellLotSize:sellBlank?'':sl,sellQtyPerLot:sellBlank?'':spl,totalSellAmount:sellBlank?'':totalSell,sellDate:sellBlank?'':sd,gross,charges:c};
  if(editingIndex===null)trades.push(item);else trades[editingIndex]=item;
  const destination=sellBlank?bd:sd;clearTradeForm();localStorage.setItem(MARKET_KEYS[activeMarket],JSON.stringify(trades));
  if(destination!==selected){const d=new Date(destination+'T12:00:00');cursor=new Date(d.getFullYear(),d.getMonth(),1);selected=destination;}
@@ -2218,7 +2233,7 @@ refreshTradeModeUI();
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', async () => {
     try {
-      const reg = await navigator.serviceWorker.register('./service-worker.js?v=52-logo-library-only-update-final', {updateViaCache:'none'});
+      const reg = await navigator.serviceWorker.register('./service-worker.js?v=52-trade-via-broker-only-update-final', {updateViaCache:'none'});
       await reg.update();
     } catch(e) {}
   });
