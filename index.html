@@ -2234,7 +2234,7 @@ refreshTradeModeUI();
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', async () => {
     try {
-      const reg = await navigator.serviceWorker.register('./service-worker.js?v=52-broker-status-text-only-update-final', {updateViaCache:'none'});
+      const reg = await navigator.serviceWorker.register('./service-worker.js?v=52-day-modal-back-x-history-only-fix-final', {updateViaCache:'none'});
       await reg.update();
     } catch(e) {}
   });
@@ -4373,5 +4373,49 @@ body:not(.future-mode) #optionChainRow.show .option-side-btn:not(.active){
 })();
 </script>
 
+
+
+<script id="v52-day-modal-back-x-history-only-fix-final-js">
+/* DAY MODAL BACK/X HISTORY ONLY FIX.
+   No layout, data, calculation, broker, trade-card or storage changes. */
+(function(){
+  'use strict';
+
+  /* Keep at most ONE trade-action history layer. Switching between trade cards
+     replaces that layer instead of stacking another history entry. */
+  showDayTradeActions=function(i){
+    try{
+      if(modal&&modal.classList.contains('summary-readonly-trade'))return;
+    }catch(e){}
+    i=Number(i);
+    if(!Number.isInteger(i)||!trades[i])return;
+    if(selectedDayTradeActionIndex===i)return;
+    selectedDayTradeActionIndex=i;
+    renderModal();
+    const st={pnlApp:true,view:'calendar',modal:'day',date:selected,tradeActions:i};
+    const cur=history.state||{};
+    if(cur.modal==='day'&&Object.prototype.hasOwnProperty.call(cur,'tradeActions')){
+      history.replaceState(st,'');
+    }else{
+      history.pushState(st,'');
+    }
+  };
+
+  /* X always closes the whole day modal in one tap.
+     Android Back remains stepwise: actions -> day modal -> calendar. */
+  closeModal=function(fromPop=false){
+    selectedDayTradeActionIndex=null;
+    try{if(modal)modal.classList.remove('summary-readonly-trade')}catch(e){}
+    clearTradeForm();
+    modal.classList.remove('show');
+    if(fromPop)return;
+    const cur=history.state||{};
+    if(cur.modal==='day'){
+      if(Object.prototype.hasOwnProperty.call(cur,'tradeActions'))history.go(-2);
+      else history.back();
+    }
+  };
+})();
+</script>
 </body>
 </html>
