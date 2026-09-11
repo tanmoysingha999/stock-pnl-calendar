@@ -24,6 +24,13 @@ html.v52-lock-pending #appLockV52{visibility:visible!important}
 .trade-broker-field{grid-column:1/-1;min-width:0}
 .trade-broker-field select{width:100%;background:#081a25;color:#f2f6f7;border:1px solid #304653;border-radius:10px;padding:10px 8px;font-size:14px;outline:none;box-sizing:border-box}
 .trade-broker-field select:focus{border-color:#304653;box-shadow:none}
+
+/* v52 SUMMARY FROM BROKER ONLY UPDATE FINAL */
+.summary-broker-field{width:100%;box-sizing:border-box;margin:0 0 10px}
+.summary-broker-field label{display:block;color:#dce5e8;font-size:11px;font-weight:650;margin:0 0 5px 2px;white-space:nowrap}
+.summary-broker-field select{width:100%;background:#081a25;color:#f2f6f7;border:1px solid #304653;border-radius:10px;padding:10px 8px;font-size:14px;outline:none;box-sizing:border-box}
+.summary-broker-field select:focus{border-color:#304653;box-shadow:none}
+@media(max-width:520px){.summary-broker-field label{font-size:10px}}
 </style>
 
 
@@ -2049,7 +2056,7 @@ render();updateStats();
 
 <script id="v52-final-five-points-js">
 /* v52 FINAL CANDIDATE — clean v50 base + 5 approved fixes. No localStorage keys are deleted or renamed. */
-let summaryCategory=null,summaryFilter='all',futureSide='BUY';
+let summaryCategory=null,summaryFilter='all',selectedSummaryBroker='',futureSide='BUY';
 function isFutureMarket(){return activeMarket==='future'||activeMarket==='commodity'}
 function activeSubKey(){return activeMarketGroup==='fno'?activeFno:(activeMarketGroup==='commodity'?activeCommodity:null)}
 function futureOrdinal(n){const v=n%100;return n+((v>=11&&v<=13)?'th':({1:'st',2:'nd',3:'rd'}[n%10]||'th'))}
@@ -2151,13 +2158,23 @@ function storedTradesFor(keyName){
  if(Array.isArray(a))return a;if(keyName==='stock')return Array.isArray(SEED)?SEED:[];return [];
 }
 function summaryEntries(cat){
- const out=[];summarySourceDefs(cat).forEach(src=>storedTradesFor(src.key).forEach((t,index)=>{if(!isOpenTrade(t)){out.push({t,index,...src})}}));
+ const out=[];summarySourceDefs(cat).forEach(src=>storedTradesFor(src.key).forEach((t,index)=>{if(!isOpenTrade(t)&&(!selectedSummaryBroker||String(t?.broker||'').trim()===selectedSummaryBroker)){out.push({t,index,...src})}}));
  return out.sort((a,b)=>tradeCalendarDate(b.t).localeCompare(tradeCalendarDate(a.t)));
+}
+function summaryBrokerNames(){
+ const names=[];try{for(const b of getBrokers()){const n=String(b?.name||'').trim();if(n&&!names.includes(n))names.push(n)}}catch(e){}
+ if(selectedSummaryBroker&&!names.includes(selectedSummaryBroker))names.push(selectedSummaryBroker);
+ return names;
+}
+function setSummaryBroker(value){
+ selectedSummaryBroker=String(value||'').trim();summaryCategory=null;summaryFilter='all';renderSummaryRoot();
+ if(history.state?.view==='history')history.replaceState({...history.state,pnlApp:true,view:'history',summaryCategory:null,summaryFilter:'all',summaryBroker:selectedSummaryBroker},'');
 }
 function summaryCategoryLabel(cat){return cat==='fno'?'F&O':cat==='commodity'?'Commodity':'Stock'}
 function renderSummaryRoot(){
- const cats=['stock','fno','commodity'];
- historyView.innerHTML=`<div class="view-title">Stock P&amp;L Summary</div><div class="summary-shell">${cats.map(c=>{const a=summaryEntries(c),net=a.reduce((z,e)=>z+calcGross(e.t)-realisedCharges(e.t),0);return `<div class="summary-category-card" onclick="selectSummaryCategory('${c}')"><div><b>${summaryCategoryLabel(c)}</b><small>${a.length} closed trade${a.length===1?'':'s'} · ${money(net)}</small></div><div class="history-chevron">›</div></div>`}).join('')}</div>`;
+ const cats=['stock','fno','commodity'],brokers=summaryBrokerNames();
+ const brokerOptions='<option value="">Select Broker</option>'+brokers.map(n=>`<option value="${escapeHtml(n)}" ${n===selectedSummaryBroker?'selected':''}>${escapeHtml(n)}</option>`).join('');
+ historyView.innerHTML=`<div class="view-title">Stock P&amp;L Summary</div><div class="summary-broker-field"><label for="summaryBroker">Summary From Broker</label><select id="summaryBroker" onchange="setSummaryBroker(this.value)">${brokerOptions}</select></div><div class="summary-shell">${cats.map(c=>{const a=summaryEntries(c),net=a.reduce((z,e)=>z+calcGross(e.t)-realisedCharges(e.t),0);return `<div class="summary-category-card" onclick="selectSummaryCategory('${c}')"><div><b>${summaryCategoryLabel(c)}</b><small>${a.length} closed trade${a.length===1?'':'s'} · ${money(net)}</small></div><div class="history-chevron">›</div></div>`}).join('')}</div>`;
 }
 function renderSummaryCategory(cat,filter='all'){
  const all=summaryEntries(cat),profits=all.filter(e=>calcGross(e.t)-realisedCharges(e.t)>=0),losses=all.filter(e=>calcGross(e.t)-realisedCharges(e.t)<0),profitAmt=profits.reduce((z,e)=>z+calcGross(e.t)-realisedCharges(e.t),0),lossAmt=losses.reduce((z,e)=>z+Math.abs(calcGross(e.t)-realisedCharges(e.t)),0),net=profitAmt-lossAmt;
@@ -2165,12 +2182,16 @@ function renderSummaryCategory(cat,filter='all'){
  const tabs=['stock','fno','commodity'];
  historyView.innerHTML=`<div class="view-title">Stock P&amp;L Summary</div><div class="summary-market-tabs">${tabs.map(c=>`<button class="${c===cat?'active':''}" onclick="selectSummaryCategory('${c}')">${summaryCategoryLabel(c)}</button>`).join('')}</div><div class="summary-detail-head"><button class="summary-back" onclick="history.back()">‹</button><div class="summary-detail-title">${summaryCategoryLabel(cat)} Profit / Loss</div></div><div class="summary-metrics"><div class="summary-metric"><small>Profit</small><b class="summary-profit">${money(profitAmt)}</b></div><div class="summary-metric"><small>Loss</small><b class="summary-loss">${money(lossAmt)}</b></div><div class="summary-metric"><small>Net P&amp;L</small><b class="summary-net">${money(net)}</b></div></div><div class="summary-filter-tabs"><button class="${filter==='all'?'active':''}" onclick="setSummaryFilter('all')">All (${all.length})</button><button class="${filter==='profit'?'active':''}" onclick="setSummaryFilter('profit')">Profit (${profits.length})</button><button class="${filter==='loss'?'active':''}" onclick="setSummaryFilter('loss')">Loss (${losses.length})</button></div><div class="summary-list">${arr.length?arr.map(e=>{const t=e.t,a=resolveTradeAsset(t),v=calcGross(t)-realisedCharges(t),pos=v>=0;return `<div class="history-item" onclick="openSummaryTrade('${e.key}',${e.index},'${cat}')">${assetLogoHTML(a,'history-logo')}<div class="history-copy"><b>${escapeHtml(t.stock)}</b><div class="history-meta">${formatDateShort(tradeCalendarDate(t))} · ${money(v)}</div></div><div class="history-result ${pos?'profit':'loss'}">${pos?'PROFIT':'LOSS'}</div><div class="history-chevron">›</div></div>`}).join(''):`<div class="summary-empty">No ${filter==='all'?'closed':filter} trades.</div>`}</div>`;
 }
-function selectSummaryCategory(cat){summaryCategory=cat;summaryFilter='all';renderSummaryCategory(cat,'all');appView='history';renderAppShell('history');setBottomActive('bnHistory');const st={pnlApp:true,view:'history',summaryCategory:cat,summaryFilter:'all'};if(history.state?.view==='history'&&history.state?.summaryCategory)history.replaceState(st,'');else history.pushState(st,'')}
-function setSummaryFilter(filter){summaryFilter=filter;renderSummaryCategory(summaryCategory,summaryFilter);history.replaceState({...(history.state||{}),pnlApp:true,view:'history',summaryCategory,summaryFilter},'')}
+function selectSummaryCategory(cat){
+ if(!selectedSummaryBroker){const el=document.getElementById('summaryBroker');if(el)el.focus();return;}
+ summaryCategory=cat;summaryFilter='all';renderSummaryCategory(cat,'all');appView='history';renderAppShell('history');setBottomActive('bnHistory');const st={pnlApp:true,view:'history',summaryCategory:cat,summaryFilter:'all',summaryBroker:selectedSummaryBroker};if(history.state?.view==='history'&&history.state?.summaryCategory)history.replaceState(st,'');else history.pushState(st,'')
+}
+function setSummaryFilter(filter){summaryFilter=filter;renderSummaryCategory(summaryCategory,summaryFilter);history.replaceState({...(history.state||{}),pnlApp:true,view:'history',summaryCategory,summaryFilter,summaryBroker:selectedSummaryBroker},'')}
 showHistoryView=function(push=true,category=null,filter='all'){
+ if(push&&category===null)selectedSummaryBroker='';else if(!push)selectedSummaryBroker=String(history.state?.summaryBroker||'').trim();
  summaryCategory=category;summaryFilter=filter||'all';appView='history';renderAppShell('history');setBottomActive('bnHistory');
- if(summaryCategory)renderSummaryCategory(summaryCategory,summaryFilter);else renderSummaryRoot();
- if(push)pushSection('history',{summaryCategory:null,summaryFilter:'all'});
+ if(summaryCategory&&selectedSummaryBroker)renderSummaryCategory(summaryCategory,summaryFilter);else{summaryCategory=null;summaryFilter='all';renderSummaryRoot();}
+ if(push)pushSection('history',{summaryCategory:null,summaryFilter:'all',summaryBroker:selectedSummaryBroker});
 };
 function marketFromStorageName(name){if(name==='future')return['fno','future'];if(name==='option')return['fno','option'];if(name==='commodity')return['commodity','future'];if(name==='commodityOption')return['commodity','option'];return['stock',null]}
 function openSummaryTrade(storageName,index,cat){
@@ -2234,7 +2255,7 @@ refreshTradeModeUI();
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', async () => {
     try {
-      const reg = await navigator.serviceWorker.register('./service-worker.js?v=52-day-modal-back-x-history-only-fix-final', {updateViaCache:'none'});
+      const reg = await navigator.serviceWorker.register('./service-worker.js?v=52-summary-from-broker-only-update-final', {updateViaCache:'none'});
       await reg.update();
     } catch(e) {}
   });
