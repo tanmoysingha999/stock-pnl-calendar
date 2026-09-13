@@ -2267,7 +2267,7 @@ refreshTradeModeUI();
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', async () => {
     try {
-      const reg = await navigator.serviceWorker.register('./service-worker.js?v=52-summary-fy-selected-trade-only-fix-final', {updateViaCache:'none'});
+      const reg = await navigator.serviceWorker.register('./service-worker.js?v=52-weekday-weekly-gains-only-fix-final', {updateViaCache:'none'});
       await reg.update();
     } catch(e) {}
   });
@@ -3832,7 +3832,7 @@ body.app-locked-v52{overflow:hidden!important;touch-action:none}
       const label=dt.toLocaleString('en-IN',{month:'short',year:'numeric'});
       rows+=`<div class="fy-row v52-fy-month-open" onclick="openFyMonthBreakdown(${y},${m})"><span>${label}</span><span class="${cls}">${val>0?'+':''}${money(val)}</span></div>`;
     }
-    fyView.innerHTML=`<div class="view-title">Financial Year Summary</div><div class="fy-top"><div><div class="fy-range">${sy} – ${ey}</div><div class="fy-sub">Apr ${sy} – Mar ${ey}</div></div><div><div class="fy-sub">FY Total P&amp;L</div><div class="fy-total">${money(total)}</div></div></div>${rows}`;
+    fyView.innerHTML=`<div class="view-title">Financial Year Summary</div><div class="fy-top"><div><div class="fy-range">${sy} – ${ey}</div><div class="fy-sub">Apr ${sy} – Mar ${ey}</div></div><div><div class="fy-sub">FY Total P&amp;L</div><div class="fy-total ${total>0?'fy-pos':total<0?'fy-neg':'fy-zero'}">${money(total)}</div></div></div>${rows}`;
   };
 
   /* Capture popstate only for the supporting page so phone Back returns to FY Summary.
@@ -4487,6 +4487,134 @@ body:not(.future-mode) #optionChainRow.show .option-side-btn:not(.active){
     const s=e.state||{};
     if(!(s.modal==='day'&&s.fromSummary))summarySelectedTradeRef=null;
   });
+})();
+</script>
+
+
+<script id="v52-weekday-weekly-gains-only-fix-final-js">
+/* WEEKLY GAINS WEEKDAY-ONLY FIX.
+   Requested behavior: each visible Gains row totals only the visible Monday-Friday
+   dates in that row. Saturday/Sunday trades are not added to the Gains cell.
+   Monthly Net P&L, trade data, date P&L, broker filters and all other behavior stay unchanged. */
+(function(){
+  'use strict';
+
+  const WEEKDAY_GAIN_KEYS={
+    stock:'stockPnLCalendar_pwa_v21',
+    future:'stockPnLCalendar_future_v21',
+    option:'stockPnLCalendar_option_v21',
+    commodity:'stockPnLCalendar_commodity_v21',
+    commodityOption:'stockPnLCalendar_commodity_option_v48'
+  };
+
+  function storedWeekdayGainTrades(name){
+    const storageKey=WEEKDAY_GAIN_KEYS[name];
+    try{
+      const a=JSON.parse(localStorage.getItem(storageKey)||'null');
+      if(Array.isArray(a))return a;
+    }catch(e){}
+    if(name==='stock'&&typeof SEED!=='undefined'&&Array.isArray(SEED))return SEED;
+    return [];
+  }
+
+  function weekdayGainNamesForCurrentView(){
+    const appEl=document.querySelector('.app');
+    if(appEl&&appEl.classList.contains('front-final')){
+      return ['stock','future','option','commodity','commodityOption'];
+    }
+    if(activeMarket==='stock')return ['stock'];
+    if(activeMarket==='fnoMenu')return ['future','option'];
+    if(activeMarket==='future')return ['future'];
+    if(activeMarket==='option')return ['option'];
+    if(activeMarket==='commodityMenu')return ['commodity','commodityOption'];
+    if(activeMarket==='commodity')return ['commodity'];
+    if(activeMarket==='commodityOption')return ['commodityOption'];
+    return [];
+  }
+
+  function weekdayGainTradeDate(t){
+    try{return tradeCalendarDate(t)||''}catch(e){
+      try{return (!isOpenTrade(t)&&t&&t.sellDate)?t.sellDate:(t&&t.date)||''}catch(_){return ''}
+    }
+  }
+
+  function weekdayGainTradeNet(t){
+    try{
+      if(!t||isOpenTrade(t))return 0;
+      return Number(calcGross(t)||0)-Number(realisedCharges(t)||0);
+    }catch(e){return 0}
+  }
+
+  function weekdayGainDayNet(ds,names){
+    let total=0;
+    for(const name of names){
+      for(const t of storedWeekdayGainTrades(name)){
+        if(weekdayGainTradeDate(t)===ds)total+=weekdayGainTradeNet(t);
+      }
+    }
+    return total;
+  }
+
+  function weekdayGainText(v){
+    if(!Number.isFinite(v)||Math.abs(v)<0.005)return '—';
+    if(typeof short==='function')return short(v);
+    const sign=v<0?'-':'+'; const a=Math.abs(v);
+    if(a>=100000)return sign+(Math.floor((a/100000)*100)/100).toFixed(2)+'L';
+    if(a>=1000)return sign+(Math.floor((a/1000)*100)/100).toFixed(2)+'K';
+    return sign+(Math.floor(a*100)/100).toFixed(2);
+  }
+
+  function paintWeekdayOnlyGains(){
+    if((appView||'calendar')!=='calendar')return;
+    const names=weekdayGainNamesForCurrentView();
+    if(!names.length)return;
+    const y=cursor.getFullYear(),m=cursor.getMonth();
+    document.querySelectorAll('#weeks .week').forEach(row=>{
+      let total=0;
+      row.querySelectorAll('.day:not(.empty)').forEach(cell=>{
+        const day=Number(cell.querySelector('.num')?.textContent||0);
+        if(day>0)total+=weekdayGainDayNet(key(y,m,day),names);
+      });
+      const gain=row.querySelector('.gain');
+      if(!gain)return;
+      gain.classList.remove('profit','loss');
+      if(total>0)gain.classList.add('profit');
+      else if(total<0)gain.classList.add('loss');
+      gain.textContent=weekdayGainText(total);
+    });
+  }
+
+  /* Run last, after each existing calendar painter, so only the Gains cells are corrected. */
+  const previousPaintFrontWeekdayGain=paintFront;
+  paintFront=function(){
+    const result=previousPaintFrontWeekdayGain();
+    paintWeekdayOnlyGains();
+    return result;
+  };
+
+  const previousRenderWeekdayGain=render;
+  render=function(){
+    const result=previousRenderWeekdayGain();
+    paintWeekdayOnlyGains();
+    return result;
+  };
+
+  const previousUpdateStatsWeekdayGain=updateStats;
+  updateStats=function(){
+    const result=previousUpdateStatsWeekdayGain();
+    paintWeekdayOnlyGains();
+    return result;
+  };
+
+  const previousApplyMarketSelectionWeekdayGain=applyMarketSelection;
+  applyMarketSelection=function(group,sub=null,push=false){
+    const result=previousApplyMarketSelectionWeekdayGain(group,sub,push);
+    paintWeekdayOnlyGains();
+    return result;
+  };
+
+  window.addEventListener('popstate',function(){setTimeout(paintWeekdayOnlyGains,0)});
+  paintWeekdayOnlyGains();
 })();
 </script>
 
