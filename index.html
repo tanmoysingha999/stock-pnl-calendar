@@ -828,13 +828,13 @@ iframe[src*="netlify" i], iframe[title*="netlify" i], [class*="netlify" i], [id*
 .summary-filter-tabs{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin:7px 0 8px}.summary-filter-tabs button{min-height:34px;font-size:10px}.summary-filter-tabs button.active{background:#123628;border-color:#39d97b;color:#57e98e}
 .summary-list .history-item{cursor:pointer}.summary-list .history-meta{white-space:normal}.summary-empty{padding:18px 8px;text-align:center;color:#81939c;font-size:11px}
 /* Approved Stock P&L Summary Total P&L card — permanent root-page slot. */
-.summary-total-card{display:none;margin-top:8px;border:1.6px solid #21744f;border-radius:18px;background:linear-gradient(150deg,#071c23,#06161f);padding:12px 14px;min-height:86px;box-sizing:border-box;grid-template-columns:52px minmax(0,1fr) auto 18px;align-items:center;gap:11px}
-.summary-total-card .summary-total-icon{width:52px;height:52px;border-radius:13px;background:linear-gradient(145deg,#0a4c3d,#063328);display:grid;place-items:center;color:#2ee99b}
-.summary-total-card .summary-total-icon svg{width:29px;height:29px;fill:none;stroke:currentColor;stroke-width:2.6;stroke-linecap:round;stroke-linejoin:round}
-.summary-total-card .summary-total-copy{min-width:0}.summary-total-card .summary-total-copy b{display:block;font-size:17px;line-height:1.1;color:#f3f6f7}.summary-total-card .summary-total-copy small{display:block;margin-top:6px;color:#8fa0a8;font-size:11px}
-.summary-total-card .summary-total-amount{font-size:18px;font-weight:850;white-space:nowrap;text-align:right}.summary-total-card .history-chevron{font-size:27px;line-height:1;color:#d9e1e4;text-align:right}
+.summary-total-card{display:none;width:100%;margin:8px 0 0;border:1.5px solid #21744f;border-radius:17px;background:linear-gradient(150deg,#071c23,#06161f);padding:6px 10px;min-height:63px;box-sizing:border-box;grid-template-columns:40px minmax(0,1fr) auto 16px;align-items:center;gap:9px}
+.summary-total-card .summary-total-icon{width:40px;height:40px;border-radius:11px;background:linear-gradient(145deg,#0a4c3d,#063328);display:grid;place-items:center;color:#2ee99b}
+.summary-total-card .summary-total-icon svg{width:23px;height:23px;fill:none;stroke:currentColor;stroke-width:2.6;stroke-linecap:round;stroke-linejoin:round}
+.summary-total-card .summary-total-copy{min-width:0}.summary-total-card .summary-total-copy b{display:block;font-size:15px;line-height:1.05;color:#f3f6f7}.summary-total-card .summary-total-copy small{display:block;margin-top:4px;color:#8fa0a8;font-size:10px}
+.summary-total-card .summary-total-amount{font-size:15.5px;font-weight:850;white-space:nowrap;text-align:right;letter-spacing:-.1px}.summary-total-card .history-chevron{font-size:23px;line-height:1;color:#d9e1e4;text-align:right}
 .summary-total-card .summary-total-positive{color:#25df82}.summary-total-card .summary-total-negative{color:#ff5d65}.summary-total-card .summary-total-zero{color:#8fa0a8}
-@media(max-width:520px){.summary-total-card{grid-template-columns:46px minmax(0,1fr) auto 14px;gap:9px;padding:11px 12px;min-height:82px}.summary-total-card .summary-total-icon{width:46px;height:46px;border-radius:12px}.summary-total-card .summary-total-icon svg{width:26px;height:26px}.summary-total-card .summary-total-copy b{font-size:15px}.summary-total-card .summary-total-copy small{font-size:10px}.summary-total-card .summary-total-amount{font-size:15px;letter-spacing:-.12px}.summary-total-card .history-chevron{font-size:23px}}
+@media(max-width:520px){.summary-total-card{width:100%;margin:8px 0 0;grid-template-columns:38px minmax(0,1fr) auto 13px;gap:8px;padding:6px 9px;min-height:60px;border-radius:17px}.summary-total-card .summary-total-icon{width:38px;height:38px;border-radius:10px}.summary-total-card .summary-total-icon svg{width:22px;height:22px}.summary-total-card .summary-total-copy b{font-size:14px}.summary-total-card .summary-total-copy small{font-size:9.5px;margin-top:3px}.summary-total-card .summary-total-amount{font-size:14px;letter-spacing:-.12px}.summary-total-card .history-chevron{font-size:21px}}
 /* v52 Point 2 — Future uses the approved derivative layout */
 .future-mode .option-chain-row>label{color:#edf3f5}.future-mode #optionStrike{text-align:center}.future-mode .option-side-btn.call.active{background:linear-gradient(135deg,#0d783a,#11a857);border-color:#22c56a}.future-mode .option-side-btn.put.active{background:linear-gradient(135deg,#9b242d,#d53843);border-color:#ef4d59}
 </style>
@@ -2168,13 +2168,36 @@ function storedTradesFor(keyName){
  const k=MARKET_KEYS[keyName];let a=null;try{a=JSON.parse(localStorage.getItem(k)||'null')}catch(e){};
  if(Array.isArray(a))return a;if(keyName==='stock')return Array.isArray(SEED)?SEED:[];return [];
 }
+const SUMMARY_UNASSIGNED_BROKER='Unassigned / Legacy';
+function summaryBrokerKey(value){return String(value||'').trim().replace(/\s+/g,' ').toLowerCase()}
+function summaryTradeMatchesBroker(t){
+ if(!selectedSummaryBroker)return true;
+ const tradeBroker=String(t?.broker||'').trim();
+ if(selectedSummaryBroker===SUMMARY_UNASSIGNED_BROKER)return !tradeBroker;
+ return !!tradeBroker&&summaryBrokerKey(tradeBroker)===summaryBrokerKey(selectedSummaryBroker);
+}
 function summaryEntries(cat){
- const out=[];summarySourceDefs(cat).forEach(src=>storedTradesFor(src.key).forEach((t,index)=>{if(!isOpenTrade(t)&&(!selectedSummaryBroker||String(t?.broker||'').trim()===selectedSummaryBroker)){out.push({t,index,...src})}}));
+ const out=[];summarySourceDefs(cat).forEach(src=>storedTradesFor(src.key).forEach((t,index)=>{if(!isOpenTrade(t)&&summaryTradeMatchesBroker(t)){out.push({t,index,...src})}}));
  return out.sort((a,b)=>tradeCalendarDate(b.t).localeCompare(tradeCalendarDate(a.t)));
 }
 function summaryBrokerNames(){
- const names=[];try{for(const b of getBrokers()){const n=String(b?.name||'').trim();if(n&&!names.includes(n))names.push(n)}}catch(e){}
- if(selectedSummaryBroker&&!names.includes(selectedSummaryBroker))names.push(selectedSummaryBroker);
+ const byKey=new Map(),addName=value=>{const n=String(value||'').trim();if(!n)return;const k=summaryBrokerKey(n);if(k&&!byKey.has(k))byKey.set(k,n)};
+ try{for(const b of getBrokers())addName(b?.name)}catch(e){}
+ let hasUnassigned=false;
+ const {start,end}=summaryCurrentFyBounds();
+ for(const cat of ['stock','fno','commodity']){
+   for(const src of summarySourceDefs(cat)){
+     for(const t of storedTradesFor(src.key)){
+       if(isOpenTrade(t))continue;
+       const ds=tradeCalendarDate(t);if(!ds)continue;
+       const d=new Date(ds+'T12:00:00');if(Number.isNaN(d.getTime())||d<start||d>=end)continue;
+       const n=String(t?.broker||'').trim();if(n)addName(n);else hasUnassigned=true;
+     }
+   }
+ }
+ if(selectedSummaryBroker&&selectedSummaryBroker!==SUMMARY_UNASSIGNED_BROKER)addName(selectedSummaryBroker);
+ const names=Array.from(byKey.values());
+ if(hasUnassigned||selectedSummaryBroker===SUMMARY_UNASSIGNED_BROKER)names.push(SUMMARY_UNASSIGNED_BROKER);
  return names;
 }
 function setSummaryBroker(value){
@@ -2334,7 +2357,7 @@ refreshTradeModeUI();
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', async () => {
     try {
-      const reg = await navigator.serviceWorker.register('./service-worker.js?v=52-summary-total-pnl-direct-render-only-fix-final', {updateViaCache:'none'});
+      const reg = await navigator.serviceWorker.register('./service-worker.js?v=52-summary-broker-reconcile-total-card-compact-only-fix-final', {updateViaCache:'none'});
       await reg.update();
     } catch(e) {}
   });
@@ -4638,5 +4661,13 @@ body:not(.future-mode) #optionChainRow.show .option-side-btn:not(.active){
    No MutationObserver, timeout injection, storage schema change, or unrelated navigation/layout change. */
 </script>
 
+
+<script id="v52-summary-broker-reconcile-total-card-compact-only-fix-final-marker">
+/* BROKER RECONCILIATION + TOTAL CARD COMPACT ONLY.
+   - Broker matching is normalized for case/spacing.
+   - Current-FY closed trades with no saved broker are exposed as “Unassigned / Legacy” instead of being silently omitted.
+   - Historical/custom broker names found in current-FY trades are included in Summary From Broker.
+   - Total P&L card width follows the same app-shell width as bottom navigation and uses compact bottom-nav-like height. */
+</script>
 </body>
 </html>
