@@ -2186,7 +2186,7 @@ function summaryRootEntries(cat){
 function renderSummaryRoot(){
  const cats=['stock','fno','commodity'],brokers=summaryBrokerNames();
  const brokerOptions='<option value="">Select Broker</option>'+brokers.map(n=>`<option value="${escapeHtml(n)}" ${n===selectedSummaryBroker?'selected':''}>${escapeHtml(n)}</option>`).join('');
- historyView.innerHTML=`<div class="view-title">Stock P&amp;L Summary</div><div class="summary-broker-field"><label for="summaryBroker">Summary From Broker</label><select id="summaryBroker" onchange="setSummaryBroker(this.value)">${brokerOptions}</select></div><div class="summary-shell">${cats.map(c=>{const a=summaryRootEntries(c),net=a.reduce((z,e)=>z+calcGross(e.t)-realisedCharges(e.t),0),amountClass=net>0?'summary-root-positive':net<0?'summary-root-negative':'summary-root-zero';return `<div class="summary-category-card" onclick="selectSummaryCategory('${c}')"><div><b>${summaryCategoryLabel(c)}</b><small>${a.length} closed trade${a.length===1?'':'s'} · <span class="${amountClass}">${money(net)}</span></small></div><div class="history-chevron">›</div></div>`}).join('')}</div>`;
+ historyView.innerHTML=`<div class="view-title">Stock P&amp;L Summary</div><div class="summary-broker-field"><label for="summaryBroker">Summary From Broker</label><select id="summaryBroker" onchange="setSummaryBroker(this.value)">${brokerOptions}</select></div><div class="summary-shell">${cats.map(c=>{const a=summaryRootEntries(c),net=a.reduce((z,e)=>{const ds=tradeCalendarDate(e.t),d=ds?new Date(ds+'T12:00:00'):null;if(!d||Number.isNaN(d.getTime())||d.getDay()===0||d.getDay()===6)return z;return z+calcGross(e.t)-realisedCharges(e.t)},0),amountClass=net>0?'summary-root-positive':net<0?'summary-root-negative':'summary-root-zero';return `<div class="summary-category-card" onclick="selectSummaryCategory('${c}')"><div><b>${summaryCategoryLabel(c)}</b><small>${a.length} closed trade${a.length===1?'':'s'} · <span class="${amountClass}">${money(net)}</span></small></div><div class="history-chevron">›</div></div>`}).join('')}</div>`;
 }
 function renderSummaryCategory(cat,filter='all'){
  const all=summaryEntries(cat),profits=all.filter(e=>calcGross(e.t)-realisedCharges(e.t)>=0),losses=all.filter(e=>calcGross(e.t)-realisedCharges(e.t)<0),profitAmt=profits.reduce((z,e)=>z+calcGross(e.t)-realisedCharges(e.t),0),lossAmt=losses.reduce((z,e)=>z+Math.abs(calcGross(e.t)-realisedCharges(e.t)),0),net=profitAmt-lossAmt;
@@ -2267,7 +2267,7 @@ refreshTradeModeUI();
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', async () => {
     try {
-      const reg = await navigator.serviceWorker.register('./service-worker.js?v=52-weekly-fy-calc-speed-only-fix-final', {updateViaCache:'none'});
+      const reg = await navigator.serviceWorker.register('./service-worker.js?v=52-monthly-fy-summary-calc-only-fix-final', {updateViaCache:'none'});
       await reg.update();
     } catch(e) {}
   });
@@ -2389,6 +2389,8 @@ function short2(v){
 function paintMainCalendarDaySummary(y,m,last){
  let profitable=0,lossMaking=0;
  for(let d=1;d<=last;d++){
+   const wd=new Date(y,m,d).getDay();
+   if(wd===0||wd===6)continue;
    const net=combinedDay(key(y,m,d));
    if(net>0)profitable++;
    else if(net<0)lossMaking++;
@@ -2420,17 +2422,16 @@ function paintFront(){
  for(let i=0;i<off;i++)slots.push(0);for(let d=1;d<=last;d++)slots.push(d);while(slots.length%7)slots.push(0);
  let html='',monthlyFromWeeks=0;
  for(let w=0;w<slots.length/7;w++){
-   let days='',weekdayGain=0,fullWeekNet=0;
+   let days='',weekdayGain=0;
    for(let dow=0;dow<5;dow++){
      const d=slots[w*7+dow];
      if(!d){days+='<div class="day empty"></div>';continue}
-     const ds=key(y,m,d),net=dayNet(ds);weekdayGain+=net;fullWeekNet+=net;
+     const ds=key(y,m,d),net=dayNet(ds);weekdayGain+=net;
      const cls=net>0?'profit':net<0?'loss':'';
      days+=`<div class="day ${cls}"><div class="num">${d}</div><div class="pnl">${net?short2(net):''}</div><div class="count"></div></div>`;
    }
-   /* Weekend P&L stays in the monthly total, but never in the visible Weekly Gains cell. */
-   for(let dow=5;dow<7;dow++){const d=slots[w*7+dow];if(d)fullWeekNet+=dayNet(key(y,m,d))}
-   monthlyFromWeeks+=fullWeekNet;
+   /* Monthly Net P&L is the sum of the displayed Mon-Fri Weekly Gains only. */
+   monthlyFromWeeks+=weekdayGain;
    const wc=weekdayGain>0?'profit':weekdayGain<0?'loss':'';
    html+=`<div class="week">${days}<div class="gain ${wc}">${short2(weekdayGain)}</div></div>`;
  }
@@ -2439,7 +2440,7 @@ function paintFront(){
 
  /* Main-calendar profitable/loss-making day cards use the same already-built month map. */
  let profitable=0,lossMaking=0;
- for(let d=1;d<=last;d++){const net=dayNet(key(y,m,d));if(net>0)profitable++;else if(net<0)lossMaking++}
+ for(let d=1;d<=last;d++){const wd=new Date(y,m,d).getDay();if(wd===0||wd===6)continue;const net=dayNet(key(y,m,d));if(net>0)profitable++;else if(net<0)lossMaking++}
  const p=document.getElementById('mainProfitableDays'),l=document.getElementById('mainLossMakingDays');
  if(p)p.textContent=String(profitable);if(l)l.textContent=String(lossMaking);
 
@@ -2634,16 +2635,16 @@ history.replaceState({pnlApp:true,view:'frontFinal',cursorYear:cursor.getFullYea
     while(slots.length%7)slots.push(0);
     let html='',monthlyFromWeeks=0;
     for(let w=0;w<slots.length/7;w++){
-      let days='',weekdayGain=0,fullWeekNet=0;
+      let days='',weekdayGain=0;
       for(let dow=0;dow<5;dow++){
         const d=slots[w*7+dow];
         if(!d){days+='<div class="day empty"></div>';continue;}
-        const ds=key(y,m,d),net=dayNet(ds);weekdayGain+=net;fullWeekNet+=net;
+        const ds=key(y,m,d),net=dayNet(ds);weekdayGain+=net;
         const cls=net>0?'profit':net<0?'loss':'';
         days+=`<div class="day ${cls}"><div class="num">${d}</div><div class="pnl">${net?compactFinal(net):''}</div><div class="count"></div></div>`;
       }
-      for(let dow=5;dow<7;dow++){const d=slots[w*7+dow];if(d)fullWeekNet+=dayNet(key(y,m,d))}
-      monthlyFromWeeks+=fullWeekNet;
+      /* Monthly Net P&L follows the displayed Weekly Gains exactly: Mon-Fri only. */
+      monthlyFromWeeks+=weekdayGain;
       const wc=weekdayGain>0?'profit':weekdayGain<0?'loss':'';
       html+=`<div class="week">${days}<div class="gain ${wc}">${compactFinal(weekdayGain)}</div></div>`;
     }
@@ -3720,7 +3721,7 @@ body.app-locked-v52{overflow:hidden!important;touch-action:none}
     for(const t of fybStored(k)){
       const ds=tradeCalendarDate(t);if(!ds)continue;
       const d=new Date(ds+'T12:00:00');
-      if(!Number.isNaN(d.getTime())&&d.getFullYear()===y&&d.getMonth()===m)total+=fybTradeNet(t);
+      if(!Number.isNaN(d.getTime())&&d.getFullYear()===y&&d.getMonth()===m&&d.getDay()!==0&&d.getDay()!==6)total+=fybTradeNet(t);
     }
     return total;
   }
@@ -3875,7 +3876,7 @@ body.app-locked-v52{overflow:hidden!important;touch-action:none}
       for(const t of list){
         const ds=tradeCalendarDate(t);if(!ds)continue;
         const d=new Date(ds+'T12:00:00');
-        if(!Number.isNaN(d.getTime())&&d.getFullYear()===y&&d.getMonth()===m)sum+=fybTradeNet(t);
+        if(!Number.isNaN(d.getTime())&&d.getFullYear()===y&&d.getMonth()===m&&d.getDay()!==0&&d.getDay()!==6)sum+=fybTradeNet(t);
       }
       return sum;
     }
@@ -4553,6 +4554,16 @@ body:not(.future-mode) #optionChainRow.show .option-side-btn:not(.active){
 
 <script id="v52-weekly-fy-calc-speed-only-fix-final-marker">
 /* Direct-path only: weekday Weekly Gains, displayed-month FY total arithmetic, and cached store reads. */
+</script>
+
+
+<script id="v52-monthly-fy-summary-calc-only-fix-final-marker">
+/* CALCULATION CONSISTENCY ONLY on v52 WEEKLY FY CALC SPEED ONLY FIX FINAL:
+   - Main Monthly Net P&L = sum of displayed Mon-Fri Weekly Gains.
+   - FY month rows + FY Total use the same Mon-Fri realised P&L basis.
+   - FY month Breakdown segment totals use the same basis.
+   - Stock P&L Summary root amounts use the same basis; closed-trade counts remain unchanged.
+   No storage schema, trade data, broker data, layout, navigation, or Trade Details changes. */
 </script>
 
 </body>
