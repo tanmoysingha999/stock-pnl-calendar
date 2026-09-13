@@ -827,6 +827,14 @@ iframe[src*="netlify" i], iframe[title*="netlify" i], [class*="netlify" i], [id*
 .summary-metrics{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin:6px 0 8px}.summary-metric{border:1px solid #29404b;border-radius:11px;background:#081923;text-align:center;padding:8px 4px}.summary-metric small{display:block;color:#8fa0a8;font-size:8.5px}.summary-metric b{display:block;margin-top:4px;font-size:11px}.summary-profit{color:var(--green)}.summary-loss{color:#ff625e}.summary-net{color:#5fa9ff}
 .summary-filter-tabs{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin:7px 0 8px}.summary-filter-tabs button{min-height:34px;font-size:10px}.summary-filter-tabs button.active{background:#123628;border-color:#39d97b;color:#57e98e}
 .summary-list .history-item{cursor:pointer}.summary-list .history-meta{white-space:normal}.summary-empty{padding:18px 8px;text-align:center;color:#81939c;font-size:11px}
+/* Approved Stock P&L Summary Total P&L card — permanent root-page slot. */
+.summary-total-card{display:none;margin-top:8px;border:1.6px solid #21744f;border-radius:18px;background:linear-gradient(150deg,#071c23,#06161f);padding:12px 14px;min-height:86px;box-sizing:border-box;grid-template-columns:52px minmax(0,1fr) auto 18px;align-items:center;gap:11px}
+.summary-total-card .summary-total-icon{width:52px;height:52px;border-radius:13px;background:linear-gradient(145deg,#0a4c3d,#063328);display:grid;place-items:center;color:#2ee99b}
+.summary-total-card .summary-total-icon svg{width:29px;height:29px;fill:none;stroke:currentColor;stroke-width:2.6;stroke-linecap:round;stroke-linejoin:round}
+.summary-total-card .summary-total-copy{min-width:0}.summary-total-card .summary-total-copy b{display:block;font-size:17px;line-height:1.1;color:#f3f6f7}.summary-total-card .summary-total-copy small{display:block;margin-top:6px;color:#8fa0a8;font-size:11px}
+.summary-total-card .summary-total-amount{font-size:18px;font-weight:850;white-space:nowrap;text-align:right}.summary-total-card .history-chevron{font-size:27px;line-height:1;color:#d9e1e4;text-align:right}
+.summary-total-card .summary-total-positive{color:#25df82}.summary-total-card .summary-total-negative{color:#ff5d65}.summary-total-card .summary-total-zero{color:#8fa0a8}
+@media(max-width:520px){.summary-total-card{grid-template-columns:46px minmax(0,1fr) auto 14px;gap:9px;padding:11px 12px;min-height:82px}.summary-total-card .summary-total-icon{width:46px;height:46px;border-radius:12px}.summary-total-card .summary-total-icon svg{width:26px;height:26px}.summary-total-card .summary-total-copy b{font-size:15px}.summary-total-card .summary-total-copy small{font-size:10px}.summary-total-card .summary-total-amount{font-size:15px;letter-spacing:-.12px}.summary-total-card .history-chevron{font-size:23px}}
 /* v52 Point 2 — Future uses the approved derivative layout */
 .future-mode .option-chain-row>label{color:#edf3f5}.future-mode #optionStrike{text-align:center}.future-mode .option-side-btn.call.active{background:linear-gradient(135deg,#0d783a,#11a857);border-color:#22c56a}.future-mode .option-side-btn.put.active{background:linear-gradient(135deg,#9b242d,#d53843);border-color:#ef4d59}
 </style>
@@ -1227,7 +1235,7 @@ img.broker-picker-logo {
  </div>
  <div class="fy-view" id="fyView"></div>
  <div class="history-view" id="historyView"></div>
- <div class="summary-total-outside-v52" id="summaryTotalOutsideV52" aria-live="polite"></div>
+ <div class="summary-total-card" id="summaryTotalCard" aria-live="polite"></div>
  <div class="trade-details-view" id="tradeDetailsView"></div>
  <div class="transaction-view" id="transactionView"></div>
  <div class="bottom-nav" id="bottomNav">
@@ -1535,6 +1543,7 @@ function renderAppShell(view){
  document.querySelector('.nav').style.display=view==='calendar'?'grid':'none';
  document.querySelector('.cal').style.display=view==='calendar'?'block':'none';
  fyView.style.display=view==='fy'?'block':'none';historyView.style.display=view==='history'?'block':'none';tradeDetailsView.style.display=view==='tradeDetails'?'block':'none';transactionView.style.display=(view==='transaction'||view==='broker')?'block':'none';document.getElementById('bottomNav').style.display=view==='tradeDetails'?'none':'grid';
+ const summaryTotalCard=document.getElementById('summaryTotalCard');if(summaryTotalCard&&view!=='history')summaryTotalCard.style.display='none';
 }
 function pushSection(view,extra={}){
  const cur=history.state||{};
@@ -2187,9 +2196,66 @@ function summaryRootEntries(cat){
 function renderSummaryRoot(){
  const cats=['stock','fno','commodity'],brokers=summaryBrokerNames();
  const brokerOptions='<option value="">Select Broker</option>'+brokers.map(n=>`<option value="${escapeHtml(n)}" ${n===selectedSummaryBroker?'selected':''}>${escapeHtml(n)}</option>`).join('');
- historyView.innerHTML=`<div class="view-title">Stock P&amp;L Summary</div><div class="summary-broker-field"><label for="summaryBroker">Summary From Broker</label><select id="summaryBroker" onchange="setSummaryBroker(this.value)">${brokerOptions}</select></div><div class="summary-shell">${cats.map(c=>{const a=summaryRootEntries(c),net=a.reduce((z,e)=>{const ds=tradeCalendarDate(e.t),d=ds?new Date(ds+'T12:00:00'):null;if(!d||Number.isNaN(d.getTime())||d.getDay()===0||d.getDay()===6)return z;return z+calcGross(e.t)-realisedCharges(e.t)},0),amountClass=net>0?'summary-root-positive':net<0?'summary-root-negative':'summary-root-zero';return `<div class="summary-category-card" onclick="selectSummaryCategory('${c}')"><div><b>${summaryCategoryLabel(c)}</b><small>${a.length} closed trade${a.length===1?'':'s'} · <span class="${amountClass}">${money(net)}</span></small></div><div class="history-chevron">›</div></div>`}).join('')}</div>`;
+ const round2=v=>Math.round((Number(v)||0)*100)/100;
+ const rootNet=e=>{
+   const ds=tradeCalendarDate(e.t),d=ds?new Date(ds+'T12:00:00'):null;
+   if(!d||Number.isNaN(d.getTime())||d.getDay()===0||d.getDay()===6)return 0;
+   return Number(calcGross(e.t)||0)-Number(realisedCharges(e.t)||0);
+ };
+ const cardData=cats.map(cat=>{
+   const entries=summaryRootEntries(cat),net=entries.reduce((z,e)=>z+rootNet(e),0);
+   return {cat,entries,net};
+ });
+ const cardsHtml=cardData.map(({cat,entries,net})=>{
+   const amountClass=net>0?'summary-root-positive':net<0?'summary-root-negative':'summary-root-zero';
+   return `<div class="summary-category-card" onclick="selectSummaryCategory('${cat}')"><div><b>${summaryCategoryLabel(cat)}</b><small>${entries.length} closed trade${entries.length===1?'':'s'} · <span class="${amountClass}">${money(net)}</span></small></div><div class="history-chevron">›</div></div>`;
+ }).join('');
+ historyView.innerHTML=`<div class="view-title">Stock P&amp;L Summary</div><div class="summary-broker-field"><label for="summaryBroker">Summary From Broker</label><select id="summaryBroker" onchange="setSummaryBroker(this.value)">${brokerOptions}</select></div><div class="summary-shell">${cardsHtml}</div>`;
+
+ const totalCount=cardData.reduce((z,x)=>z+x.entries.length,0);
+ let totalNet=0;
+ if(selectedSummaryBroker){
+   /* Selected broker: exact sum of the three DISPLAYED, 2-decimal segment amounts. */
+   totalNet=round2(cardData.reduce((z,x)=>z+round2(x.net),0));
+ }else{
+   /* No broker: use the exact same month-by-month weekday basis as FY Summary. */
+   const {start,end}=summaryCurrentFyBounds(),monthRaw=new Array(12).fill(0);
+   const keyNames=['stock','future','option','commodity','commodityOption'];
+   const fyNet=t=>{
+     try{
+       if(isOpenTrade(t))return 0;
+       if(!t.futureTrade&&!t.optionTrade&&!(typeof isOptionTradeRecord==='function'&&isOptionTradeRecord(t))){
+         const bp=Number(t.buyPrice),sp=Number(t.sellPrice),bq=Number(t.buyQty),sq=Number(t.sellQty);
+         if(Number.isFinite(bp)&&Number.isFinite(sp)&&Number.isFinite(sq)&&sq>0){
+           const rq=Number.isFinite(bq)&&bq>0?Math.min(bq,sq):sq;
+           return (sp-bp)*rq-Number(realisedCharges(t)||0);
+         }
+       }
+       return Number(calcGross(t)||0)-Number(realisedCharges(t)||0);
+     }catch(e){return 0}
+   };
+   for(const keyName of keyNames){
+     const storageKey=MARKET_KEYS[keyName],raw=localStorage.getItem(storageKey)||'null';let list=[];
+     try{const a=JSON.parse(raw);if(Array.isArray(a))list=a}catch(e){}
+     for(const t of list){
+       const ds=tradeCalendarDate(t);if(!ds)continue;
+       const d=new Date(ds+'T12:00:00');
+       if(Number.isNaN(d.getTime())||d<start||d>=end||d.getDay()===0||d.getDay()===6)continue;
+       const idx=(d.getFullYear()-start.getFullYear())*12+d.getMonth()-3;
+       if(idx>=0&&idx<12)monthRaw[idx]+=fyNet(t);
+     }
+   }
+   totalNet=round2(monthRaw.reduce((z,v)=>z+round2(v),0));
+ }
+ const totalClass=totalNet>0?'summary-total-positive':totalNet<0?'summary-total-negative':'summary-total-zero';
+ const totalCard=document.getElementById('summaryTotalCard');
+ if(totalCard){
+   totalCard.innerHTML=`<div class="summary-total-icon" aria-hidden="true"><svg viewBox="0 0 32 32"><rect x="6" y="3" width="20" height="26" rx="3"></rect><path d="M9 9h14M10 14h3M19 14h3M10 19h3M19 19h3M10 24h3M19 24h3"></path></svg></div><div class="summary-total-copy"><b>Total P&amp;L</b><small>${totalCount} closed trade${totalCount===1?'':'s'}</small></div><div class="summary-total-amount ${totalClass}">${money(totalNet)}</div><div class="history-chevron" aria-hidden="true">›</div>`;
+   totalCard.style.display='grid';
+ }
 }
 function renderSummaryCategory(cat,filter='all'){
+ const totalCard=document.getElementById('summaryTotalCard');if(totalCard)totalCard.style.display='none';
  const all=summaryEntries(cat),profits=all.filter(e=>calcGross(e.t)-realisedCharges(e.t)>=0),losses=all.filter(e=>calcGross(e.t)-realisedCharges(e.t)<0),profitAmt=profits.reduce((z,e)=>z+calcGross(e.t)-realisedCharges(e.t),0),lossAmt=losses.reduce((z,e)=>z+Math.abs(calcGross(e.t)-realisedCharges(e.t)),0),net=profitAmt-lossAmt;
  const arr=filter==='profit'?profits:filter==='loss'?losses:all;
  const tabs=['stock','fno','commodity'];
@@ -2268,7 +2334,7 @@ refreshTradeModeUI();
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', async () => {
     try {
-      const reg = await navigator.serviceWorker.register('./service-worker.js?v=52-summary-total-pnl-visible-only-fix-final', {updateViaCache:'none'});
+      const reg = await navigator.serviceWorker.register('./service-worker.js?v=52-summary-total-pnl-direct-render-only-fix-final', {updateViaCache:'none'});
       await reg.update();
     } catch(e) {}
   });
@@ -4567,142 +4633,9 @@ body:not(.future-mode) #optionChainRow.show .option-side-btn:not(.active){
    No storage schema, trade data, broker data, layout, navigation, or Trade Details changes. */
 </script>
 
-
-
-<style id="v52-summary-total-pnl-visible-only-fix-final-css">
-/* FINAL approved Stock P&L Summary Total P&L card — separate sibling below the summary panel. */
-.summary-total-outside-v52{
-  display:none;
-  margin-top:8px;
-  width:100%;
-  box-sizing:border-box;
-  grid-template-columns:46px minmax(0,1fr) auto 16px;
-  align-items:center;
-  gap:10px;
-  padding:12px 11px;
-  border:1.5px solid #236d55;
-  border-radius:18px;
-  background:linear-gradient(135deg,#08231f 0%,#081b23 58%,#081923 100%);
-  box-shadow:inset 0 0 0 1px rgba(46,219,142,.035);
-}
-.summary-total-outside-v52.show{display:grid}
-.summary-total-outside-v52 .summary-total-icon-v52{
-  width:46px;height:46px;border-radius:11px;
-  display:flex;align-items:center;justify-content:center;
-  background:#0b4436;color:#39e795;overflow:hidden;
-}
-.summary-total-outside-v52 .summary-total-icon-v52 svg{width:25px;height:25px;display:block}
-.summary-total-outside-v52 .summary-total-copy-v52{min-width:0}
-.summary-total-outside-v52 .summary-total-copy-v52 b{display:block;color:#f4f7f8;font-size:15px;line-height:1.15;font-weight:850}
-.summary-total-outside-v52 .summary-total-copy-v52 small{display:block;margin-top:4px;color:#90a1a9;font-size:10px;line-height:1.2;white-space:nowrap}
-.summary-total-outside-v52 .summary-total-amount-v52{font-size:clamp(13px,4.1vw,18px);line-height:1;font-weight:850;white-space:nowrap;text-align:right}
-.summary-total-outside-v52 .summary-total-chevron-v52{font-size:27px;line-height:1;color:#dce6e9;text-align:right}
-@media(max-width:390px){
-  .summary-total-outside-v52{grid-template-columns:42px minmax(0,1fr) auto 13px;gap:8px;padding:11px 9px}
-  .summary-total-outside-v52 .summary-total-icon-v52{width:42px;height:42px}
-  .summary-total-outside-v52 .summary-total-copy-v52 b{font-size:14px}
-  .summary-total-outside-v52 .summary-total-copy-v52 small{font-size:9.2px}
-  .summary-total-outside-v52 .summary-total-amount-v52{font-size:clamp(12px,3.9vw,15px)}
-}
-</style>
-
-<script id="v52-summary-total-pnl-visible-only-fix-final-js">
-/* TOTAL P&L VISIBILITY FIX ONLY on v52 MONTHLY FY SUMMARY CALC ONLY FIX FINAL.
-   The card is a dedicated DOM sibling between historyView and bottomNav so it cannot be clipped
-   inside the Stock P&L Summary panel. No storage/navigation/trade-data changes. */
-(function(){
-  'use strict';
-
-  const mount=document.getElementById('summaryTotalOutsideV52');
-  if(!mount)return;
-
-  const TOTAL_KEYS_V52=[MARKET_KEYS.stock,MARKET_KEYS.future,MARKET_KEYS.option,MARKET_KEYS.commodity,MARKET_KEYS.commodityOption];
-  const totalCacheV52=new Map();
-  function roundMoneyV52(v){return Math.round((Number(v)||0)*100)/100}
-  function storedV52(k){
-    const raw=localStorage.getItem(k)||'null',hit=totalCacheV52.get(k);
-    if(hit&&hit.raw===raw)return hit.list;
-    try{const a=JSON.parse(raw),list=Array.isArray(a)?a:[];totalCacheV52.set(k,{raw,list});return list}
-    catch(e){totalCacheV52.set(k,{raw,list:[]});return []}
-  }
-  function tradeNetV52(t){
-    try{
-      if(isOpenTrade(t))return 0;
-      if(!t.futureTrade&&!t.optionTrade&&!(typeof isOptionTradeRecord==='function'&&isOptionTradeRecord(t))){
-        const bp=Number(t.buyPrice),sp=Number(t.sellPrice),bq=Number(t.buyQty),sq=Number(t.sellQty);
-        if(Number.isFinite(bp)&&Number.isFinite(sp)&&Number.isFinite(sq)&&sq>0){
-          const rq=Number.isFinite(bq)&&bq>0?Math.min(bq,sq):sq;
-          return (sp-bp)*rq-Number(realisedCharges(t)||0);
-        }
-      }
-      return Number(calcGross(t)||0)-Number(realisedCharges(t)||0);
-    }catch(e){return 0}
-  }
-  function currentFyTotalLikeFySummaryV52(){
-    const {start}=summaryCurrentFyBounds(),sy=start.getFullYear();
-    let fy=0;
-    for(let i=0;i<12;i++){
-      const dt=new Date(sy,3+i,1),y=dt.getFullYear(),m=dt.getMonth();
-      let month=0;
-      for(const k of TOTAL_KEYS_V52){
-        for(const t of storedV52(k)){
-          const ds=tradeCalendarDate(t);if(!ds)continue;
-          const d=new Date(ds+'T12:00:00');
-          if(Number.isNaN(d.getTime())||d.getFullYear()!==y||d.getMonth()!==m||d.getDay()===0||d.getDay()===6)continue;
-          month+=tradeNetV52(t);
-        }
-      }
-      fy+=roundMoneyV52(month);
-    }
-    return roundMoneyV52(fy);
-  }
-  function brokerSegmentSnapshotV52(cat){
-    const entries=summaryRootEntries(cat);
-    let raw=0;
-    for(const e of entries){
-      const ds=tradeCalendarDate(e.t);if(!ds)continue;
-      const d=new Date(ds+'T12:00:00');
-      if(Number.isNaN(d.getTime())||d.getDay()===0||d.getDay()===6)continue;
-      /* Match the currently displayed root-card formula exactly. */
-      raw+=Number(calcGross(e.t)||0)-Number(realisedCharges(e.t)||0);
-    }
-    return {count:entries.length,shown:roundMoneyV52(raw)};
-  }
-  function iconV52(){
-    return `<svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="2.8" width="14" height="18.4" rx="2.3"></rect><path d="M8 6.5h8M8.2 10.4h.01M12 10.4h.01M15.8 10.4h.01M8.2 14.1h.01M12 14.1h.01M15.8 14.1h.01M8.2 17.8h.01M12 17.8h.01M15.8 17.8h.01"></path></svg>`;
-  }
-  function hideTotalV52(){mount.classList.remove('show');mount.innerHTML=''}
-  function renderTotalV52(){
-    const parts=['stock','fno','commodity'].map(brokerSegmentSnapshotV52);
-    const count=parts.reduce((n,p)=>n+p.count,0);
-    const total=selectedSummaryBroker
-      ? roundMoneyV52(parts.reduce((n,p)=>n+p.shown,0))
-      : currentFyTotalLikeFySummaryV52();
-    const cls=total>0?'summary-root-positive':total<0?'summary-root-negative':'summary-root-zero';
-    mount.innerHTML=`<div class="summary-total-icon-v52">${iconV52()}</div><div class="summary-total-copy-v52"><b>Total P&amp;L</b><small>${count} closed trade${count===1?'':'s'}</small></div><div class="summary-total-amount-v52 ${cls}">${money(total)}</div><div class="summary-total-chevron-v52">›</div>`;
-    mount.classList.add('show');
-  }
-
-  const previousRenderSummaryRootV52=renderSummaryRoot;
-  renderSummaryRoot=function(){
-    const r=previousRenderSummaryRootV52();
-    renderTotalV52();
-    return r;
-  };
-
-  const previousRenderSummaryCategoryV52=renderSummaryCategory;
-  renderSummaryCategory=function(cat,filter='all'){
-    hideTotalV52();
-    return previousRenderSummaryCategoryV52(cat,filter);
-  };
-
-  const previousRenderAppShellTotalV52=renderAppShell;
-  renderAppShell=function(view){
-    const r=previousRenderAppShellTotalV52(view);
-    if(view!=='history'||summaryCategory)hideTotalV52();
-    return r;
-  };
-})();
+<script id="v52-summary-total-pnl-direct-render-only-fix-final-marker">
+/* TOTAL P&L ROOT CARD ONLY: permanent app-shell slot + direct renderSummaryRoot population.
+   No MutationObserver, timeout injection, storage schema change, or unrelated navigation/layout change. */
 </script>
 
 </body>
